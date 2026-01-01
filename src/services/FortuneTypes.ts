@@ -776,20 +776,37 @@ function getAnimalSign(birthYear: number): number {
   return birthYear % 12;
 }
 
+// 천간에 따른 띠 색상 (전통 명칭)
+const STEM_ZODIAC_COLORS: Record<string, string> = {
+  '갑': '푸른', '을': '푸른',   // 목(木) = 청색/푸른색
+  '병': '붉은', '정': '붉은',   // 화(火) = 적색/붉은색
+  '무': '노란', '기': '노란',   // 토(土) = 황색/노란색
+  '경': '흰', '신': '흰',       // 금(金) = 백색/흰색
+  '임': '검은', '계': '검은',   // 수(水) = 흑색/검은색
+};
+
 export function generateAnimalFortune(birthDate: string, dayMaster: string = '갑') {
   const year = parseInt(birthDate.split('-')[0], 10);
   const animalIndex = getAnimalSign(year);
   const animal = ZODIAC_ANIMALS[animalIndex];
   const fortune = ANIMAL_YEARLY_FORTUNE[animalIndex];
 
+  // 년간(천간)으로부터 띠 색상 결정
+  const yearGanji = getYearGanji(year);
+  const zodiacColor = STEM_ZODIAC_COLORS[yearGanji.stem] || '';
+  const fullZodiacName = `${zodiacColor}${animal.name.replace('띠', '')}띠`;  // 예: 푸른쥐띠
+  const yearHanja = `${yearGanji.stemHanja}${yearGanji.branchHanja}`;  // 예: 甲子
+
   return {
-    summary: `${animal.emoji} ${animal.name} (${animal.element})\n${animal.personality}\n\n${fortune.overall}`,
+    summary: `${animal.emoji} ${fullZodiacName} (${yearHanja})\n${animal.personality}\n\n${fortune.overall}`,
     score: fortune.score,
     animalInfo: {
-      name: animal.name,
+      name: fullZodiacName,  // 푸른쥐띠 형식으로 변경
       emoji: animal.emoji,
-      element: animal.element,
+      element: `${STEM_ELEMENTS[yearGanji.stem]}(${yearGanji.stemHanja})`,  // 년간 오행 표시
       personality: animal.personality,
+      yearHanja: yearHanja,  // 甲子 등 한자 정보 추가
+      originalName: animal.name,  // 원래 띠 이름 보존
     },
     categories: [
       {

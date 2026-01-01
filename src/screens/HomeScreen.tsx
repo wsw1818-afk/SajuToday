@@ -23,14 +23,22 @@ import { generateFortune } from '../services/FortuneGenerator';
 import { analyzeFiveSpirits } from '../services/FortuneTypes';
 import { COLOR_NAME_TO_HEX, STEM_TO_KOREAN_ELEMENT } from '../data/constants';
 import { formatDateWithDayOfWeek, formatLunarFromISO } from '../utils/dateFormatter';
+import { SajuCalculator } from '../services/SajuCalculator';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { profile, sajuResult, todayInfo, todayFortune, setTodayFortune, refreshTodayInfo } = useApp();
+  const { profile, todayInfo, todayFortune, setTodayFortune, refreshTodayInfo } = useApp();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+
+  // 사주를 실시간으로 재계산 (저장된 데이터의 UTC 버그 문제 해결)
+  const sajuResult = useMemo(() => {
+    if (!profile) return null;
+    const calculator = new SajuCalculator(profile.birthDate, profile.birthTime);
+    return calculator.calculate();
+  }, [profile?.birthDate, profile?.birthTime]);
 
   // 운세가 없으면 새로 생성
   useEffect(() => {

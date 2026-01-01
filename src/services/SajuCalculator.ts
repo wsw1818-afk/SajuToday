@@ -35,7 +35,10 @@ export class SajuCalculator {
   private birthTime: string | null;
 
   constructor(birthDate: string, birthTime: string | null) {
-    this.birthDate = new Date(birthDate);
+    // UTC 시간대 문제 방지: 날짜 문자열을 직접 파싱하여 로컬 날짜로 생성
+    // new Date("YYYY-MM-DD")는 UTC 자정으로 해석되어 시간대에 따라 날짜가 다를 수 있음
+    const [year, month, day] = birthDate.split('-').map(Number);
+    this.birthDate = new Date(year, month - 1, day);
     this.birthTime = birthTime;
   }
 

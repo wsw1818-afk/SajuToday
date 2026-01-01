@@ -66,7 +66,7 @@ function formatTimeToString(time: Date | null): string | null {
 export default function CompatibilityInputScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { profile, sajuResult, calculateSaju } = useApp();
+  const { profile, calculateSaju } = useApp();
 
   // 저장된 사람 목록
   const [savedPeople, setSavedPeople] = useState<SavedPerson[]>([]);

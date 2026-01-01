@@ -235,6 +235,27 @@ export const STEM_TO_KOREAN_ELEMENT: Record<string, string> = {
   '임': '수', '계': '수',
 } as const;
 
+/** 천간(년간)에 따른 띠 색상 - 전통적인 띠 명칭에 사용 */
+export const STEM_TO_ZODIAC_COLOR: Record<string, { korean: string; hanja: string }> = {
+  '갑': { korean: '푸른', hanja: '甲' },   // 목(木) = 청색/푸른색
+  '을': { korean: '푸른', hanja: '乙' },   // 목(木) = 청색/푸른색
+  '병': { korean: '붉은', hanja: '丙' },   // 화(火) = 적색/붉은색
+  '정': { korean: '붉은', hanja: '丁' },   // 화(火) = 적색/붉은색
+  '무': { korean: '노란', hanja: '戊' },   // 토(土) = 황색/노란색
+  '기': { korean: '노란', hanja: '己' },   // 토(土) = 황색/노란색
+  '경': { korean: '흰', hanja: '庚' },     // 금(金) = 백색/흰색
+  '신': { korean: '흰', hanja: '辛' },     // 금(金) = 백색/흰색
+  '임': { korean: '검은', hanja: '壬' },   // 수(水) = 흑색/검은색
+  '계': { korean: '검은', hanja: '癸' },   // 수(水) = 흑색/검은색
+} as const;
+
+/** 지지에 따른 띠 동물 (한글 이름만) */
+export const BRANCH_TO_ANIMAL: Record<string, string> = {
+  '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼',
+  '진': '용', '사': '뱀', '오': '말', '미': '양',
+  '신': '원숭이', '유': '닭', '술': '개', '해': '돼지',
+} as const;
+
 // ============================================
 // UI 상수
 // ============================================

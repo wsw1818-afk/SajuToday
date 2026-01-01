@@ -3,14 +3,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Pillar, Element } from '../../types';
 import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS, ELEMENT_COLORS } from '../../utils/theme';
 import { getStemByKorean, getBranchByKorean } from '../../data/saju';
+import { STEM_TO_ZODIAC_COLOR } from '../../data/constants';
 
 interface PillarCardProps {
   pillar: Pillar | null;
   label: string;
   showEmpty?: boolean;
+  isYearPillar?: boolean;  // 년주 여부 (전통 띠 명칭 표시용)
 }
 
-export function PillarCard({ pillar, label, showEmpty = true }: PillarCardProps) {
+export function PillarCard({ pillar, label, showEmpty = true, isYearPillar = false }: PillarCardProps) {
   if (!pillar && !showEmpty) return null;
 
   const stemInfo = pillar ? getStemByKorean(pillar.stem) : null;
@@ -18,6 +20,14 @@ export function PillarCard({ pillar, label, showEmpty = true }: PillarCardProps)
 
   const stemColor = stemInfo ? ELEMENT_COLORS[stemInfo.element] : COLORS.textLight;
   const branchColor = branchInfo ? ELEMENT_COLORS[branchInfo.element] : COLORS.textLight;
+
+  // 년주일 경우 전통적 띠 명칭 생성 (예: 푸른쥐)
+  const getFullZodiacName = () => {
+    if (!isYearPillar || !pillar || !stemInfo || !branchInfo) return branchInfo?.animal || '';
+    const colorInfo = STEM_TO_ZODIAC_COLOR[pillar.stem];
+    if (!colorInfo) return branchInfo.animal;
+    return `${colorInfo.korean}${branchInfo.animal}`;  // 예: 푸른쥐
+  };
 
   return (
     <View style={styles.container}>
@@ -46,7 +56,9 @@ export function PillarCard({ pillar, label, showEmpty = true }: PillarCardProps)
         )}
       </View>
       {branchInfo && (
-        <Text style={styles.animal}>{branchInfo.animal}</Text>
+        <Text style={[styles.animal, isYearPillar && styles.zodiacName]}>
+          {getFullZodiacName()}{isYearPillar ? '띠' : ''}
+        </Text>
       )}
     </View>
   );
@@ -92,6 +104,10 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
     marginTop: SPACING.xs,
+  },
+  zodiacName: {
+    fontWeight: '600',
+    color: COLORS.primary,
   },
 });
 

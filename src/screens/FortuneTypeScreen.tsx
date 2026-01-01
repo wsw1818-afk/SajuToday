@@ -24,6 +24,7 @@ import {
   generateLuckyInfo,
   analyzeFiveSpirits,
 } from '../services/FortuneTypes';
+import { SajuCalculator } from '../services/SajuCalculator';
 
 // 현재 연도 정보 계산 (FortuneMenuScreen과 동일)
 const HEAVENLY_STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
@@ -93,7 +94,14 @@ const FORTUNE_CONFIG: Record<string, {
 export default function FortuneTypeScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { profile, sajuResult } = useApp();
+  const { profile } = useApp();
+
+  // 사주를 실시간으로 재계산 (저장된 데이터의 UTC 버그 문제 해결)
+  const sajuResult = useMemo(() => {
+    if (!profile) return null;
+    const calculator = new SajuCalculator(profile.birthDate, profile.birthTime);
+    return calculator.calculate();
+  }, [profile?.birthDate, profile?.birthTime]);
 
   const fortuneType = route.params?.type || 'daily';
   const config = FORTUNE_CONFIG[fortuneType];
@@ -346,6 +354,9 @@ export default function FortuneTypeScreen() {
               <View style={styles.animalInfoCard}>
                 <Text style={styles.animalEmoji}>{fortuneData.animalInfo.emoji}</Text>
                 <Text style={styles.animalName}>{fortuneData.animalInfo.name}</Text>
+                {fortuneData.animalInfo.yearHanja && (
+                  <Text style={styles.animalYearHanja}>({fortuneData.animalInfo.yearHanja})</Text>
+                )}
                 <Text style={styles.animalElement}>{fortuneData.animalInfo.element}</Text>
                 <Text style={styles.animalPersonality}>{fortuneData.animalInfo.personality}</Text>
               </View>
@@ -774,6 +785,12 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
+    marginBottom: SPACING.xs,
+  },
+  animalYearHanja: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
     marginBottom: SPACING.xs,
   },
   animalElement: {

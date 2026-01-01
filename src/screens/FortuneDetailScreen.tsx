@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useApp } from '../contexts/AppContext';
 import { CircularProgress } from '../components/saju';
 import { generateFortune } from '../services/FortuneGenerator';
 import { DetailedFortune } from '../types';
+import { SajuCalculator } from '../services/SajuCalculator';
 
 // 카테고리별 아이콘 매핑
 const CATEGORY_ICONS = {
@@ -127,7 +128,14 @@ const FortuneCard: React.FC<FortuneCardProps> = ({ category, score, description,
 
 export default function FortuneDetailScreen() {
   const navigation = useNavigation();
-  const { todayFortune, profile, sajuResult } = useApp();
+  const { todayFortune, profile } = useApp();
+
+  // 사주를 실시간으로 재계산 (저장된 데이터의 UTC 버그 문제 해결)
+  const sajuResult = useMemo(() => {
+    if (!profile) return null;
+    const calculator = new SajuCalculator(profile.birthDate, profile.birthTime);
+    return calculator.calculate();
+  }, [profile?.birthDate, profile?.birthTime]);
 
   // 운세 데이터 (없으면 새로 생성)
   const fortune = todayFortune || generateFortune(sajuResult);
