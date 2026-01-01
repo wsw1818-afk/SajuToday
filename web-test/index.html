@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사주투데이 - 오늘의 운세</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #FDFBF7;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 430px;
+      margin: 0 auto;
+      background: #FDFBF7;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1C1917;
+    }
+
+    .icon-btn {
+      padding: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    /* Main Content */
+    .main-content {
+      text-align: center;
+      padding: 10px 24px 20px;
+    }
+
+    .main-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1C1917;
+      margin-bottom: 4px;
+    }
+
+    .sub-title {
+      font-size: 14px;
+      color: #78716C;
+      margin-bottom: 30px;
+    }
+
+    /* Saju Wheel */
+    .saju-wheel {
+      width: 280px;
+      height: 280px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .wheel-ring {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .outer-ring {
+      width: 280px;
+      height: 280px;
+      background: linear-gradient(135deg, #F5F5F4, #E7E5E4);
+      top: 0;
+      left: 0;
+    }
+
+    .middle-ring {
+      width: 200px;
+      height: 200px;
+      background: #FDFBF7;
+      top: 40px;
+      left: 40px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .inner-ring {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #6B5B45, #8B7355);
+      top: 80px;
+      left: 80px;
+      box-shadow: 0 4px 12px rgba(107, 91, 69, 0.3);
+    }
+
+    .center-symbol {
+      font-size: 40px;
+      color: #FDFBF7;
+    }
+
+    /* Pillar positions */
+    .pillar {
+      position: absolute;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .pillar-top { top: 8px; left: 50%; transform: translateX(-50%); }
+    .pillar-right { right: 8px; top: 50%; transform: translateY(-50%); }
+    .pillar-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+    .pillar-left { left: 8px; top: 50%; transform: translateY(-50%); }
+
+    .pillar-label {
+      font-size: 10px;
+      color: #78716C;
+    }
+
+    .pillar-value {
+      font-weight: bold;
+      color: #1C1917;
+    }
+
+    /* Horoscope Sheet */
+    .horoscope-sheet {
+      background: linear-gradient(to bottom, rgba(250, 250, 249, 0.8), #FFFFFF);
+      border-radius: 40px 40px 0 0;
+      padding: 30px 24px;
+      margin-top: -20px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: #E5E5E5;
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+
+    /* Date Header */
+    .date-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .lunar-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(231, 229, 228, 0.5);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .lunar-text {
+      font-size: 12px;
+      color: #57534E;
+      font-weight: 500;
+    }
+
+    .dot-separator {
+      width: 4px;
+      height: 4px;
+      background: #A8A29E;
+      border-radius: 50%;
+    }
+
+    .date-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1C1917;
+    }
+
+    /* Luck Cards Row */
+    .luck-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .luck-card {
+      flex: 1;
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 16px 12px;
+      text-align: center;
+      border: 1px solid #F5F5F4;
+    }
+
+    .luck-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .luck-label {
+      font-size: 12px;
+      color: #78716C;
+      margin-bottom: 4px;
+    }
+
+    .luck-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .luck-bar {
+      height: 4px;
+      background: #E5E5E5;
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .luck-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    /* Advice Card */
+    .advice-card {
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .advice-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .advice-main {
+      font-size: 18px;
+      font-weight: bold;
+      color: #78350F;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .advice-sub {
+      font-size: 14px;
+      color: #92400E;
+      line-height: 1.5;
+    }
+
+    /* Detail Grid */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .detail-item {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #F5F5F4;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: #78716C;
+      margin-bottom: 6px;
+    }
+
+    .detail-value-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .detail-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1C1917;
+    }
+
+    .color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .detail-icon {
+      font-size: 14px;
+      color: #A8A29E;
+    }
+
+    /* Compat Card */
+    .compat-card {
+      background: #292524;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .compat-item {
+      flex: 1;
+    }
+
+    .compat-label {
+      font-size: 12px;
+      color: #A8A29E;
+      margin-bottom: 4px;
+    }
+
+    .compat-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compat-emoji {
+      font-size: 20px;
+    }
+
+    .compat-value {
+      font-size: 16px;
+      font-weight: bold;
+      color: #FFFFFF;
+    }
+
+    .compat-divider {
+      width: 1px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 16px;
+    }
+
+    .compat-right {
+      text-align: right;
+    }
+
+    /* Action Button */
+    .action-button {
+      width: 100%;
+      background: #6B5B45;
+      color: #FDFBF7;
+      border: none;
+      padding: 18px;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(107, 91, 69, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .action-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(107, 91, 69, 0.4);
+    }
+
+    .action-button:active {
+      transform: translateY(0);
+    }
+
+    /* Fortune Detail Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #F5F5F4;
+      width: 100%;
+      max-width: 430px;
+      max-height: 90vh;
+      border-radius: 24px 24px 0 0;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #6B5B45, #8B7355);
+      padding: 20px 24px 30px;
+      color: white;
+    }
+
+    .modal-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-back {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .modal-date {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .modal-user {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .modal-summary {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .keywords {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .keyword {
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .modal-body {
+      padding: 24px 16px;
+      overflow-y: auto;
+      max-height: calc(90vh - 200px);
+    }
+
+    .fortune-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .fortune-card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .fortune-icon-container {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .fortune-card-title {
+      flex: 1;
+      margin-left: 12px;
+    }
+
+    .fortune-category {
+      font-size: 14px;
+      color: #78716C;
+      margin-bottom: 2px;
+    }
+
+    .fortune-score {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .fortune-progress {
+      width: 50px;
+      height: 50px;
+      position: relative;
+    }
+
+    .fortune-progress svg {
+      transform: rotate(-90deg);
+    }
+
+    .fortune-progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .fortune-description {
+      font-size: 15px;
+      color: #44403C;
+      line-height: 1.5;
+    }
+
+    .dos-donts {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+
+    .do-card, .dont-card {
+      flex: 1;
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    .do-card {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+    }
+
+    .dont-card {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+    }
+
+    .dos-donts-label {
+      font-size: 12px;
+      color: #78716C;
+      margin-bottom: 6px;
+    }
+
+    .dos-donts-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1C1917;
+    }
+
+    .disclaimer {
+      font-size: 12px;
+      color: #A8A29E;
+      text-align: center;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <button class="icon-btn">☰</button>
+      <span class="header-title">사주팔자</span>
+      <button class="icon-btn">🔔</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <h1 class="main-title">나의 사주팔자</h1>
+      <p class="sub-title">당신의 운명을 확인해보세요</p>
+
+      <!-- Saju Wheel -->
+      <div class="saju-wheel">
+        <div class="wheel-ring outer-ring">
+          <div class="pillar pillar-top">
+            <div class="pillar-label">년주</div>
+            <div class="pillar-value">甲子</div>
+          </div>
+          <div class="pillar pillar-right">
+            <div class="pillar-label">월주</div>
+            <div class="pillar-value">丙寅</div>
+          </div>
+          <div class="pillar pillar-bottom">
+            <div class="pillar-label">일주</div>
+            <div class="pillar-value">戊辰</div>
+          </div>
+          <div class="pillar pillar-left">
+            <div class="pillar-label">시주</div>
+            <div class="pillar-value">庚午</div>
+          </div>
+        </div>
+        <div class="wheel-ring middle-ring"></div>
+        <div class="wheel-ring inner-ring">
+          <span class="center-symbol">☯</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Horoscope Sheet -->
+    <div class="horoscope-sheet">
+      <div class="sheet-handle"></div>
+
+      <!-- Date Header -->
+      <div class="date-header">
+        <div class="lunar-badge">
+          <span class="lunar-text" id="lunar-date">음력 11월 29일</span>
+          <div class="dot-separator"></div>
+          <span class="lunar-text" id="solar-term">동지</span>
+        </div>
+        <div class="date-title" id="today-date">12월 29일 (일)</div>
+      </div>
+
+      <!-- Luck Cards -->
+      <div class="luck-row">
+        <div class="luck-card">
+          <div class="luck-icon">✨</div>
+          <div class="luck-label">종합운</div>
+          <div class="luck-value" style="color: #F59E0B;" id="overall-score">95점</div>
+          <div class="luck-bar">
+            <div class="luck-bar-fill" style="width: 95%; background: #F59E0B;"></div>
+          </div>
+        </div>
+        <div class="luck-card">
+          <div class="luck-icon">❤️</div>
+          <div class="luck-label">애정운</div>
+          <div class="luck-value" style="color: #F43F5E;" id="love-score">80점</div>
+          <div class="luck-bar">
+            <div class="luck-bar-fill" style="width: 80%; background: #F43F5E;"></div>
+          </div>
+        </div>
+        <div class="luck-card">
+          <div class="luck-icon">📈</div>
+          <div class="luck-label">금전운</div>
+          <div class="luck-value" style="color: #10B981;" id="money-score">대길</div>
+          <div class="luck-bar">
+            <div class="luck-bar-fill" style="width: 90%; background: #10B981;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advice Card -->
+      <div class="advice-card">
+        <div class="advice-icon">🌟</div>
+        <div class="advice-main" id="advice-main">흐르는 물처럼 유연하게 대처하세요.</div>
+        <div class="advice-sub" id="advice-sub">서두르지 말고 차분하게 마음을 가라앉히면 의외의 곳에서 해결책을 찾을 수 있습니다.</div>
+      </div>
+
+      <!-- Detail Grid -->
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-label">행운의 색</div>
+          <div class="detail-value-row">
+            <span class="detail-value" id="lucky-color">남색</span>
+            <div class="color-dot" id="lucky-color-dot" style="background: #312E81;"></div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">행운의 숫자</div>
+          <div class="detail-value-row">
+            <span class="detail-value" id="lucky-number">3, 17</span>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">행운의 방향</div>
+          <div class="detail-value-row">
+            <span class="detail-value" id="lucky-direction">동쪽</span>
+            <span class="detail-icon">🧭</span>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">행운의 시간</div>
+          <div class="detail-value-row">
+            <span class="detail-value" id="lucky-time">오후 3시</span>
+            <span class="detail-icon">🕐</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compat Card -->
+      <div class="compat-card">
+        <div class="compat-item">
+          <div class="compat-label">오늘의 귀인</div>
+          <div class="compat-row">
+            <span class="compat-emoji" id="lucky-zodiac-emoji">🐒</span>
+            <span class="compat-value" id="lucky-zodiac">원숭이띠</span>
+          </div>
+        </div>
+        <div class="compat-divider"></div>
+        <div class="compat-item compat-right">
+          <div class="compat-label">주의할 띠</div>
+          <div class="compat-row" style="justify-content: flex-end;">
+            <span class="compat-value" id="caution-zodiac">호랑이띠</span>
+            <span class="compat-emoji" id="caution-zodiac-emoji">🐯</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button class="action-button" onclick="showFortuneDetail()">전체 운세 보기</button>
+    </div>
+  </div>
+
+  <!-- Fortune Detail Modal -->
+  <div class="modal-overlay" id="fortune-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-header-row">
+          <button class="modal-back" onclick="hideFortuneDetail()">←</button>
+          <span class="modal-title">오늘의 운세</span>
+          <div style="width: 32px;"></div>
+        </div>
+        <div class="modal-date" id="modal-date">2024년 12월 29일</div>
+        <div class="modal-user">사용자님의 운세</div>
+        <div class="modal-summary" id="modal-summary">흐르는 물처럼 유연하게 대처하세요.</div>
+        <div class="keywords">
+          <span class="keyword">#평온</span>
+          <span class="keyword">#유연</span>
+          <span class="keyword">#기회</span>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- 종합운 -->
+        <div class="fortune-card">
+          <div class="fortune-card-header">
+            <div class="fortune-icon-container" style="background: rgba(245, 158, 11, 0.2);">✨</div>
+            <div class="fortune-card-title">
+              <div class="fortune-category">종합운</div>
+              <div class="fortune-score" style="color: #F59E0B;">95점</div>
+            </div>
+            <div class="fortune-progress">
+              <svg width="50" height="50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#F59E0B" stroke-width="4"
+                  stroke-dasharray="125.6" stroke-dashoffset="6.28" stroke-linecap="round"/>
+              </svg>
+              <span class="fortune-progress-text" style="color: #F59E0B;">95</span>
+            </div>
+          </div>
+          <div class="fortune-description">서두르지 말고 차분하게 마음을 가라앉히면 의외의 곳에서 해결책을 찾을 수 있습니다.</div>
+        </div>
+
+        <!-- 애정운 -->
+        <div class="fortune-card">
+          <div class="fortune-card-header">
+            <div class="fortune-icon-container" style="background: rgba(244, 63, 94, 0.2);">❤️</div>
+            <div class="fortune-card-title">
+              <div class="fortune-category">애정운</div>
+              <div class="fortune-score" style="color: #F43F5E;">80점</div>
+            </div>
+            <div class="fortune-progress">
+              <svg width="50" height="50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#F43F5E" stroke-width="4"
+                  stroke-dasharray="125.6" stroke-dashoffset="25.12" stroke-linecap="round"/>
+              </svg>
+              <span class="fortune-progress-text" style="color: #F43F5E;">80</span>
+            </div>
+          </div>
+          <div class="fortune-description">진심 어린 대화가 관계를 깊게 합니다. 상대방의 말에 귀 기울여 보세요.</div>
+        </div>
+
+        <!-- 금전운 -->
+        <div class="fortune-card">
+          <div class="fortune-card-header">
+            <div class="fortune-icon-container" style="background: rgba(16, 185, 129, 0.2);">📈</div>
+            <div class="fortune-card-title">
+              <div class="fortune-category">금전운</div>
+              <div class="fortune-score" style="color: #10B981;">90점</div>
+            </div>
+            <div class="fortune-progress">
+              <svg width="50" height="50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#10B981" stroke-width="4"
+                  stroke-dasharray="125.6" stroke-dashoffset="12.56" stroke-linecap="round"/>
+              </svg>
+              <span class="fortune-progress-text" style="color: #10B981;">90</span>
+            </div>
+          </div>
+          <div class="fortune-description">작은 투자보다는 저축을 권합니다. 큰 지출은 피하는 것이 좋습니다.</div>
+        </div>
+
+        <!-- 직장운 -->
+        <div class="fortune-card">
+          <div class="fortune-card-header">
+            <div class="fortune-icon-container" style="background: rgba(59, 130, 246, 0.2);">💼</div>
+            <div class="fortune-card-title">
+              <div class="fortune-category">직장운</div>
+              <div class="fortune-score" style="color: #3B82F6;">85점</div>
+            </div>
+            <div class="fortune-progress">
+              <svg width="50" height="50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#3B82F6" stroke-width="4"
+                  stroke-dasharray="125.6" stroke-dashoffset="18.84" stroke-linecap="round"/>
+              </svg>
+              <span class="fortune-progress-text" style="color: #3B82F6;">85</span>
+            </div>
+          </div>
+          <div class="fortune-description">동료와의 협업이 빛을 발하는 날입니다. 새로운 프로젝트에 도전해보세요.</div>
+        </div>
+
+        <!-- 건강운 -->
+        <div class="fortune-card">
+          <div class="fortune-card-header">
+            <div class="fortune-icon-container" style="background: rgba(139, 92, 246, 0.2);">💪</div>
+            <div class="fortune-card-title">
+              <div class="fortune-category">건강운</div>
+              <div class="fortune-score" style="color: #8B5CF6;">88점</div>
+            </div>
+            <div class="fortune-progress">
+              <svg width="50" height="50">
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
+                <circle cx="25" cy="25" r="20" fill="none" stroke="#8B5CF6" stroke-width="4"
+                  stroke-dasharray="125.6" stroke-dashoffset="15.07" stroke-linecap="round"/>
+              </svg>
+              <span class="fortune-progress-text" style="color: #8B5CF6;">88</span>
+            </div>
+          </div>
+          <div class="fortune-description">가벼운 산책이 기분 전환에 도움됩니다. 충분한 수면을 취하세요.</div>
+        </div>
+
+        <!-- Do & Don't -->
+        <div class="dos-donts">
+          <div class="do-card">
+            <div class="dos-donts-label">오늘 하면 좋은 것</div>
+            <div class="dos-donts-text">감사 일기 쓰기</div>
+          </div>
+          <div class="dont-card">
+            <div class="dos-donts-label">오늘 피할 것</div>
+            <div class="dos-donts-text">불필요한 걱정하기</div>
+          </div>
+        </div>
+
+        <div class="disclaimer">본 운세는 재미와 참고를 위한 것입니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 오늘 날짜 설정
+    const today = new Date();
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    document.getElementById('today-date').textContent =
+      `${today.getMonth() + 1}월 ${today.getDate()}일 (${days[today.getDay()]})`;
+    document.getElementById('modal-date').textContent =
+      `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+
+    // 모달 표시/숨김
+    function showFortuneDetail() {
+      document.getElementById('fortune-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideFortuneDetail() {
+      document.getElementById('fortune-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('fortune-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideFortuneDetail();
+      }
+    });
+  </script>
+</body>
+</html>

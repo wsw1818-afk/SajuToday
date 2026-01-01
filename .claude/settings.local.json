@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(npx create-expo-app:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(cmd /c \"cd /d h:\\\\Claude_work\\\\SajuToday\\\\android && gradlew.bat assembleDebug\")",
+      "Bash(cmd /c \"h: && cd h:\\\\Claude_work\\\\SajuToday\\\\android && gradlew.bat assembleDebug\")",
+      "Bash(powershell -Command \"Set-Location ''h:\\\\Claude_work\\\\SajuToday\\\\android''; .\\\\gradlew.bat assembleDebug\")",
+      "Bash(powershell -Command \"Test-Path ''h:\\\\Claude_work\\\\SajuToday\\\\android\\\\app\\\\build\\\\outputs\\\\apk\\\\debug\\\\app-debug.apk''\")",
+      "Bash(powershell -Command:*)",
+      "Bash(gradlew.bat clean:*)",
+      "Bash(npx expo export:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx react-native:*)",
+      "Bash(ls -la \"h:\\\\Claude_work\\\\SajuToday\\\\src\"\" 2>/dev/null || echo \"src folder check failed \")",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -1,0 +1,1140 @@
+/**
+ * 운세 생성 엔진
+ * 사주 정보를 기반으로 오늘의 운세를 생성합니다.
+ *
+ * 명리학적 원리:
+ * 1. 오행 상생상극: 일간과 오늘 천간의 오행 관계로 기본 운의 흐름 판단
+ * 2. 지지 관계: 육합, 삼합, 육충, 육해, 형, 원진 등으로 세부 운세 조정
+ * 3. 십신 관계: 오늘 간지가 나에게 어떤 십신인지에 따른 해석
+ */
+
+import { SajuResult, Fortune, Element, ElementAnalysis, BranchAnalysis, DetailedFortune } from '../types';
+import { HEAVENLY_STEMS, EARTHLY_BRANCHES, SEXAGENARY_CYCLE } from '../data/saju';
+import { getTodayGanji } from './SajuCalculator';
+import {
+  ELEMENT_RELATIONS,
+  ELEMENT_COLORS,
+  ELEMENT_DIRECTIONS,
+  ELEMENT_NUMBERS,
+  ELEMENT_TIMES,
+  BRANCH_TO_ZODIAC,
+  SIX_HARMONIES,
+  SIX_CLASHES,
+  SIX_HARMS,
+} from '../data/constants';
+
+// 삼합 관계 (3개가 모여 합)
+const THREE_HARMONIES: Record<string, { group: string[]; element: Element; name: string }> = {
+  '인': { group: ['인', '오', '술'], element: 'fire', name: '인오술 삼합(화국)' },
+  '오': { group: ['인', '오', '술'], element: 'fire', name: '인오술 삼합(화국)' },
+  '술': { group: ['인', '오', '술'], element: 'fire', name: '인오술 삼합(화국)' },
+  '사': { group: ['사', '유', '축'], element: 'metal', name: '사유축 삼합(금국)' },
+  '유': { group: ['사', '유', '축'], element: 'metal', name: '사유축 삼합(금국)' },
+  '축': { group: ['사', '유', '축'], element: 'metal', name: '사유축 삼합(금국)' },
+  '해': { group: ['해', '묘', '미'], element: 'wood', name: '해묘미 삼합(목국)' },
+  '묘': { group: ['해', '묘', '미'], element: 'wood', name: '해묘미 삼합(목국)' },
+  '미': { group: ['해', '묘', '미'], element: 'wood', name: '해묘미 삼합(목국)' },
+  '신': { group: ['신', '자', '진'], element: 'water', name: '신자진 삼합(수국)' },
+  '자': { group: ['신', '자', '진'], element: 'water', name: '신자진 삼합(수국)' },
+  '진': { group: ['신', '자', '진'], element: 'water', name: '신자진 삼합(수국)' },
+};
+
+// 원진 관계 (怨嗔)
+const YUAN_JIN: Record<string, string> = {
+  '자': '미', '미': '자',
+  '축': '오', '오': '축',
+  '인': '유', '유': '인',
+  '묘': '신', '신': '묘',
+  '진': '해', '해': '진',
+  '사': '술', '술': '사',
+};
+
+// 오행 한글 이름
+const ELEMENT_NAMES: Record<Element, string> = {
+  wood: '목(木)',
+  fire: '화(火)',
+  earth: '토(土)',
+  metal: '금(金)',
+  water: '수(水)',
+};
+
+// 오행별 특성
+const ELEMENT_CHARACTERISTICS: Record<Element, {
+  nature: string;
+  energy: string;
+  season: string;
+  personality: string;
+}> = {
+  wood: {
+    nature: '생명과 성장',
+    energy: '확장하고 뻗어나가는 기운',
+    season: '봄',
+    personality: '진취적이고 창의적인 성향',
+  },
+  fire: {
+    nature: '열정과 활력',
+    energy: '발산하고 타오르는 기운',
+    season: '여름',
+    personality: '적극적이고 표현력이 강한 성향',
+  },
+  earth: {
+    nature: '안정과 중용',
+    energy: '수용하고 조화시키는 기운',
+    season: '환절기',
+    personality: '신뢰할 수 있고 안정적인 성향',
+  },
+  metal: {
+    nature: '결단과 정리',
+    energy: '수렴하고 정돈하는 기운',
+    season: '가을',
+    personality: '원칙적이고 명확한 성향',
+  },
+  water: {
+    nature: '지혜와 유연함',
+    energy: '흐르고 스며드는 기운',
+    season: '겨울',
+    personality: '지적이고 적응력이 뛰어난 성향',
+  },
+};
+
+// 오행 상생상극 상세 설명
+const ELEMENT_RELATION_DETAILS: Record<string, {
+  name: string;
+  description: string;
+  effect: string;
+  advice: string;
+}> = {
+  generate: {
+    name: '내가 생(生)하는 관계',
+    description: '당신의 기운이 오늘의 기운을 생성하고 키워주는 관계입니다.',
+    effect: '에너지가 빠져나갈 수 있지만, 그만큼 보람과 성취감을 느끼게 됩니다. 다른 사람을 돕거나 창작 활동에 좋은 날입니다.',
+    advice: '무리하지 않는 선에서 능동적으로 행동하세요. 체력 관리에 신경 쓰세요.',
+  },
+  generated: {
+    name: '나를 생(生)해주는 관계',
+    description: '오늘의 기운이 당신에게 힘을 불어넣어 주는 관계입니다.',
+    effect: '주변으로부터 도움이나 좋은 기회가 찾아옵니다. 새로운 것을 배우거나 받아들이기에 좋은 날입니다.',
+    advice: '열린 마음으로 주변의 호의를 받아들이세요. 감사하는 마음이 더 큰 복을 부릅니다.',
+  },
+  control: {
+    name: '내가 극(克)하는 관계',
+    description: '당신의 기운이 오늘의 기운을 억제하고 통제하는 관계입니다.',
+    effect: '주도적으로 상황을 이끌어 나갈 수 있습니다. 다만, 지나친 통제는 반발을 부를 수 있으니 주의가 필요합니다.',
+    advice: '자신감을 갖되 상대방의 입장도 배려하세요. 협상이나 결단이 필요한 일에 좋습니다.',
+  },
+  controlled: {
+    name: '나를 극(克)하는 관계',
+    description: '오늘의 기운이 당신을 억제하고 제어하는 관계입니다.',
+    effect: '외부의 압박이나 장애물을 만날 수 있습니다. 신중하게 행동하고, 무리한 도전은 피하는 것이 좋습니다.',
+    advice: '오늘은 방어적으로 임하세요. 새로운 일보다는 기존 일을 정리하는 데 집중하세요.',
+  },
+  same: {
+    name: '비화(比和) 관계',
+    description: '당신과 오늘의 오행이 같아 에너지가 중첩됩니다.',
+    effect: '같은 성향이 강해지므로 장점이 배가될 수 있으나, 단점도 부각될 수 있습니다. 경쟁 상황이 생길 수 있습니다.',
+    advice: '자신의 강점을 살리되, 지나친 고집은 피하세요. 협력이 경쟁보다 나은 결과를 가져옵니다.',
+  },
+};
+
+// 지지 관계 상세 설명
+const BRANCH_RELATION_DETAILS: Record<string, {
+  name: string;
+  description: string;
+  effect: string;
+  simpleExplanation: string;  // 쉬운 설명 추가
+}> = {
+  '육합': {
+    name: '육합(六合)',
+    description: '가장 좋은 합의 관계로, 서로 끌어당기는 기운이 있습니다.',
+    effect: '인연이 맺어지기 좋고, 협력과 화합이 잘 이루어지는 날입니다. 대인관계에서 좋은 일이 생길 수 있습니다.',
+    simpleExplanation: '쉽게 말해 "찰떡궁합"인 날이에요! 사람들과 잘 맞고, 협력하면 좋은 결과가 나오는 날입니다.',
+  },
+  '삼합': {
+    name: '삼합(三合)',
+    description: '세 지지가 모여 강한 오행의 기운을 형성하는 관계입니다.',
+    effect: '큰 일을 도모하거나 팀워크가 필요한 일에 좋습니다. 여러 사람과의 협업이 시너지를 냅니다.',
+    simpleExplanation: '쉽게 말해 "팀플 대박"인 날이에요! 혼자보다 여러 사람과 함께하면 큰 힘이 나는 날입니다.',
+  },
+  '육충': {
+    name: '육충(六沖)',
+    description: '정반대의 기운이 부딪히는 관계로, 충돌이 일어나기 쉽습니다.',
+    effect: '갈등이나 장애물을 만날 수 있습니다. 중요한 결정은 미루고, 감정적 대응은 피하세요.',
+    simpleExplanation: '쉽게 말해 "부딪히기 쉬운" 날이에요. 시계의 12시와 6시처럼 정반대 에너지가 만나서 갈등이 생기기 쉽습니다. 오늘은 한 발 물러서면 괜찮아요.',
+  },
+  '육해': {
+    name: '육해(六害)',
+    description: '서로 해치는 관계로, 은근히 손해를 보거나 방해를 받습니다.',
+    effect: '겉으로 드러나지 않는 문제가 생길 수 있습니다. 세부 사항을 꼼꼼히 확인하세요.',
+    simpleExplanation: '쉽게 말해 "은근히 손해보는" 날이에요. 눈에 잘 안 보이는 곳에서 문제가 생길 수 있으니 꼼꼼히 체크하세요.',
+  },
+  '원진': {
+    name: '원진(怨嗔)',
+    description: '미움과 원망의 관계로, 불편함이나 불화가 생기기 쉽습니다.',
+    effect: '대인관계에서 오해나 감정적 갈등이 생길 수 있습니다. 말조심하고 관계에서 거리를 두세요.',
+    simpleExplanation: '쉽게 말해 "어색하고 불편한" 날이에요. 같은 말도 오해받기 쉬우니 중요한 대화는 다른 날로 미루세요.',
+  },
+};
+
+// 종합운 메시지 템플릿
+const OVERALL_MESSAGES = {
+  excellent: [
+    '오늘은 하늘의 기운이 당신 편에 서서 모든 일이 순조롭게 풀리는 대길한 날입니다. 평소에 막혔던 일들도 물꼬가 트이고, 새로운 시작에 최적의 타이밍입니다. 주변의 귀인이 나타나 도움을 줄 수 있으니 열린 마음으로 하루를 맞이하세요.',
+    '오늘은 우주의 에너지가 당신에게 집중되어 무엇을 해도 빛나는 날입니다. 도전을 두려워하지 말고 적극적으로 행동하세요. 기다리던 좋은 소식이 찾아오거나 예상치 못한 행운이 함께할 것입니다.',
+    '천기(天氣)가 당신을 감싸 보호하고 있어 어떤 일을 해도 좋은 결과가 기대되는 행운의 날입니다. 오래 미뤄왔던 일을 시작하거나 중요한 결정을 내리기에 최적의 시기이니 이 기회를 놓치지 마세요.',
+  ],
+  good: [
+    '오늘은 전반적으로 안정적이고 편안한 기운이 감도는 하루입니다. 큰 행운보다는 작은 것에서 행복을 찾을 수 있으며, 꾸준한 노력이 결실을 맺기 시작합니다. 마음의 여유를 갖고 주변 사람들에게 따뜻함을 나누어 보세요.',
+    '오늘 하루는 긍정적인 에너지가 당신을 감싸고 있어 작은 노력도 큰 보람으로 돌아올 것입니다. 평소에 소홀했던 관계를 돌보거나 자기계발에 시간을 투자하면 좋은 성과가 있을 것입니다.',
+    '안정과 조화의 기운이 가득한 날입니다. 급하게 서두르기보다 차분하게 한 걸음씩 나아가면 원하는 목표에 다다를 수 있습니다. 감사하는 마음을 가지면 더 큰 복이 찾아올 것입니다.',
+  ],
+  neutral: [
+    '오늘은 특별히 좋거나 나쁜 기운 없이 평온한 하루가 예상됩니다. 큰 변화를 추구하기보다는 현재 상태를 유지하며 내일을 준비하는 시간으로 삼으세요. 무리하지 않는 것이 오히려 현명한 선택입니다.',
+    '오늘 하루는 조용하고 평화로운 에너지가 흐르고 있습니다. 급하게 결정을 내리거나 새로운 일을 시작하기보다는 기존에 하던 일에 충실하면서 휴식과 재충전의 시간을 가져보세요.',
+    '큰 파도 없이 잔잔한 바다와 같은 하루입니다. 차분하게 일상을 보내며 에너지를 축적하세요. 오늘의 평온함이 내일의 도약을 위한 준비가 될 것입니다.',
+  ],
+  caution: [
+    '오늘은 예상치 못한 변수가 생길 수 있어 조심스럽게 행동해야 하는 날입니다. 중요한 결정이나 계약은 가급적 미루고, 새로운 시작보다는 현재 상황을 점검하고 정비하는 데 집중하세요. 침착함이 위기를 기회로 바꿀 것입니다.',
+    '오늘은 신중함이 필요한 날입니다. 작은 실수가 큰 문제로 이어질 수 있으니 모든 일에 꼼꼼하게 확인하고 또 확인하세요. 감정에 휩쓸려 행동하기보다 이성적으로 판단하면 무난히 넘길 수 있습니다.',
+    '다소 험난한 기운이 감도는 하루이니 몸과 마음을 사려야 합니다. 불필요한 갈등은 피하고, 가능하면 혼자 조용히 시간을 보내며 에너지를 보존하세요. 이 또한 지나갈 것입니다.',
+  ],
+};
+
+// 애정운 메시지
+const LOVE_MESSAGES = {
+  excellent: [
+    '연인과의 관계가 더욱 깊어지는 날입니다.',
+    '새로운 인연이 찾아올 수 있는 좋은 시기입니다.',
+    '진심 어린 대화가 관계를 더욱 돈독하게 만들 것입니다.',
+  ],
+  good: [
+    '소소한 행복을 느낄 수 있는 날입니다.',
+    '상대방의 마음을 이해하려는 노력이 빛을 발합니다.',
+    '따뜻한 말 한마디가 큰 힘이 됩니다.',
+  ],
+  neutral: [
+    '평온한 관계를 유지할 수 있는 날입니다.',
+    '급한 진전보다는 현재를 즐기세요.',
+    '서로의 공간을 존중하는 것이 좋겠습니다.',
+  ],
+  caution: [
+    '오해가 생기기 쉬우니 말을 아끼세요.',
+    '감정적인 대화는 피하는 것이 좋겠습니다.',
+    '혼자만의 시간이 필요할 수 있습니다.',
+  ],
+};
+
+// 금전운 메시지
+const MONEY_MESSAGES = {
+  excellent: [
+    '재물운이 상승하는 길한 날입니다.',
+    '예상치 못한 수입이 있을 수 있습니다.',
+    '투자에 좋은 기회가 올 수 있으니 주시하세요.',
+  ],
+  good: [
+    '안정적인 재정 상태를 유지할 수 있습니다.',
+    '작은 저축이 큰 자산이 됩니다.',
+    '계획적인 소비가 좋은 결과를 가져옵니다.',
+  ],
+  neutral: [
+    '큰 지출은 자제하는 것이 좋겠습니다.',
+    '현재 상태를 유지하는 것이 현명합니다.',
+    '충동구매를 조심하세요.',
+  ],
+  caution: [
+    '금전 거래는 신중히 하세요.',
+    '보증이나 대출은 피하는 것이 좋겠습니다.',
+    '지출을 최소화하고 절약하세요.',
+  ],
+};
+
+// 직장운 메시지
+const WORK_MESSAGES = {
+  excellent: [
+    '업무에서 좋은 성과를 낼 수 있는 날입니다.',
+    '상사나 동료에게 인정받을 수 있습니다.',
+    '새로운 프로젝트에 도전하기 좋은 시기입니다.',
+  ],
+  good: [
+    '꾸준한 노력이 결실을 맺을 것입니다.',
+    '팀워크가 빛을 발하는 날입니다.',
+    '차분하게 업무를 처리하면 좋은 결과가 있을 것입니다.',
+  ],
+  neutral: [
+    '무난하게 업무를 처리할 수 있습니다.',
+    '새로운 시도보다는 기존 업무에 집중하세요.',
+    '휴식과 업무의 균형을 맞추세요.',
+  ],
+  caution: [
+    '직장 내 대인관계에 신경 쓰세요.',
+    '중요한 회의나 발표는 미루는 것이 좋겠습니다.',
+    '실수를 줄이기 위해 꼼꼼히 확인하세요.',
+  ],
+};
+
+// 건강운 메시지
+const HEALTH_MESSAGES = {
+  excellent: [
+    '활력이 넘치는 하루가 될 것입니다.',
+    '운동을 시작하기 좋은 날입니다.',
+    '심신이 안정되어 컨디션이 좋습니다.',
+  ],
+  good: [
+    '전반적으로 건강한 하루입니다.',
+    '규칙적인 생활이 건강을 지켜줍니다.',
+    '가벼운 스트레칭이 도움이 됩니다.',
+  ],
+  neutral: [
+    '무리하지 않는 것이 좋겠습니다.',
+    '충분한 수면을 취하세요.',
+    '균형 잡힌 식사를 하세요.',
+  ],
+  caution: [
+    '피로가 쌓이기 쉬우니 휴식을 취하세요.',
+    '과음이나 과식을 피하세요.',
+    '감기 등 건강 관리에 신경 쓰세요.',
+  ],
+};
+
+// 오늘 할 일 / 피할 일
+const DO_SUGGESTIONS = [
+  '감사 일기 쓰기',
+  '오래된 친구에게 연락하기',
+  '새로운 것 배우기',
+  '산책하며 생각 정리하기',
+  '주변 정리정돈하기',
+  '책 읽기',
+  '명상하기',
+  '운동하기',
+  '일찍 잠자리에 들기',
+  '좋은 음식 먹기',
+];
+
+const DONT_SUGGESTIONS = [
+  '충동적인 결정하기',
+  '불필요한 걱정하기',
+  '과음하기',
+  '험담하기',
+  '늦게까지 깨어있기',
+  '무리하게 일하기',
+  '갈등 상황 만들기',
+  '큰돈 쓰기',
+  '과거에 얽매이기',
+  '부정적인 생각하기',
+];
+
+// 키워드 목록
+const KEYWORDS = {
+  positive: ['행운', '성공', '발전', '조화', '안정', '희망', '기회', '성장', '평화', '축복'],
+  neutral: ['평온', '유연', '인내', '균형', '절제', '차분', '신중', '지혜', '겸손', '성찰'],
+  caution: ['주의', '신중', '인내', '절제', '휴식', '준비', '관찰', '대기', '보수', '안전'],
+};
+
+// 카테고리별 상세 운세 메시지 템플릿 (대폭 확장)
+const DETAILED_FORTUNE_TEMPLATES = {
+  overall: {
+    excellent: {
+      generated: {
+        analysis: '오늘은 {todayElement}의 기운이 당신의 {userElement} 기운을 생해주는 대길한 날입니다. 마치 식물이 햇빛과 물을 받아 무럭무럭 자라나듯, 외부로부터 긍정적인 에너지가 끊임없이 흘러들어와 당신의 모든 행동에 힘을 실어줍니다. 오늘 하는 일들은 순조롭게 풀릴 가능성이 매우 높으며, 평소에 막혀있던 일들도 물꼬가 트이기 시작할 것입니다. 주변 사람들의 도움과 지지를 받기 쉬우며, 예상치 못한 행운이 찾아올 수도 있습니다. 특히 오전 시간대에 중요한 일을 처리하면 더욱 좋은 결과를 얻을 수 있습니다.',
+        reason: '명리학에서 인성(印星)이 작용하는 날입니다. 인성은 나를 낳아주고 길러주는 어머니의 기운과 같아서, 모든 면에서 보호받고 성장할 수 있는 에너지를 제공합니다. {todayElement}의 기운이 당신의 {userElement}를 생해주어 지혜가 밝아지고, 학습 능력이 향상되며, 귀인의 도움을 받기 쉬운 상태가 됩니다. 또한 인성은 문서운과도 연결되어 계약, 시험, 자격증 관련 일에도 좋은 영향을 미칩니다. 하늘의 기운이 당신 편이니 자신감을 갖고 행동하세요.',
+        advice: '오늘 받는 좋은 기운을 100% 활용하기 위해서는 적극적인 자세가 중요합니다. 새로운 일을 시작하거나, 중요한 결정을 내리거나, 오래 미뤄왔던 일에 도전하기에 최적의 날입니다. 학습이나 자기계발 활동도 효과가 배가됩니다. 다만, 좋은 기운이 강하다고 해서 방심하면 안 됩니다. 겸손한 마음으로 주변에 감사하며, 받은 복을 나누는 마음을 가지면 더 큰 행운이 따라올 것입니다. 오늘의 행운을 내일의 기반으로 삼으세요.',
+      },
+      same: {
+        analysis: '오늘은 {todayElement}의 기운이 당신의 기운과 완벽하게 동일하여 에너지가 두 배로 강해지는 날입니다. 마치 같은 주파수의 파동이 만나 공명을 일으키듯, 당신 본연의 장점과 강점이 더욱 빛을 발하게 됩니다. 평소에 자신 있던 분야에서 탁월한 성과를 낼 수 있으며, 자기 표현력이 극대화됩니다. 리더십을 발휘하거나 자신만의 색깔을 드러내야 하는 상황에서 특히 유리합니다. 같은 오행의 기운이 겹치면 그 특성이 강조되므로, 당신다운 방식으로 접근할 때 최상의 결과를 얻을 수 있습니다.',
+        reason: '비화(比和)의 관계에서 같은 오행이 만나면 그 기운이 강화됩니다. 명리학에서 비견(比肩)이라 불리는 이 관계는 나와 같은 존재, 동료, 형제, 친구의 기운을 의미합니다. 오늘은 당신의 본성이 온전히 발현되는 날이므로, 억지로 다른 사람을 따라하거나 본래 성향과 다른 방식을 취할 필요가 없습니다. 당신 고유의 색깔이 가장 큰 무기가 되는 날입니다. 자기 확신을 갖되, 비슷한 성향의 사람들과 경쟁이 생길 수 있으니 협력의 자세도 중요합니다.',
+        advice: '자신감을 갖고 당신답게 행동하세요. 오늘은 남의 의견에 휘둘리기보다 자신의 직관과 판단을 믿고 밀고 나가는 것이 좋습니다. 다만 기운이 강해진 만큼 자기주장이 세질 수 있으니, 상대방의 입장도 배려하는 여유가 필요합니다. 혼자서 잘할 수 있는 일에 집중하되, 팀 프로젝트에서는 조율의 노력을 기울이세요. 운동이나 야외 활동을 통해 넘치는 에너지를 발산하면 심신의 균형을 유지할 수 있습니다.',
+      },
+      generate: {
+        analysis: '오늘은 당신의 {userElement} 기운이 {todayElement} 기운을 생해주어 창의적이고 생산적인 활동에 최적화된 날입니다. 당신 안에 있는 에너지가 외부로 자연스럽게 흘러나가면서 무언가를 만들어내고, 표현하고, 나누는 일에 특별한 재능이 발휘됩니다. 마치 봄에 나무가 새싹을 틔우듯, 당신의 아이디어와 노력이 구체적인 결실로 이어질 수 있습니다. 예술, 글쓰기, 디자인, 기획 등 창작 활동에 특히 좋으며, 가르치거나 조언하는 일에서도 빛을 발합니다.',
+        reason: '식상(食傷)의 기운이 발동하는 날입니다. 명리학에서 식상은 내가 생하는 오행으로, 표현력, 창의력, 재능 발휘를 상징합니다. 식신(食神)은 안정적이고 부드러운 표현을, 상관(傷官)은 파격적이고 독창적인 표현을 나타냅니다. 오늘은 머릿속에 있던 생각들이 자연스럽게 말과 행동으로 나오며, 자신을 표현하는 것에 거부감이 없어집니다. 생(生)을 준다는 것은 나눔과 창조를 의미하니, 당신이 가진 것을 세상과 공유할 때 더 큰 복이 돌아옵니다.',
+        advice: '오늘은 적극적으로 자신을 표현하고 창작 활동에 임하세요. 블로그 글쓰기, SNS 포스팅, 프레젠테이션, 공연 등 사람들 앞에 나서는 일이 잘 풀립니다. 다만, 에너지가 외부로 많이 빠져나가므로 체력 소모에 주의해야 합니다. 너무 많은 일을 벌이면 피곤해질 수 있으니, 핵심적인 활동에 집중하고 충분한 휴식을 취하세요. 또한 식상이 강하면 말이 많아질 수 있으니, 불필요한 언쟁이나 험담은 피하는 것이 좋습니다.',
+      },
+      control: {
+        analysis: '오늘은 당신의 {userElement} 기운이 {todayElement} 기운을 극하여 상황의 주도권을 확실히 잡을 수 있는 날입니다. 목표를 향해 돌진하는 추진력이 강해지며, 원하는 것을 쟁취할 수 있는 힘이 생깁니다. 협상, 계약, 비즈니스 미팅에서 유리한 위치를 점할 수 있으며, 경쟁 상황에서 승리할 가능성이 높습니다. 다만 극(克)의 기운은 강한 만큼 조심스럽게 사용해야 합니다. 지나치게 밀어붙이면 반발을 살 수 있으니, 부드러움과 강함의 균형을 유지하세요.',
+        reason: '재성(財星)의 기운이 작용하는 날입니다. 명리학에서 재물은 내가 극하는 오행으로, 재물뿐 아니라 목표 달성, 성취, 통제력을 의미합니다. 정재(正財)는 안정적이고 정당한 방법으로 얻는 것을, 편재(偏財)는 투기나 부수입 등 비정기적 수입을 상징합니다. 오늘은 당신이 원하는 것을 향해 나아가는 힘이 강해지며, 재물 관련 일에서도 긍정적인 결과를 기대할 수 있습니다.',
+        advice: '중요한 협상이나 결단이 필요한 일을 오늘 처리하세요. 당신이 주도권을 잡고 상황을 이끌어 나갈 수 있는 날입니다. 다만, 너무 강압적으로 나가면 상대방의 반감을 살 수 있으니, 상대의 입장도 일부 수용하는 유연함이 필요합니다. 또한 재물운이 좋다고 해서 무분별한 투자나 지출은 금물입니다. 계획적이고 신중한 접근이 오히려 더 큰 이익을 가져다 줄 것입니다.',
+      },
+      controlled: {
+        analysis: '오늘은 {todayElement} 기운이 당신의 {userElement} 기운을 다소 억제하지만, 이를 슬기롭게 받아들이면 오히려 더 강해질 수 있는 날입니다. 외부의 압력이나 제약이 느껴질 수 있지만, 이는 당신을 단련시키고 성장하게 하는 긍정적인 시련입니다. 마치 대나무가 강풍에 휘어졌다가 다시 일어서듯, 유연하게 대처하면 어떤 상황도 극복할 수 있습니다. 적절한 긴장감은 오히려 집중력을 높여주고 실수를 줄여줍니다.',
+        reason: '관성(官星)이 작용하는 날입니다. 명리학에서 관은 나를 극하는 오행으로, 규율, 책임, 직장, 권위를 상징합니다. 정관(正官)은 정당한 권위와 승진 기회를, 편관(偏官, 七殺)은 압박과 도전을 의미합니다. 관성이 적당히 작용하면 규율 안에서 안정을 찾고 사회적 인정을 받게 되지만, 너무 강하면 스트레스가 됩니다. 오늘은 관성이 적절히 작용하여, 외부의 기대를 충족시키면서 인정받을 수 있는 기회가 있습니다.',
+        advice: '무리한 도전보다는 내실을 다지는 데 집중하세요. 외부의 압박을 피하려 하기보다 정면으로 받아들이되, 무리하지 않는 선에서 대응하는 것이 좋습니다. 상사나 윗사람의 지시를 잘 따르면 인정받을 수 있으며, 책임감 있는 태도가 좋은 평가로 이어집니다. 다만 체력적으로 무리가 갈 수 있으니 건강 관리에도 신경 쓰세요.',
+      },
+    },
+    good: {
+      generated: {
+        analysis: '오늘 {todayElement}의 기운이 당신의 {userElement} 기운을 도와주고 있어, 전반적으로 안정적이고 좋은 흐름을 타고 있습니다. 급격한 변화나 큰 행운보다는 차분하고 꾸준한 상승세를 기대할 수 있는 날입니다. 주변 사람들의 조언이 도움이 되며, 새로운 지식이나 정보를 습득하기에도 좋습니다. 마음이 평온해지고 여유가 생기며, 평소에 어려웠던 것들이 조금씩 풀려나가기 시작합니다. 조급해하지 말고 하나씩 차근차근 해나가면 좋은 결과가 있을 것입니다.',
+        reason: '인수(印綬)의 기운이 부드럽게 작용하고 있습니다. 강하지는 않지만 꾸준히 당신을 돕는 에너지가 있어, 큰 위험 없이 안정적으로 하루를 보낼 수 있습니다. 생(生)을 받는 관계는 명리학에서 길한 관계로 분류되며, 특히 정신적인 안정감과 학습 능력 향상에 효과적입니다. 귀인의 도움을 받거나, 필요한 정보를 적시에 얻을 수 있는 기운이 감돕니다.',
+        advice: '주변의 도움이나 조언에 귀를 기울이세요. 오늘은 혼자 힘으로 해결하려 하기보다 주변의 지혜를 빌리는 것이 더 효율적입니다. 감사하는 마음으로 받은 것을 나누면 더 큰 복이 돌아옵니다. 학습이나 독서, 자기계발 활동에 시간을 투자하면 좋은 성과가 있을 것입니다.',
+      },
+      same: {
+        analysis: '같은 {todayElement} 기운이 당신의 본성을 강화시켜 자신다운 하루를 보낼 수 있는 날입니다. 평소의 당신 모습 그대로가 가장 좋은 결과를 가져오며, 억지로 꾸미거나 다른 사람을 따라할 필요가 없습니다. 자기 확신이 높아지고, 결단력이 좋아지며, 주변 사람들에게 신뢰감을 줄 수 있습니다. 같은 성향의 사람들과 만나면 공감대가 형성되어 좋은 관계로 발전할 수 있습니다.',
+        reason: '비화(比和)의 관계에서 본인의 특성이 더욱 부각됩니다. 비견(比肩)의 기운이 적절히 작용하여 자기 확신과 독립심이 강화됩니다. 오늘은 남에게 의존하기보다 자신의 능력으로 일을 처리하는 것이 좋습니다. 장점을 살리면 좋은 결과가 있으며, 동료나 친구와의 관계에서도 대등한 위치에서 소통할 수 있습니다.',
+        advice: '자기 방식대로 일을 처리하되, 독선적으로 보이지 않도록 타인의 의견도 경청하세요. 오늘은 협력보다 개인 작업에 더 적합하며, 자신만의 시간을 갖는 것도 좋습니다. 비슷한 성향의 사람들과 교류하면 좋은 아이디어가 나올 수 있습니다.',
+      },
+      generate: {
+        analysis: '당신의 {userElement} 기운이 {todayElement}를 생하여 창의적이고 적극적인 활동에 좋은 날입니다. 표현력이 좋아지고 아이디어가 샘솟으며, 사람들 앞에 나서는 것이 두렵지 않습니다. 프레젠테이션, 면접, 영업, 교육 등 소통이 필요한 일에서 좋은 성과를 기대할 수 있습니다. 다만 에너지가 밖으로 나가므로 체력 관리에 신경 써야 합니다.',
+        reason: '식상(食傷)의 기운이 발동하여 표현력과 창의력이 향상됩니다. 식신의 기운은 부드럽고 자연스러운 표현을, 상관의 기운은 독창적이고 파격적인 표현을 가능하게 합니다. 오늘은 머릿속 생각을 밖으로 꺼내기 좋은 날이며, 예술 활동이나 창작에 재능이 발휘됩니다.',
+        advice: '아이디어를 표현하거나 사람들 앞에 나서기 좋은 날입니다. 망설이던 말이 있다면 오늘 전하세요. 다만 말이 많아질 수 있으니 불필요한 논쟁은 피하고, 체력 소모에 대비해 충분히 쉬세요.',
+      },
+      control: {
+        analysis: '당신의 {userElement} 기운이 {todayElement}를 극하여 목표를 향해 나아갈 추진력이 생기는 날입니다. 하고자 하는 일에 집중하면 좋은 성과를 낼 수 있으며, 원하는 것을 얻기 위한 행동력이 높아집니다. 재물 관련 일에서도 긍정적인 흐름이 있으며, 작은 노력이 실질적인 결과로 이어질 수 있습니다.',
+        reason: '재성(財星)의 기운으로 목표 달성과 성취의 에너지가 있습니다. 정재의 기운은 꾸준한 노력으로 얻는 정당한 보상을, 편재의 기운은 기회를 포착하여 얻는 이익을 상징합니다. 오늘은 재물운이 나쁘지 않으니 계획했던 것을 실행에 옮기기 좋습니다.',
+        advice: '하고자 하는 일에 집중하고 행동으로 옮기세요. 머리로만 생각하지 말고 실제로 움직여야 성과가 있습니다. 다만 무리한 투자나 모험은 자제하고, 확실한 것에 집중하세요.',
+      },
+      controlled: {
+        analysis: '{todayElement} 기운이 당신의 {userElement} 기운을 다소 억제하지만, 이를 통해 배우고 성장할 수 있는 날입니다. 외부의 기대나 규율을 따르면서 자신을 다잡을 수 있으며, 책임감 있는 태도가 좋은 평가로 이어집니다. 압박감이 느껴질 수 있지만, 이는 당신을 더 강하게 만드는 과정입니다.',
+        reason: '관성(官星)의 기운이 있어 외부의 제약이 있지만, 이는 당신을 단련시키는 역할을 합니다. 정관의 기운은 정당한 규율과 인정을, 편관의 기운은 도전과 시련을 통한 성장을 의미합니다. 적절한 관성은 오히려 집중력을 높이고 성과를 만들어내는 동력이 됩니다.',
+        advice: '지시나 규칙을 잘 따르면서 그 속에서 성장의 기회를 찾으세요. 불만을 표출하기보다 묵묵히 맡은 일을 수행하면 인정받게 됩니다. 스트레스 관리에도 신경 쓰세요.',
+      },
+    },
+    neutral: {
+      generated: {
+        analysis: '오늘 {todayElement}의 기운이 당신의 {userElement} 기운에 힘을 주고 있으나, 그 영향은 평온한 수준입니다. 큰 변화나 특별한 사건 없이 무난하게 하루를 보낼 수 있으며, 급하게 서두를 필요 없이 자신의 페이스를 유지하면 됩니다. 오늘은 마치 봄날 오후의 따스한 햇살처럼 은은하고 편안한 에너지가 당신을 감싸고 있습니다. 평화로운 일상 속에서 작은 행복을 찾을 수 있는 날이니, 주변의 소소한 것들에 감사하는 마음을 가져보세요. 급격한 변화보다는 현재의 안정을 유지하면서 내일을 준비하는 것이 현명합니다.',
+        reason: '인수(印綬)의 기운이 약하게 작용하여 안정적이지만 큰 변화는 없습니다. 명리학에서 인성이 약하게 작용하면 강한 지원보다는 은은하게 돕는 에너지가 있어, 무난하게 하루를 마무리할 수 있습니다. 이런 날은 새로운 것을 시작하기보다 기존에 하던 일을 점검하고 정리하는 것이 더 적합합니다. 마치 농부가 봄에 씨를 뿌리기 전에 땅을 고르듯, 오늘은 준비와 계획의 시간으로 활용하세요.',
+        advice: '평화로운 하루를 보내며 내일을 준비하세요. 급하게 일을 추진하기보다 차분히 계획을 세우고 준비하는 것이 좋습니다. 독서나 명상, 가벼운 산책 등 마음을 정화하는 활동이 도움이 됩니다. 오늘의 차분함이 내일의 성공을 위한 밑거름이 될 것입니다. 억지로 무언가를 이루려 하기보다 흐름에 맡기는 여유를 가지세요.',
+      },
+      same: {
+        analysis: '같은 {todayElement} 기운으로 특별한 변화 없이 평온한 하루가 예상됩니다. 큰 행운도 큰 불운도 없이 일상적인 흐름을 따라가게 됩니다. 무리하지 않고 현재 상태를 유지하는 것이 현명한 선택입니다. 오늘은 당신 본연의 모습 그대로가 가장 편안하고 자연스러운 날입니다. 남과 비교하거나 억지로 다른 사람을 따라할 필요 없이, 자신만의 리듬으로 하루를 보내세요. 비슷한 기운이 만나 서로 균형을 이루는 날이니, 내면의 평화를 유지하는 것이 중요합니다.',
+        reason: '비화(比和) 관계에서는 현상 유지가 자연스럽습니다. 같은 기운이 만나 서로 균형을 이루며, 특별히 높거나 낮은 변동 없이 안정된 상태가 유지됩니다. 명리학에서 비견(比肩)의 기운이 적당히 작용하면 자기 확신은 유지되지만 큰 변화를 일으킬 만큼 강하지는 않습니다. 이런 날은 새로운 도전보다 기존의 것을 공고히 하는 데 적합합니다. 잔잔한 호수처럼 평온한 기운을 유지하세요.',
+        advice: '무리하지 않고 일상을 유지하는 것이 좋습니다. 새로운 도전보다는 기존에 하던 일을 묵묵히 해나가세요. 평소에 미뤄왔던 정리정돈이나 자기 관리에 시간을 투자하면 좋습니다. 조용한 시간을 갖고 자신을 돌아보는 것도 의미 있는 하루를 만드는 방법입니다. 급하게 결과를 내려 하지 말고 천천히 진행하세요.',
+      },
+      generate: {
+        analysis: '당신의 {userElement} 기운이 외부로 나가면서 약간의 피로감이 느껴질 수 있는 날입니다. 에너지가 발산되어 창의적인 일은 가능하지만, 지나치게 많은 것을 하려고 하면 지칠 수 있습니다. 오늘은 마치 초에 불을 켜두듯 에너지가 서서히 소모되는 날이니, 체력 관리에 특히 신경 써야 합니다. 하지만 이 발산되는 에너지를 잘 활용하면 표현력이 좋아지고 아이디어가 샘솟을 수 있으니, 핵심적인 창작 활동이나 소통에 집중해 보세요.',
+        reason: '식상(食傷)의 기운이 발산되어 에너지 소모가 있습니다. 표현하고 창작하는 데 에너지가 쓰이므로 체력 관리가 필요합니다. 명리학에서 식상은 내가 생하는 오행으로, 나의 에너지가 외부로 흘러나가는 것을 의미합니다. 이 기운이 적당하면 창의력과 표현력이 높아지지만, 과하면 피로가 누적됩니다. 오늘은 중간 정도의 식상 기운이므로 절제와 휴식이 필요합니다.',
+        advice: '체력 관리에 신경 쓰고 충분한 휴식을 취하세요. 너무 많은 일을 벌이지 말고 선택과 집중을 하세요. 꼭 필요한 창작 활동이나 발표가 있다면 그것에만 에너지를 집중하고, 나머지는 내일로 미루세요. 카페인이나 에너지 음료에 의존하기보다 균형 잡힌 식사와 충분한 수분 섭취가 도움이 됩니다.',
+      },
+      control: {
+        analysis: '상황을 통제할 수 있는 힘이 있지만, 오늘은 큰 성과보다 안정을 유지하는 데 집중하는 것이 좋겠습니다. 무리하게 밀어붙이기보다 현재의 것을 지키는 데 힘쓰세요. 재물이나 목표를 향한 욕심이 생길 수 있지만, 오늘은 그 욕심을 잠시 내려놓고 현실적인 것에 만족하는 것이 현명합니다. 이미 가진 것을 잘 관리하고 보존하는 것도 중요한 성취입니다.',
+        reason: '재성(財星)의 기운이 있으나 강하지 않아 현상 유지가 적절합니다. 큰 욕심을 부리면 오히려 손해가 될 수 있습니다. 명리학에서 재물은 내가 극(克)하는 오행인데, 오늘은 그 극하는 힘이 약해서 무리하게 취하려 하면 빗나갈 수 있습니다. 물이 새는 것을 막는 것이 새 물을 구하는 것보다 중요한 날입니다.',
+        advice: '큰 욕심 없이 주어진 일을 차근차근 처리하세요. 안정적인 자세가 오히려 좋은 결과를 가져옵니다. 투자나 큰 지출은 피하고, 계획에 없던 소비는 자제하세요. 있는 것에 감사하는 마음을 갖고, 작은 것부터 아끼고 모으는 습관이 장기적으로 큰 재산이 됩니다.',
+      },
+      controlled: {
+        analysis: '{todayElement} 기운의 억제를 받아 다소 제약이 느껴질 수 있는 날입니다. 외부의 압박이나 책임감이 무겁게 느껴질 수 있으나, 이를 극복하면 내일은 더 나아질 것입니다. 오늘은 마치 등산을 하며 힘든 구간을 지나는 것처럼 느껴질 수 있지만, 이 과정이 당신을 더 강하게 만들어 줍니다. 스트레스를 받더라도 이것이 성장의 기회라고 생각하고 담담하게 받아들이세요.',
+        reason: '관성(官星)의 기운으로 외부의 제약이나 부담이 느껴질 수 있습니다. 다만 적절한 긴장감은 집중력을 높여주기도 합니다. 명리학에서 관은 나를 극하는 오행으로 규율과 책임을 상징합니다. 오늘은 이 관성이 중간 정도로 작용하여 부담은 있지만 감당할 수 있는 수준입니다. 이런 적당한 압박은 오히려 나태해지는 것을 막고 성실하게 임하도록 도와줍니다.',
+        advice: '무리한 일정을 피하고 필수적인 일만 처리하세요. 스트레스를 받더라도 침착하게 대응하면 무난히 넘길 수 있습니다. 상사나 윗사람의 지시가 있다면 묵묵히 따르는 것이 오히려 좋은 평가로 이어집니다. 퇴근 후에는 충분한 휴식과 취미 활동으로 스트레스를 해소하세요.',
+      },
+    },
+    caution: {
+      generated: {
+        analysis: '오늘 {todayElement}의 기운이 당신에게 흘러오지만, 과한 에너지가 오히려 부담이 될 수 있습니다. 지나친 도움이나 보호가 자립심을 약화시킬 수 있으며, 남에게 의존하려는 마음이 생기기 쉽습니다. 마치 과보호 속에서 자란 새가 날개짓을 잊듯, 너무 많은 지원이 오히려 당신의 성장을 방해할 수 있습니다. 주체적으로 판단하고 행동하려는 노력이 필요하며, 편안함에 안주하지 않도록 스스로를 다잡아야 합니다. 오늘 하루는 자립심을 기르는 연습의 시간으로 삼으세요.',
+        reason: '인성(印星)이 과하면 게으름이나 의존적 성향이 나타날 수 있습니다. 명리학에서 인성은 어머니의 보호와 같아서 적당하면 좋지만, 과하면 자립심을 저해합니다. 모든 것이 주어지면 오히려 스스로 움직이지 않게 되는 것처럼, 지나친 인성은 성장을 방해할 수 있습니다. 또한 과한 인성은 우유부단함, 결단력 부족, 나태함으로 이어질 수 있으니 주의가 필요합니다.',
+        advice: '스스로 움직이고 주체적으로 행동하려 노력하세요. 남의 도움에 지나치게 기대지 말고, 자신의 힘으로 해결하려는 자세가 중요합니다. 작은 일이라도 직접 해결해 보면서 자신감을 키우세요. 게으름을 피하고 규칙적인 생활 패턴을 유지하면 오늘의 부정적 기운을 극복할 수 있습니다.',
+      },
+      same: {
+        analysis: '같은 {todayElement} 기운이 너무 강해져 충돌이나 경쟁이 생길 수 있는 날입니다. 비슷한 성향의 사람들과 마찰이 생기기 쉬우며, 자기주장이 너무 강해져 갈등을 유발할 수 있습니다. 마치 두 마리의 호랑이가 한 산에서 다투듯, 같은 기운이 겹치면 충돌이 불가피합니다. 오늘은 양보하고 조율하는 마음이 필요하며, 굳이 이기려고 하지 않는 것이 현명합니다. 승리보다 평화를 선택하면 결과적으로 더 많은 것을 얻게 될 것입니다.',
+        reason: '비겁(比劫)이 강하면 경쟁이나 다툼의 기운이 생깁니다. 명리학에서 비견과 겁재가 과하면 형제, 동료, 친구와의 갈등이 생기고 재물 손실도 있을 수 있습니다. 같은 것을 원하는 사람들이 충돌하면서 분쟁이 발생하고, 자기 것을 지키려는 마음이 과해져 오히려 손해를 볼 수 있습니다. 고집과 자존심이 화를 부르는 날입니다.',
+        advice: '경쟁보다 협력을 선택하세요. 양보하는 마음이 오히려 더 큰 것을 얻게 해줍니다. 고집을 부리면 손해를 볼 수 있으니, 한 발 물러서는 지혜가 필요합니다. 비슷한 성향의 사람들과 굳이 부딪히지 말고, 다른 방향으로 우회하는 것도 방법입니다. 오늘의 패배가 내일의 승리를 위한 준비가 될 수 있습니다.',
+      },
+      generate: {
+        analysis: '에너지가 과도하게 발산되어 지치기 쉬운 날입니다. 말이 많아지고 경솔한 언행으로 실수를 저지를 수 있습니다. 마치 통제되지 않은 불꽃처럼 에너지가 사방으로 튀어 자칫 화를 입을 수 있는 날입니다. 체력 소모가 심하니 무리하지 말고, 특히 말조심을 해야 합니다. 하고 싶은 말이 있어도 한 번 더 생각한 후에 말하세요. 오늘 한 말이 두고두고 발목을 잡을 수 있으니 신중해야 합니다.',
+        reason: '식상(食傷)이 강하면 체력 소모와 함께 경솔한 언행이 나올 수 있습니다. 명리학에서 식신과 상관이 과하면 입이 가볍워지고, 불필요한 말로 적을 만들기 쉽습니다. 표현하고 싶은 충동이 강해지지만, 조절하지 않으면 화근이 됩니다. 또한 과한 식상은 체력을 급격히 소진시켜 면역력 저하, 피로 누적으로 이어질 수 있습니다.',
+        advice: '말과 행동을 신중히 하세요. 하고 싶은 말이 있어도 한 번 더 생각한 후에 말하고, 충분한 휴식을 취하세요. 오늘은 창작 활동이나 발표를 피하고, 에너지를 보존하는 데 집중하세요. SNS나 단체 채팅에서도 말을 아끼고, 불필요한 논쟁에 끼어들지 마세요. 일찍 잠자리에 들어 체력을 회복하세요.',
+      },
+      control: {
+        analysis: '상황을 통제하려는 욕심이 과해져 무리하게 될 수 있는 날입니다. 원하는 것을 얻으려는 집착이 오히려 역효과를 낼 수 있으니, 한 발 물러서는 여유가 필요합니다. 마치 손에 모래를 움켜쥐면 빠져나가듯, 너무 강하게 잡으려 할수록 놓치게 됩니다. 재물이나 성과에 대한 과도한 욕심은 판단력을 흐리게 하고, 결국 더 큰 손실로 이어질 수 있습니다. 오늘은 얻기보다 지키는 데 집중하세요.',
+        reason: '재성(財星)이 과하면 욕심이 생기고 무리한 행동을 하게 됩니다. 명리학에서 재물을 탐하는 마음이 과하면 비합리적인 결정을 내리게 됩니다. 더 많이 갖고 싶은 마음이 판단을 흐리게 하고, 위험한 투자나 무리한 거래에 뛰어들게 만듭니다. 또한 과한 재성은 건강을 해치고 인간관계에도 문제를 일으킬 수 있습니다.',
+        advice: '욕심을 버리고 현실적인 목표를 세우세요. 있는 것에 만족하고, 무리한 투자나 도박은 절대 피하세요. 오늘 놓치는 기회는 다음에 다시 올 것입니다. 급하게 돈을 벌려 하지 말고, 장기적인 안목으로 바라보세요. 달콤한 제안이 와도 의심하고, 충분히 검토한 후 결정하세요.',
+      },
+      controlled: {
+        analysis: '{todayElement} 기운의 강한 억제로 어려움을 겪을 수 있는 날입니다. 외부의 압박이나 스트레스가 심하게 느껴지며, 원치 않는 상황에 휘말릴 수 있습니다. 마치 폭풍우 속의 작은 배처럼 통제할 수 없는 힘에 휩쓸리는 느낌이 들 수 있습니다. 오늘은 최대한 몸을 사리고 중요한 일은 미루는 것이 현명합니다. 억지로 저항하기보다 상황이 지나가기를 기다리는 인내가 필요합니다. 이 또한 지나갈 것입니다.',
+        reason: '관살(官殺)의 기운이 강하면 압박과 스트레스가 심해집니다. 명리학에서 칠살(七殺)은 가장 강한 극제를 의미하며, 통제할 수 없는 상황에 놓이거나 원치 않는 책임을 떠안게 될 수 있습니다. 상사의 압박, 법적 문제, 갑작스러운 사고 등 예상치 못한 어려움이 닥칠 수 있으니 각별히 주의해야 합니다. 건강 문제도 발생할 수 있으니 무리하지 마세요.',
+        advice: '무리하지 말고 몸을 사리세요. 중요한 결정이나 새로운 시작은 다른 날로 미루고, 오늘은 최소한의 것만 처리하세요. 스트레스를 받더라도 감정적으로 대응하지 말고 침착함을 유지하세요. 위험한 활동, 과격한 운동, 밤늦게 돌아다니는 것은 피하세요. 집에서 조용히 쉬면서 내일을 기다리는 것이 최선입니다.',
+      },
+    },
+  },
+  love: {
+    excellent: {
+      analysis: '오늘은 {branchRelation}의 영향으로 인연과 관계에 길한 기운이 강하게 감돌고 있습니다. 연인이 있다면 둘 사이의 유대감이 더욱 깊어지고, 서로에 대한 이해와 사랑이 커질 것입니다. 싱글이라면 운명적인 만남이 기다리고 있을 수 있습니다. 마음을 열고 주변을 살펴보세요. 오랜 친구가 연인으로 발전하거나, 뜻밖의 장소에서 인연을 만날 수도 있습니다. 관계의 진전이 있다면 오늘 중요한 이야기를 나눠보는 것도 좋습니다.',
+      reason: '{branchReason} 명리학에서 합(合)의 기운은 두 사람을 끌어당기고 하나로 만드는 힘이 있습니다. 오늘의 지지 배치가 인연을 연결해주는 역할을 하고 있어, 새로운 만남이든 기존 관계든 긍정적인 방향으로 흘러갈 가능성이 높습니다.',
+      advice: '진심을 표현하기에 최적의 날입니다. 마음속에 품고만 있던 감정을 전하거나, 연인에게 고마움을 표현하세요. 오늘 나누는 마음은 오래도록 기억될 것입니다. 새로운 만남에도 열린 자세로 임하세요.',
+    },
+    good: {
+      analysis: '오늘은 대인관계에서 좋은 기운이 흐르고 있어, 소소하지만 확실한 행복을 느낄 수 있는 날입니다. 연인과 함께하는 시간이 즐겁고 편안할 것이며, 작은 것에서도 감사함을 느낄 수 있습니다. 싱글이라면 마음에 드는 사람과 자연스러운 대화를 나눌 기회가 있을 수 있습니다. 거창한 이벤트보다 일상적인 교류에서 따뜻함을 느끼는 하루입니다.',
+      reason: '오늘의 지지 기운이 당신의 인연운을 부드럽게 돕고 있습니다. 강렬한 만남보다는 편안하고 자연스러운 관계의 진전이 예상됩니다. 명리학에서는 이런 기운을 "화기(和氣)"라 하여, 조화롭고 평화로운 관계를 만들어주는 에너지입니다.',
+      advice: '상대방에게 따뜻한 말 한마디를 건네세요. 특별한 이벤트가 아니더라도, 진심 어린 관심과 배려가 관계를 더욱 돈독하게 만들어줍니다. 작은 것에 감사하는 마음으로 하루를 보내세요.',
+    },
+    neutral: {
+      analysis: '오늘은 특별한 변화 없이 평온한 관계를 유지할 수 있는 날입니다. 연인과의 관계에서 급격한 진전이나 갈등은 없으며, 편안하고 안정적인 시간을 보낼 수 있습니다. 싱글이라면 급하게 만남을 추구하기보다 자연스러운 흐름에 맡기는 것이 좋겠습니다. 오늘은 인연의 기운이 강하지 않아, 무리하게 관계를 진전시키려 하면 오히려 역효과가 날 수 있습니다.',
+      reason: '오늘은 인연의 기운이 특별히 강하거나 약하지 않은 중립적인 상태입니다. 현상 유지가 가장 자연스러우며, 무리한 변화는 오히려 불필요한 갈등을 유발할 수 있습니다.',
+      advice: '서로의 공간을 존중하며 편안한 시간을 보내세요. 꼭 함께 있어야 한다는 부담 없이, 각자의 시간도 갖는 것이 관계에 도움이 됩니다.',
+    },
+    caution: {
+      analysis: '오늘은 {branchRelation}의 영향으로 대인관계에서 갈등이나 오해가 생기기 쉬운 날입니다. 연인과의 사소한 말다툼이 큰 싸움으로 번질 수 있으며, 감정적인 대화는 상처를 남길 수 있습니다. 싱글이라면 새로운 만남에서 오해를 받거나 좋지 않은 첫인상을 줄 수 있으니 주의하세요. 오늘은 관계의 진전보다 현재 관계를 지키는 데 집중하세요.',
+      reason: '{branchReason} 충(沖)이나 해(害)의 기운은 두 사람 사이에 마찰과 불화를 일으킵니다. 같은 말도 다르게 들리고, 의도와 다르게 전달되어 오해가 쌓이기 쉽습니다.',
+      advice: '감정적인 대화는 최대한 피하고, 오해가 생기면 바로 해명하세요. 상대방의 말을 곱씹어 화내기보다, 진의가 무엇인지 확인하는 것이 중요합니다. 오늘은 중요한 관계 이야기는 미루는 것이 좋습니다.',
+    },
+  },
+  money: {
+    excellent: {
+      analysis: '재물운이 크게 상승하는 길한 날입니다. 오늘의 {todayElement} 기운이 당신의 재성(財星)을 강하게 돕고 있어, 예상치 못한 수입이 있거나 재물과 관련된 좋은 소식을 들을 수 있습니다. 평소에 막혔던 금전 문제가 해결되거나, 투자한 것에서 수익이 날 수 있습니다. 다만 좋은 기운이라고 해서 무분별하게 쓰면 안 됩니다. 들어오는 것이 있으면 지키는 지혜도 필요합니다.',
+      reason: '명리학에서 재물은 내가 극(克)하는 오행으로, 오늘은 재물을 다루는 힘이 강해지고 있습니다. 정재(正財)의 기운은 정당한 노력의 대가를, 편재(偏財)의 기운은 횡재나 부수입을 상징합니다. 오늘은 이 재성의 기운이 원활하게 작용하여 금전적 이득을 기대할 수 있습니다.',
+      advice: '수입의 기회가 있을 수 있으니 눈과 귀를 열어두세요. 다만 욕심을 부려 무리한 투자를 하기보다, 들어온 것을 잘 지키는 수성(守成)의 자세가 중요합니다. 돈을 벌었다면 일부는 저축하거나 의미 있는 곳에 쓰세요.',
+    },
+    good: {
+      analysis: '안정적인 재정 상태를 유지할 수 있는 날입니다. 큰 횡재는 없지만 손실도 없으며, 계획적인 소비를 하면 좋은 결과가 있을 것입니다. 평소에 꾸준히 해왔던 저축이나 투자가 조금씩 결실을 맺기 시작하는 시기입니다. 급하게 큰돈을 벌려고 하기보다 차근차근 쌓아가는 자세가 필요합니다.',
+      reason: '오늘의 기운이 재물운을 안정적으로 유지시켜 주고 있습니다. 재성의 기운이 적당히 작용하여 큰 변동 없이 현재의 재정 상태를 유지할 수 있습니다.',
+      advice: '작은 저축의 습관이 큰 자산을 만듭니다. 불필요한 지출을 줄이고, 계획에 없던 소비는 자제하세요. 꾸준함이 가장 큰 재산입니다.',
+    },
+    neutral: {
+      analysis: '큰 변화 없이 현재 상태를 유지하는 것이 좋겠습니다. 재물운이 특별히 좋지도 나쁘지도 않은 날이라, 무리하게 돈을 벌려고 하거나 큰 소비를 하면 손해를 볼 수 있습니다. 오늘은 현재 가진 것을 잘 관리하는 데 집중하세요.',
+      reason: '재성의 기운이 약하여 큰 수입도 큰 지출도 없는 날입니다. 현상 유지가 가장 자연스러우며, 변화를 추구하면 오히려 불안정해질 수 있습니다.',
+      advice: '충동구매를 자제하고 계획된 소비만 하세요. 새로운 투자나 금전 거래는 다른 날로 미루는 것이 좋습니다.',
+    },
+    caution: {
+      analysis: '재물 손실에 주의해야 하는 날입니다. 뜻하지 않게 돈이 나갈 일이 생기거나, 사기나 손해를 볼 위험이 있습니다. 금전 거래는 특히 신중해야 하며, 남의 말만 믿고 투자하면 큰 손해를 볼 수 있습니다. 보증이나 대출도 피하는 것이 좋습니다.',
+      reason: '비겁(比劫)이나 겁재(劫財)의 기운이 있어 재물이 빠져나가기 쉽습니다. 겁재는 말 그대로 재물을 빼앗는 기운으로, 경쟁이나 손실, 사기 등을 상징합니다. 오늘은 돈 관련해서 조심하지 않으면 피해를 볼 수 있습니다.',
+      advice: '보증, 대출, 투자는 절대 피하세요. 평소 알던 사람이라도 금전 거래는 하지 않는 것이 좋습니다. 있는 돈을 지키는 것이 버는 것입니다. 지갑이나 카드 분실에도 주의하세요.',
+    },
+  },
+  work: {
+    excellent: {
+      analysis: '업무에서 탁월한 성과를 낼 수 있는 길한 날입니다. 오늘의 기운이 당신의 관록(官祿)을 크게 돕고 있어, 직장에서 인정받거나 승진, 발탁의 기회가 올 수 있습니다. 새로운 프로젝트를 시작하거나 중요한 프레젠테이션을 하기에 최적의 날입니다. 상사나 클라이언트에게 좋은 인상을 남길 수 있으며, 리더십을 발휘할 기회도 있습니다.',
+      reason: '관성(官星)이 길하게 작용하여 직장에서의 지위와 명예가 상승합니다. 정관(正官)의 기운은 정당한 인정과 승진을, 편관의 기운은 도전적인 업무에서의 성취를 의미합니다. 오늘은 당신의 능력을 보여줄 수 있는 무대가 마련되어 있습니다.',
+      advice: '새로운 프로젝트에 도전하거나, 평소에 생각했던 아이디어를 상사에게 제안하기 좋은 날입니다. 적극적으로 나서면 좋은 결과가 있을 것입니다. 팀원들을 이끌거나 대표로 나서는 일도 잘 풀립니다.',
+    },
+    good: {
+      analysis: '꾸준한 노력이 결실을 맺을 수 있는 날입니다. 특별히 드라마틱한 성과보다는 묵묵히 해온 일이 인정받는 때입니다. 팀워크가 빛을 발하며, 동료들과의 협업에서 시너지가 납니다. 차분하게 업무를 처리하면 좋은 평가를 받을 수 있습니다.',
+      reason: '오늘의 기운이 협업과 조화를 돕고 있습니다. 혼자만의 성과보다 팀 전체의 성공에 기여할 때 더 큰 인정을 받게 됩니다.',
+      advice: '차분하게 업무를 처리하고, 팀원들과 소통을 잘 하세요. 혼자 돋보이려 하기보다 전체의 성과를 높이는 데 기여하면 결과적으로 당신에게도 좋은 일이 생깁니다.',
+    },
+    neutral: {
+      analysis: '무난하게 업무를 처리할 수 있는 날입니다. 특별한 성과도 큰 실수도 없이 일상적인 업무가 진행됩니다. 새로운 시도보다는 기존 업무에 집중하는 것이 좋으며, 휴식과 업무의 균형을 맞추는 것이 중요합니다.',
+      reason: '특별히 강한 기운이 없어 현상 유지가 자연스럽습니다. 무리하게 성과를 내려 하면 오히려 역효과가 날 수 있습니다.',
+      advice: '휴식과 업무의 균형을 맞추며 컨디션을 관리하세요. 오늘 하루 쉬어가는 것도 내일 더 잘하기 위한 준비입니다.',
+    },
+    caution: {
+      analysis: '직장 내 대인관계에 특히 신경 써야 하는 날입니다. 동료나 상사와의 마찰이 생기기 쉬우며, 작은 실수가 큰 문제로 번질 수 있습니다. 중요한 회의나 발표가 있다면 평소보다 더 꼼꼼하게 준비해야 합니다. 가능하다면 중요한 일정은 다른 날로 미루세요.',
+      reason: '관살(官殺)이 강하게 작용하여 압박감이나 갈등이 생기기 쉽습니다. 상사의 기대가 부담으로 느껴지거나, 책임을 떠안게 될 수 있습니다.',
+      advice: '중요한 회의나 발표는 가능하면 미루세요. 피할 수 없다면 철저하게 준비하고, 방어적인 자세로 임하세요. 불필요한 논쟁은 피하고 침묵이 금인 하루입니다.',
+    },
+  },
+  health: {
+    excellent: {
+      analysis: '활력이 넘치는 상쾌한 하루입니다. 몸과 마음 모두 컨디션이 좋아 무엇을 해도 가볍게 느껴질 것입니다. 운동을 시작하거나 새로운 건강 습관을 들이기에 최적의 날입니다. 야외 활동을 하면 에너지가 더욱 충전되며, 심신이 맑아지는 것을 느낄 수 있습니다.',
+      reason: '오늘의 기운이 당신의 신체 에너지를 크게 높여주고 있습니다. 양(陽)의 기운이 왕성하여 활동력이 증가하고 면역력도 좋아지는 상태입니다.',
+      advice: '좋은 컨디션을 활용해 활동적으로 움직이세요. 미뤄왔던 운동을 시작하거나, 산책, 등산 등 야외 활동을 하면 더욱 좋습니다. 건강 검진이나 상담도 오늘 받으면 좋은 결과가 있을 것입니다.',
+    },
+    good: {
+      analysis: '전반적으로 건강한 하루입니다. 큰 컨디션 변화 없이 무난하게 하루를 보낼 수 있으며, 규칙적인 생활을 유지하면 건강을 지킬 수 있습니다. 가벼운 스트레칭이나 산책으로 몸을 풀어주면 하루가 더 상쾌해질 것입니다.',
+      reason: '오늘의 기운이 안정적으로 작용하여 건강을 유지하는 데 도움이 됩니다. 급격한 변화 없이 현재 상태를 유지하는 것이 좋습니다.',
+      advice: '가벼운 스트레칭이나 산책을 해보세요. 몸을 많이 쓰지 않더라도 꾸준히 움직이면 건강 유지에 도움이 됩니다. 규칙적인 식사와 수면도 중요합니다.',
+    },
+    neutral: {
+      analysis: '무리하지 않는 것이 좋은 날입니다. 특별히 아프지는 않지만 컨디션이 최상은 아니라 피곤함이 느껴질 수 있습니다. 충분한 수면과 휴식을 취하고, 무리한 운동이나 야근은 피하세요.',
+      reason: '오늘은 신체 에너지가 보통 수준입니다. 무리하면 피로가 쌓이고 면역력이 떨어질 수 있습니다.',
+      advice: '균형 잡힌 식사와 규칙적인 생활 패턴을 유지하세요. 커피나 에너지 음료에 의존하기보다 충분한 휴식이 더 효과적입니다.',
+    },
+    caution: {
+      analysis: '피로가 쌓이기 쉬우니 휴식을 우선시해야 하는 날입니다. 면역력이 떨어져 감기 등 가벼운 질환에 걸리기 쉬우며, 과로하면 몸이 보내는 경고 신호가 올 수 있습니다. 오늘은 건강 관리를 최우선으로 삼으세요.',
+      reason: '오늘의 기운이 신체 에너지를 소모시키는 방향으로 작용합니다. 무리하면 쉽게 지치고, 회복에 시간이 걸릴 수 있습니다.',
+      advice: '과음, 과식, 무리한 운동을 피하세요. 몸이 보내는 신호에 귀 기울이고, 조금이라도 이상하면 쉬어가세요. 충분한 수면을 취하고 영양가 있는 음식을 드세요.',
+    },
+  },
+};
+
+/**
+ * 오늘의 운세 생성
+ */
+export function generateFortune(sajuResult: SajuResult | null, date: Date = new Date()): Fortune {
+  const todayGanji = getTodayGanji(date);
+  const todayStem = todayGanji.stem;
+  const todayBranch = todayGanji.branch;
+
+  // 오늘 천간/지지의 오행
+  const todayStemInfo = HEAVENLY_STEMS.find(s => s.korean === todayStem);
+  const todayBranchInfo = EARTHLY_BRANCHES.find(b => b.korean === todayBranch);
+  const todayElement = todayStemInfo?.element || 'earth';
+
+  // 사용자의 일간 오행 (없으면 기본값)
+  let dayMasterElement: Element = 'wood';
+  let dayMasterBranch = '자';
+  let dayMasterStem = '갑';
+
+  if (sajuResult?.pillars?.day) {
+    const dayMasterStemInfo = HEAVENLY_STEMS.find(s => s.korean === sajuResult.pillars.day.stem);
+    const dayMasterBranchInfo = EARTHLY_BRANCHES.find(b => b.korean === sajuResult.pillars.day.branch);
+    dayMasterElement = dayMasterStemInfo?.element || 'wood';
+    dayMasterBranch = sajuResult.pillars.day.branch;
+    dayMasterStem = sajuResult.pillars.day.stem;
+  }
+
+  // 오행 관계 분석
+  const relation = analyzeElementRelation(dayMasterElement, todayElement);
+
+  // 지지 관계 분석
+  const branchRelationResult = analyzeBranchRelation(dayMasterBranch, todayBranch);
+
+  // 점수 계산 (지지 관계도 반영)
+  const scores = calculateScores(relation, date, branchRelationResult.type);
+
+  // 운세 등급 결정
+  const overallGrade = getGrade(scores.overall);
+  const loveGrade = getGrade(scores.love);
+  const moneyGrade = getGrade(scores.money);
+  const workGrade = getGrade(scores.work);
+  const healthGrade = getGrade(scores.health);
+
+  // 행운 정보 결정 (용신: 나를 생해주는 오행)
+  // generates 역방향으로 찾기: X가 일간을 생하면 X가 용신
+  const luckyElement = (Object.keys(ELEMENT_RELATIONS.generates).find(
+    k => ELEMENT_RELATIONS.generates[k as Element] === dayMasterElement
+  ) || 'water') as Element;
+  const luckyColors = ELEMENT_COLORS[luckyElement];
+  const luckyColor = luckyColors[date.getDate() % luckyColors.length];
+  const luckyNumbers = ELEMENT_NUMBERS[luckyElement];
+  const luckyDirection = ELEMENT_DIRECTIONS[luckyElement];
+  const luckyTime = ELEMENT_TIMES[luckyElement];
+
+  // 귀인/주의 띠 결정
+  const luckyZodiac = BRANCH_TO_ZODIAC[SIX_HARMONIES[dayMasterBranch] || '자'];
+  const cautionZodiac = BRANCH_TO_ZODIAC[SIX_CLASHES[dayMasterBranch] || '오'];
+
+  // 메시지 선택
+  const dayOfYear = getDayOfYear(date);
+
+  // 상세 분석 생성
+  const elementAnalysis = generateElementAnalysis(dayMasterElement, todayElement, relation);
+  const branchAnalysis = generateBranchAnalysis(dayMasterBranch, todayBranch, branchRelationResult);
+
+  // 상세 운세 메시지 생성
+  const detailedFortunes = generateDetailedFortunes(
+    dayMasterElement,
+    todayElement,
+    relation,
+    branchRelationResult,
+    overallGrade,
+    loveGrade,
+    moneyGrade,
+    workGrade,
+    healthGrade
+  );
+
+  // 운세 내용 생성
+  const fortune: Fortune = {
+    summary: generateDetailedSummary(dayMasterElement, todayElement, relation, branchRelationResult, overallGrade),
+    keywords: selectKeywords(overallGrade, dayOfYear) as [string, string, string],
+    scores: {
+      overall: scores.overall,
+      money: scores.money,
+      love: scores.love,
+      work: scores.work,
+      health: scores.health,
+    },
+    cards: {
+      overall: [detailedFortunes.overall.summary],
+      money: [detailedFortunes.money.summary],
+      love: [detailedFortunes.love.summary],
+      work: [detailedFortunes.work.summary],
+      health: [detailedFortunes.health.summary],
+    },
+    luckyInfo: {
+      color: luckyColor.name,
+      number: luckyNumbers.join(', '),
+      direction: luckyDirection,
+      time: luckyTime,
+    },
+    zodiacCompat: {
+      luckyZodiac: luckyZodiac.name,
+      luckyZodiacEmoji: luckyZodiac.emoji,
+      cautionZodiac: cautionZodiac.name,
+      cautionZodiacEmoji: cautionZodiac.emoji,
+    },
+    do: DO_SUGGESTIONS[dayOfYear % DO_SUGGESTIONS.length],
+    dont: DONT_SUGGESTIONS[(dayOfYear + 5) % DONT_SUGGESTIONS.length],
+    generatedAt: new Date().toISOString(),
+    // 새로 추가된 상세 분석
+    elementAnalysis,
+    branchAnalysis,
+    detailedFortunes,
+    todayGanji: {
+      stem: todayStem,
+      branch: todayBranch,
+      fullName: `${todayStem}${todayBranch}(${todayStemInfo?.hanja || ''}${todayBranchInfo?.hanja || ''})`,
+    },
+    userDayMaster: {
+      stem: dayMasterStem,
+      element: dayMasterElement,
+      elementName: ELEMENT_NAMES[dayMasterElement],
+    },
+    disclaimer: '본 운세는 전통 명리학을 기반으로 한 참고용 정보입니다. 중요한 결정은 본인의 판단과 전문가 상담을 권장합니다.',
+  };
+
+  return fortune;
+}
+
+/**
+ * 지지 관계 분석
+ */
+function analyzeBranchRelation(userBranch: string, todayBranch: string): {
+  type: string | null;
+  name: string;
+  description: string;
+  effect: string;
+  simpleExplanation?: string;  // 쉬운 설명 추가
+} {
+  // 육합 확인
+  if (SIX_HARMONIES[userBranch] === todayBranch) {
+    const detail = BRANCH_RELATION_DETAILS['육합'];
+    return { type: '육합', name: detail.name, description: detail.description, effect: detail.effect, simpleExplanation: detail.simpleExplanation };
+  }
+
+  // 삼합 확인 (부분 삼합)
+  const userThreeHarmony = THREE_HARMONIES[userBranch];
+  const todayThreeHarmony = THREE_HARMONIES[todayBranch];
+  if (userThreeHarmony && todayThreeHarmony &&
+      userThreeHarmony.group.includes(todayBranch) &&
+      userBranch !== todayBranch) {
+    const detail = BRANCH_RELATION_DETAILS['삼합'];
+    return {
+      type: '삼합',
+      name: `${detail.name} (${userThreeHarmony.name})`,
+      description: detail.description,
+      effect: detail.effect,
+      simpleExplanation: detail.simpleExplanation,
+    };
+  }
+
+  // 육충 확인
+  if (SIX_CLASHES[userBranch] === todayBranch) {
+    const detail = BRANCH_RELATION_DETAILS['육충'];
+    return { type: '육충', name: detail.name, description: detail.description, effect: detail.effect, simpleExplanation: detail.simpleExplanation };
+  }
+
+  // 육해 확인
+  if (SIX_HARMS[userBranch] === todayBranch) {
+    const detail = BRANCH_RELATION_DETAILS['육해'];
+    return { type: '육해', name: detail.name, description: detail.description, effect: detail.effect, simpleExplanation: detail.simpleExplanation };
+  }
+
+  // 원진 확인
+  if (YUAN_JIN[userBranch] === todayBranch) {
+    const detail = BRANCH_RELATION_DETAILS['원진'];
+    return { type: '원진', name: detail.name, description: detail.description, effect: detail.effect, simpleExplanation: detail.simpleExplanation };
+  }
+
+  // 같은 지지
+  if (userBranch === todayBranch) {
+    return {
+      type: null,
+      name: '동일 지지',
+      description: '같은 지지가 겹쳐 해당 지지의 기운이 강해집니다.',
+      effect: '해당 지지의 특성이 배가되어 나타납니다.',
+      simpleExplanation: '쉽게 말해 오늘과 내 띠가 같아서 그 띠의 특성이 강해지는 날이에요.',
+    };
+  }
+
+  // 특별한 관계 없음
+  return {
+    type: null,
+    name: '일반 관계',
+    description: '특별한 합충 관계는 없습니다.',
+    effect: '오행 관계가 주된 영향을 미칩니다.',
+    simpleExplanation: '오늘은 특별히 좋거나 나쁜 띠 관계가 없어요. 평범한 하루입니다.',
+  };
+}
+
+/**
+ * 오행 분석 결과 생성
+ */
+function generateElementAnalysis(
+  userElement: Element,
+  todayElement: Element,
+  relation: string
+): ElementAnalysis {
+  const relationDetail = ELEMENT_RELATION_DETAILS[relation];
+  const userChar = ELEMENT_CHARACTERISTICS[userElement];
+  const todayChar = ELEMENT_CHARACTERISTICS[todayElement];
+
+  return {
+    userElement,
+    userElementName: ELEMENT_NAMES[userElement],
+    todayElement,
+    todayElementName: ELEMENT_NAMES[todayElement],
+    relation,
+    relationName: relationDetail.name,
+    relationDescription: relationDetail.description,
+    effect: `당신의 ${userChar.nature}의 기운과 오늘의 ${todayChar.nature}의 기운이 만나 ${relationDetail.effect}`,
+  };
+}
+
+/**
+ * 지지 분석 결과 생성
+ */
+function generateBranchAnalysis(
+  userBranch: string,
+  todayBranch: string,
+  branchRelation: { type: string | null; name: string; description: string; effect: string; simpleExplanation?: string }
+): BranchAnalysis {
+  const todayZodiac = BRANCH_TO_ZODIAC[todayBranch];
+
+  return {
+    userBranch,
+    todayBranch,
+    zodiac: todayZodiac?.name || '알 수 없음',
+    relation: branchRelation.type,
+    relationDescription: branchRelation.description,
+    effect: branchRelation.effect,
+    simpleExplanation: branchRelation.simpleExplanation,
+  };
+}
+
+/**
+ * 상세 운세 메시지 생성
+ */
+function generateDetailedFortunes(
+  userElement: Element,
+  todayElement: Element,
+  relation: string,
+  branchRelation: { type: string | null; name: string; description: string; effect: string },
+  overallGrade: 'excellent' | 'good' | 'neutral' | 'caution',
+  loveGrade: 'excellent' | 'good' | 'neutral' | 'caution',
+  moneyGrade: 'excellent' | 'good' | 'neutral' | 'caution',
+  workGrade: 'excellent' | 'good' | 'neutral' | 'caution',
+  healthGrade: 'excellent' | 'good' | 'neutral' | 'caution'
+): {
+  overall: DetailedFortune;
+  love: DetailedFortune;
+  money: DetailedFortune;
+  work: DetailedFortune;
+  health: DetailedFortune;
+} {
+  const userElementName = ELEMENT_NAMES[userElement];
+  const todayElementName = ELEMENT_NAMES[todayElement];
+
+  // 플레이스홀더 치환 함수
+  const replacePlaceholders = (template: string): string => {
+    return template
+      .replace(/{userElement}/g, userElementName)
+      .replace(/{todayElement}/g, todayElementName)
+      .replace(/{branchRelation}/g, branchRelation.name)
+      .replace(/{branchReason}/g, branchRelation.description);
+  };
+
+  // 종합운 상세 메시지
+  type RelationType = 'generated' | 'same' | 'generate' | 'control' | 'controlled';
+  const validRelations: RelationType[] = ['generated', 'same', 'generate', 'control', 'controlled'];
+  const safeRelation = validRelations.includes(relation as RelationType) ? (relation as RelationType) : 'same';
+  const overallTemplate = DETAILED_FORTUNE_TEMPLATES.overall[overallGrade][safeRelation];
+  const overallFortune: DetailedFortune = {
+    summary: OVERALL_MESSAGES[overallGrade][0],
+    analysis: replacePlaceholders(overallTemplate.analysis),
+    reason: replacePlaceholders(overallTemplate.reason),
+    advice: replacePlaceholders(overallTemplate.advice),
+    keywords: getKeywordsForGrade(overallGrade),
+  };
+
+  // 애정운 상세 메시지
+  const loveTemplate = DETAILED_FORTUNE_TEMPLATES.love[loveGrade];
+  const loveFortune: DetailedFortune = {
+    summary: LOVE_MESSAGES[loveGrade][0],
+    analysis: replacePlaceholders(loveTemplate.analysis),
+    reason: replacePlaceholders(loveTemplate.reason),
+    advice: replacePlaceholders(loveTemplate.advice),
+    keywords: getLoveKeywords(loveGrade),
+  };
+
+  // 금전운 상세 메시지
+  const moneyTemplate = DETAILED_FORTUNE_TEMPLATES.money[moneyGrade];
+  const moneyFortune: DetailedFortune = {
+    summary: MONEY_MESSAGES[moneyGrade][0],
+    analysis: replacePlaceholders(moneyTemplate.analysis),
+    reason: replacePlaceholders(moneyTemplate.reason),
+    advice: replacePlaceholders(moneyTemplate.advice),
+    keywords: getMoneyKeywords(moneyGrade),
+  };
+
+  // 직장운 상세 메시지
+  const workTemplate = DETAILED_FORTUNE_TEMPLATES.work[workGrade];
+  const workFortune: DetailedFortune = {
+    summary: WORK_MESSAGES[workGrade][0],
+    analysis: replacePlaceholders(workTemplate.analysis),
+    reason: replacePlaceholders(workTemplate.reason),
+    advice: replacePlaceholders(workTemplate.advice),
+    keywords: getWorkKeywords(workGrade),
+  };
+
+  // 건강운 상세 메시지
+  const healthTemplate = DETAILED_FORTUNE_TEMPLATES.health[healthGrade];
+  const healthFortune: DetailedFortune = {
+    summary: HEALTH_MESSAGES[healthGrade][0],
+    analysis: replacePlaceholders(healthTemplate.analysis),
+    reason: replacePlaceholders(healthTemplate.reason),
+    advice: replacePlaceholders(healthTemplate.advice),
+    keywords: getHealthKeywords(healthGrade),
+  };
+
+  return {
+    overall: overallFortune,
+    love: loveFortune,
+    money: moneyFortune,
+    work: workFortune,
+    health: healthFortune,
+  };
+}
+
+/**
+ * 상세 요약 생성 (대폭 확장)
+ */
+function generateDetailedSummary(
+  userElement: Element,
+  todayElement: Element,
+  relation: string,
+  branchRelation: { type: string | null; name: string; description: string; effect: string },
+  grade: 'excellent' | 'good' | 'neutral' | 'caution'
+): string {
+  const relationDetail = ELEMENT_RELATION_DETAILS[relation];
+  const userElementName = ELEMENT_NAMES[userElement];
+  const todayElementName = ELEMENT_NAMES[todayElement];
+  const userChar = ELEMENT_CHARACTERISTICS[userElement];
+  const todayChar = ELEMENT_CHARACTERISTICS[todayElement];
+
+  let summary = '';
+
+  switch (grade) {
+    case 'excellent':
+      if (relation === 'generated') {
+        summary = `오늘은 ${todayElementName}의 ${todayChar.nature} 기운이 당신의 ${userElementName}(${userChar.nature}) 기운을 생(生)해주는 대길(大吉)한 날입니다. ` +
+          `마치 어머니가 자녀를 보살피듯, 오늘의 기운이 당신을 도와 모든 일이 순조롭게 풀릴 것입니다. ` +
+          `특히 새로운 일을 시작하거나, 중요한 결정을 내리기에 최적의 시기이며, 학습이나 자기계발에도 좋은 성과가 있을 것입니다. ` +
+          `귀인의 도움이 있을 수 있으니 주변 사람들의 조언에 귀 기울이세요. ` +
+          `오늘의 행운을 감사히 받되, 겸손한 마음으로 임하면 복이 더욱 커질 것입니다.`;
+      } else if (relation === 'same') {
+        summary = `오늘은 ${todayElementName}의 기운이 당신의 ${userElementName} 기운과 동일하여, 당신 본연의 에너지가 두 배로 강해지는 길한 날입니다. ` +
+          `${userChar.personality}이 더욱 돋보이며, 자신만의 색깔로 빛을 발할 수 있습니다. ` +
+          `리더십을 발휘하거나 자기 주도적으로 일을 추진할 때 좋은 결과가 있을 것입니다. ` +
+          `다만 기운이 강해진 만큼 자기주장이 세질 수 있으니, 주변과의 조화도 신경 쓰세요.`;
+      } else if (relation === 'generate') {
+        summary = `오늘은 당신의 ${userElementName}(${userChar.nature}) 기운이 ${todayElementName}(${todayChar.nature}) 기운을 생해주어, ` +
+          `창의력과 표현력이 극대화되는 날입니다. 당신 안의 재능이 밖으로 발현되어 사람들에게 인정받을 수 있으며, ` +
+          `예술 활동, 글쓰기, 발표, 교육 등 자신을 표현하는 일에 특별한 성과가 있을 것입니다. ` +
+          `다만 에너지가 외부로 많이 나가므로 체력 관리에 신경 쓰세요.`;
+      } else if (relation === 'control') {
+        summary = `오늘은 당신의 ${userElementName} 기운이 ${todayElementName} 기운을 극(克)하여 상황의 주도권을 확실히 잡을 수 있는 날입니다. ` +
+          `목표를 향한 추진력이 강해지고, 협상이나 경쟁에서 유리한 위치를 점할 수 있습니다. ` +
+          `재물운도 좋아 금전적 이득을 기대할 수 있으나, 지나친 욕심은 금물입니다. ` +
+          `강함과 부드러움의 균형을 유지하면 최상의 결과를 얻을 것입니다.`;
+      } else {
+        summary = `오늘은 ${todayElementName} 기운이 당신의 ${userElementName} 기운을 다소 억제하지만, 이를 기회로 삼으면 크게 성장할 수 있는 날입니다. ` +
+          `적절한 시련은 당신을 더 강하게 만들며, 외부의 압박을 이겨내면 사회적 인정을 받을 수 있습니다. ` +
+          `상사나 윗사람의 지시를 잘 따르고 책임감 있게 행동하면 좋은 평가를 받을 것입니다.`;
+      }
+      break;
+
+    case 'good':
+      if (relation === 'generated') {
+        summary = `오늘 ${todayElementName}의 기운이 당신의 ${userElementName} 기운을 부드럽게 돕고 있어, 전반적으로 안정적이고 순조로운 하루가 예상됩니다. ` +
+          `급격한 변화보다는 차분하고 꾸준한 상승세를 타고 있으며, 주변의 조언이 도움이 됩니다. ` +
+          `새로운 것을 배우거나 정보를 습득하기에 좋은 날이니, 학습이나 독서에 시간을 투자해 보세요. ` +
+          `감사하는 마음으로 하루를 보내면 더 큰 복이 따를 것입니다.`;
+      } else if (relation === 'same') {
+        summary = `오늘은 ${todayElementName}의 기운이 당신과 같아 본성이 강화되는 날입니다. ${userChar.personality}이 더욱 빛을 발하며, ` +
+          `자신다운 방식으로 일을 처리할 때 좋은 결과가 있습니다. 같은 성향의 사람들과 만나면 공감대가 형성되어 ` +
+          `좋은 관계로 발전할 수 있습니다. 억지로 다른 사람을 따라하기보다 당신만의 색깔을 보여주세요.`;
+      } else if (relation === 'generate') {
+        summary = `오늘 당신의 ${userElementName} 기운이 ${todayElementName}를 생하여 표현력과 창의력이 좋아지는 날입니다. ` +
+          `아이디어를 내거나 사람들 앞에 나서는 일에서 좋은 성과를 기대할 수 있습니다. ` +
+          `프레젠테이션, 면접, 영업 등 소통이 필요한 일에 적합합니다. 다만 체력 소모에 주의하세요.`;
+      } else if (relation === 'control') {
+        summary = `오늘 당신의 ${userElementName} 기운이 ${todayElementName}를 극하여 목표를 향해 나아갈 힘이 생기는 날입니다. ` +
+          `하고자 하는 일에 집중하면 좋은 성과를 낼 수 있으며, 재물 관련 일에서도 긍정적인 흐름이 있습니다. ` +
+          `행동으로 옮기는 실천력이 중요한 하루입니다.`;
+      } else {
+        summary = `오늘 ${todayElementName} 기운이 당신의 ${userElementName} 기운을 다소 억제하지만, 이를 통해 성장할 수 있는 날입니다. ` +
+          `외부의 규율이나 기대를 따르면서 자신을 다잡을 수 있으며, 책임감 있는 태도가 좋은 평가로 이어집니다. ` +
+          `적당한 긴장감은 오히려 집중력을 높여줍니다.`;
+      }
+      break;
+
+    case 'neutral':
+      summary = `오늘은 ${todayElementName}의 기운과 당신의 ${userElementName} 기운이 평온하게 만나는 날입니다. ` +
+        `특별히 좋거나 나쁜 일 없이 일상적인 흐름을 따라가게 되며, 큰 변화보다는 현재 상태를 유지하는 것이 좋겠습니다. ` +
+        `급하게 서두르지 말고 자신의 페이스를 유지하세요. 평화로운 일상 속에서 작은 행복을 찾을 수 있는 하루입니다. ` +
+        `무리하지 않고 차분하게 하루를 보내면 무난하게 마무리할 수 있을 것입니다.`;
+      break;
+
+    case 'caution':
+      if (relation === 'controlled') {
+        summary = `오늘 ${todayElementName}의 기운이 당신의 ${userElementName} 기운을 강하게 억제하여 주의가 필요한 날입니다. ` +
+          `외부의 압박이나 스트레스가 심하게 느껴질 수 있으며, 예상치 못한 장애물을 만날 수 있습니다. ` +
+          `중요한 결정이나 새로운 시작은 다른 날로 미루고, 오늘은 최소한의 것만 처리하며 몸을 사리세요. ` +
+          `무리하면 더 큰 문제가 생길 수 있으니 인내심을 갖고 때를 기다리는 것이 현명합니다.`;
+      } else if (relation === 'same') {
+        summary = `오늘은 ${todayElementName}의 기운이 당신과 같아 에너지가 과잉되는 날입니다. ` +
+          `비슷한 성향의 사람들과 충돌하거나 경쟁이 심해질 수 있으며, 자기주장이 너무 강해져 갈등을 유발할 수 있습니다. ` +
+          `양보하고 협력하는 자세가 필요하며, 고집을 부리면 손해를 볼 수 있습니다. ` +
+          `경쟁보다 협력을 선택하면 오히려 더 좋은 결과를 얻을 것입니다.`;
+      } else if (relation === 'generate') {
+        summary = `오늘은 당신의 에너지가 과도하게 밖으로 발산되어 지치기 쉬운 날입니다. ` +
+          `말이 많아지고 경솔한 언행으로 실수를 저지를 수 있으니 말과 행동을 신중히 하세요. ` +
+          `체력 소모가 심하니 무리하지 말고 충분한 휴식을 취하세요. ` +
+          `하고 싶은 말이 있어도 한 번 더 생각한 후에 말하는 것이 좋습니다.`;
+      } else {
+        summary = `오늘 ${todayElementName}의 기운이 당신의 ${userElementName} 기운과 긴장 관계에 있어 신중함이 필요합니다. ` +
+          `예상치 못한 변수가 생기거나 계획대로 일이 진행되지 않을 수 있습니다. ` +
+          `중요한 결정은 미루고, 감정적인 대응은 피하세요. 차분하게 상황을 관망하며 때를 기다리는 것이 현명합니다.`;
+      }
+      break;
+  }
+
+  // 특별한 지지 관계가 있으면 추가 (더 상세하게)
+  if (branchRelation.type === '육합') {
+    summary += `\n\n특히 오늘은 ${branchRelation.name}이 형성되어 인연과 관계에 더없이 좋은 기운이 감돕니다. ` +
+      `연인이나 배우자와의 관계가 돈독해지고, 새로운 인연이 찾아올 수도 있습니다. 협력과 화합이 잘 이루어지니 팀 활동에도 좋습니다.`;
+  } else if (branchRelation.type === '삼합') {
+    summary += `\n\n특히 오늘은 ${branchRelation.name}이 형성되어 여러 사람과의 협업에서 시너지가 납니다. ` +
+      `큰 일을 도모하거나 팀 프로젝트를 진행하기에 좋은 날입니다. 주변의 도움이 있을 것이니 혼자 하려 하지 마세요.`;
+  } else if (branchRelation.type === '육충') {
+    summary += `\n\n다만 오늘은 ${branchRelation.name}의 영향이 있어 대인관계에서 마찰이 생기기 쉽습니다. ` +
+      `감정적인 대화를 피하고, 중요한 관계 이야기는 다른 날로 미루세요. 충돌이 예상되면 한 발 물러서는 것이 현명합니다.`;
+  } else if (branchRelation.type === '원진') {
+    summary += `\n\n또한 오늘은 ${branchRelation.name}의 영향으로 불편한 관계나 오해가 생기기 쉽습니다. ` +
+      `말조심하고, 상대방의 의도를 섣불리 판단하지 마세요. 오해가 생기면 바로 해명하는 것이 좋습니다.`;
+  } else if (branchRelation.type === '육해') {
+    summary += `\n\n한편 ${branchRelation.name}의 영향이 있어 겉으로 드러나지 않는 손해나 방해가 있을 수 있습니다. ` +
+      `계약서나 서류는 꼼꼼히 확인하고, 구두 약속보다 문서로 남기세요.`;
+  }
+
+  return summary;
+}
+
+/**
+ * 등급별 키워드 반환
+ */
+function getKeywordsForGrade(grade: string): string[] {
+  switch (grade) {
+    case 'excellent': return ['대길', '행운', '성취', '발전'];
+    case 'good': return ['안정', '순조', '평화', '조화'];
+    case 'neutral': return ['평온', '유지', '균형', '신중'];
+    case 'caution': return ['주의', '인내', '절제', '보수'];
+    default: return ['평온', '균형', '조화'];
+  }
+}
+
+function getLoveKeywords(grade: string): string[] {
+  switch (grade) {
+    case 'excellent': return ['인연', '화합', '로맨스', '설렘'];
+    case 'good': return ['소통', '이해', '따뜻함', '배려'];
+    case 'neutral': return ['안정', '유지', '편안함', '존중'];
+    case 'caution': return ['신중', '거리두기', '인내', '자제'];
+    default: return ['소통', '이해', '편안함'];
+  }
+}
+
+function getMoneyKeywords(grade: string): string[] {
+  switch (grade) {
+    case 'excellent': return ['재물', '수입', '횡재', '투자'];
+    case 'good': return ['저축', '안정', '계획', '절약'];
+    case 'neutral': return ['유지', '관리', '계획', '절제'];
+    case 'caution': return ['절약', '보수', '주의', '지출관리'];
+    default: return ['관리', '계획', '안정'];
+  }
+}
+
+function getWorkKeywords(grade: string): string[] {
+  switch (grade) {
+    case 'excellent': return ['성과', '인정', '승진', '성공'];
+    case 'good': return ['협력', '진전', '노력', '결실'];
+    case 'neutral': return ['유지', '안정', '꾸준함', '루틴'];
+    case 'caution': return ['신중', '확인', '대기', '방어'];
+    default: return ['노력', '안정', '균형'];
+  }
+}
+
+function getHealthKeywords(grade: string): string[] {
+  switch (grade) {
+    case 'excellent': return ['활력', '에너지', '건강', '운동'];
+    case 'good': return ['균형', '관리', '컨디션', '안정'];
+    case 'neutral': return ['휴식', '수면', '식사', '규칙'];
+    case 'caution': return ['휴식', '절제', '주의', '관리'];
+    default: return ['균형', '휴식', '관리'];
+  }
+}
+
+/**
+ * 오행 관계 분석
+ */
+function analyzeElementRelation(userElement: Element, todayElement: Element): 'generate' | 'control' | 'same' | 'generated' | 'controlled' {
+  if (userElement === todayElement) return 'same';
+  if (ELEMENT_RELATIONS.generates[userElement] === todayElement) return 'generate';
+  if (ELEMENT_RELATIONS.generates[todayElement] === userElement) return 'generated';
+  if (ELEMENT_RELATIONS.controls[userElement] === todayElement) return 'control';
+  if (ELEMENT_RELATIONS.controls[todayElement] === userElement) return 'controlled';
+  return 'same';
+}
+
+/**
+ * 점수 계산
+ */
+function calculateScores(relation: string, date: Date, branchRelationType: string | null = null): Record<string, number> {
+  const baseScore = {
+    generate: 85,    // 내가 생하는 오행 (약간 피곤하지만 좋음)
+    generated: 92,   // 나를 생하는 오행 (매우 좋음)
+    same: 78,        // 같은 오행 (보통)
+    control: 75,     // 내가 극하는 오행 (노력 필요)
+    controlled: 62,  // 나를 극하는 오행 (주의)
+  }[relation] || 75;
+
+  // 지지 관계에 따른 보정
+  let branchBonus = 0;
+  if (branchRelationType) {
+    switch (branchRelationType) {
+      case '육합': branchBonus = 10; break;  // 매우 좋음
+      case '삼합': branchBonus = 8; break;   // 좋음
+      case '육충': branchBonus = -12; break; // 나쁨
+      case '육해': branchBonus = -8; break;  // 해로움
+      case '원진': branchBonus = -6; break;  // 불화
+    }
+  }
+
+  // 날짜 기반 변동 (-8 ~ +8)
+  const dayVariation = (date.getDate() % 17) - 8;
+
+  // 각 카테고리별 점수 계산 (지지 관계가 애정운/직장운에 더 영향)
+  const overall = Math.min(100, Math.max(45, baseScore + branchBonus + dayVariation));
+  const love = Math.min(100, Math.max(45, baseScore + branchBonus * 1.5 + ((date.getDate() * 3) % 17) - 8)); // 지지 관계 영향 강화
+  const money = Math.min(100, Math.max(45, baseScore + branchBonus * 0.5 + ((date.getDate() * 5) % 17) - 8));
+  const work = Math.min(100, Math.max(45, baseScore + branchBonus * 1.2 + ((date.getDate() * 7) % 17) - 8)); // 지지 관계 영향 강화
+  const health = Math.min(100, Math.max(45, baseScore + branchBonus * 0.3 + ((date.getDate() * 11) % 17) - 8));
+
+  return { overall, love, money, work, health };
+}
+
+/**
+ * 등급 결정
+ */
+function getGrade(score: number): 'excellent' | 'good' | 'neutral' | 'caution' {
+  if (score >= 85) return 'excellent';
+  if (score >= 70) return 'good';
+  if (score >= 55) return 'neutral';
+  return 'caution';
+}
+
+/**
+ * 키워드 선택
+ */
+function selectKeywords(grade: string, seed: number): string[] {
+  const pool = grade === 'excellent' || grade === 'good'
+    ? [...KEYWORDS.positive, ...KEYWORDS.neutral]
+    : [...KEYWORDS.neutral, ...KEYWORDS.caution];
+
+  const selected: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    const index = (seed + i * 7) % pool.length;
+    if (!selected.includes(pool[index])) {
+      selected.push(pool[index]);
+    }
+  }
+
+  return selected.length === 3 ? selected : ['평온', '유연', '기회'];
+}
+
+/**
+ * 연중 일차 계산
+ */
+function getDayOfYear(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+}
+
+export default { generateFortune };
