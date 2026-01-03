@@ -1,20 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
 import CircularProgress from './CircularProgress';
 
 interface LuckCardProps {
   label: string;
-  icon: LucideIcon;
+  emoji: string;
   color: string;
   value: string;
   score: number;
 }
 
-const LuckCard: React.FC<LuckCardProps> = ({ label, icon, color, value, score }) => {
+const LuckCard: React.FC<LuckCardProps> = ({ label, emoji, color, value, score }) => {
   return (
     <View style={styles.container}>
-      <CircularProgress score={score} color={color} icon={icon} iconColor={color} />
+      <CircularProgress score={score} color={color} emoji={emoji} />
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
     </View>

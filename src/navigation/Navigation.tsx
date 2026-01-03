@@ -19,6 +19,8 @@ import FortuneTypeScreen from '../screens/FortuneTypeScreen';
 import CompatibilityInputScreen from '../screens/CompatibilityInputScreen';
 import CompatibilityResultScreen from '../screens/CompatibilityResultScreen';
 import SavedPeopleScreen from '../screens/SavedPeopleScreen';
+import DatePickerScreen from '../screens/DatePickerScreen';
+import MenuScreen from '../screens/MenuScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -28,6 +30,7 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
     Home: '☯',
     Profile: '命',
+    Fortune: '🔮',
     History: '卜',
     Settings: '設',
   };
@@ -70,6 +73,11 @@ function MainTabs() {
         name="Profile"
         component={ProfileScreen}
         options={{ tabBarLabel: '내사주' }}
+      />
+      <Tab.Screen
+        name="Fortune"
+        component={FortuneMenuScreen}
+        options={{ tabBarLabel: '운세종류' }}
       />
       <Tab.Screen
         name="History"
@@ -118,6 +126,16 @@ export default function Navigation() {
             <Stack.Screen name="CompatibilityInput" component={CompatibilityInputScreen} />
             <Stack.Screen name="CompatibilityResult" component={CompatibilityResultScreen} />
             <Stack.Screen name="SavedPeople" component={SavedPeopleScreen} />
+            <Stack.Screen
+              name="DatePicker"
+              component={DatePickerScreen}
+              options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="Menu"
+              component={MenuScreen}
+              options={{ presentation: 'modal' }}
+            />
           </>
         )}
       </Stack.Navigator>

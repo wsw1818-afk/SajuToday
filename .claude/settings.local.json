@@ -14,7 +14,30 @@
       "Bash(npx tsc:*)",
       "Bash(npx react-native:*)",
       "Bash(ls -la \"h:\\\\Claude_work\\\\SajuToday\\\\src\"\" 2>/dev/null || echo \"src folder check failed \")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(node test_saju_calculation.js:*)",
+      "Bash(node test_day_pillar_verify.js:*)",
+      "Bash(node test_full_saju_flow.js:*)",
+      "Bash(node test_actual_saju.js:*)",
+      "Bash(node test_fix_verification.js)",
+      "Bash(adb devices:*)",
+      "Bash(adb install:*)",
+      "Bash(adb shell:*)",
+      "Bash(./gradlew.bat:*)",
+      "Bash(.gradlew.bat:*)",
+      "Bash(cmd /c \"cd /d h:\\\\Claude_work\\\\SajuToday\\\\android && gradlew assembleDebug\")",
+      "Bash(cmd /c \"h: && cd h:\\\\Claude_work\\\\SajuToday\\\\android && gradlew.bat assembleDebug 2>&1\")",
+      "Bash(npm ls:*)",
+      "Bash(cat:*)",
+      "Bash(adb connect:*)",
+      "Bash(node -e:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npx tsx test-algo.ts)",
+      "Bash(del \"h:\\\\Claude_work\\\\SajuToday\\\\test-algo.ts\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n✨ 운세 종류 탭 추가 및 메뉴 정리: 하단 탭에 ''운세종류'' 추가, 햄버거 메뉴에서 중복 항목\\(운세종류, 히스토리, 설정\\) 제거\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

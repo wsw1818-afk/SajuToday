@@ -1,13 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
-import { LucideIcon } from 'lucide-react-native';
 
 interface CircularProgressProps {
   score: number;
   color: string;
-  icon?: LucideIcon;
-  iconColor?: string;
+  emoji?: string;
   size?: number;
   strokeWidth?: number;
   showScore?: boolean;
@@ -16,8 +14,7 @@ interface CircularProgressProps {
 const CircularProgress: React.FC<CircularProgressProps> = ({
   score,
   color,
-  icon: Icon,
-  iconColor,
+  emoji,
   size = 48,
   strokeWidth = 3,
   showScore = false,
@@ -52,8 +49,8 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
       <View style={styles.iconContainer}>
         {showScore ? (
           <Text style={[styles.scoreText, { color, fontSize: size * 0.24 }]}>{score}</Text>
-        ) : Icon ? (
-          <Icon color={iconColor} size={18} />
+        ) : emoji ? (
+          <Text style={styles.emojiText}>{emoji}</Text>
         ) : null}
       </View>
     </View>
@@ -71,6 +68,9 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontWeight: 'bold',
+  },
+  emojiText: {
+    fontSize: 16,
   },
 });
 

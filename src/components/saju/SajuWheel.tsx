@@ -1,12 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { Pillar } from '../../types';
 
 const { width } = Dimensions.get('window');
@@ -83,19 +76,6 @@ const SajuWheel: React.FC<SajuWheelProps> = ({
   monthPillar,
   hourPillar,
 }) => {
-  const scale = useSharedValue(0.8);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    scale.value = withSpring(1);
-    opacity.value = withTiming(1, { duration: 800 });
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
   const trigrams: ('solid' | 'broken')[][] = [
     ['solid', 'solid', 'solid'],
     ['broken', 'solid', 'solid'],
@@ -135,7 +115,7 @@ const SajuWheel: React.FC<SajuWheelProps> = ({
         ))}
 
         {/* Center Core */}
-        <Animated.View style={[styles.centerCore, animatedStyle]}>
+        <View style={styles.centerCore}>
           <View style={styles.quadrantRow}>
             <View style={[styles.quadrant, { backgroundColor: 'rgba(255, 229, 163, 0.9)' }]}>
               <Text style={styles.quadrantText}>{centerChars.topLeft}</Text>
@@ -156,7 +136,7 @@ const SajuWheel: React.FC<SajuWheelProps> = ({
           {/* Cross Divider */}
           <View style={styles.crossVertical} />
           <View style={styles.crossHorizontal} />
-        </Animated.View>
+        </View>
       </View>
     </View>
   );
