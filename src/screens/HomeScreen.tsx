@@ -255,10 +255,6 @@ export default function HomeScreen() {
   }, [refreshTodayInfo, isToday]);
 
 
-  const handleOpenCompatibility = useCallback(() => {
-    navigation.navigate('CompatibilityInput');
-  }, [navigation]);
-
   const handleOpenMenu = useCallback(() => {
     navigation.navigate('Menu');
   }, [navigation]);
@@ -278,12 +274,6 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <TouchableOpacity style={styles.iconButton} onPress={handleOpenMenu}>
               <Text style={styles.menuIconButton}>☰</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.headerTitle}>사주팔자</Text>
-
-            <TouchableOpacity style={styles.iconButton} onPress={handleOpenCompatibility}>
-              <Text style={styles.heartIcon}>♥</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -549,11 +539,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     zIndex: 10,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1C1917',
   },
   iconButton: {
     padding: 8,
@@ -1239,10 +1224,6 @@ const styles = StyleSheet.create({
   menuIconButton: {
     fontSize: 24,
     color: '#1C1917',
-  },
-  heartIcon: {
-    fontSize: 24,
-    color: '#E91E63',
   },
   arrowText: {
     fontSize: 20,
