@@ -434,12 +434,6 @@ export default function FortuneTypeScreen() {
                     </Text>
                   </View>
                   <View style={styles.luckyItem}>
-                    <Text style={styles.luckyLabel}>행운의 숫자</Text>
-                    <Text style={styles.luckyValue}>
-                      {fortuneData.luckyInfo?.number || fortuneData.numbers}
-                    </Text>
-                  </View>
-                  <View style={styles.luckyItem}>
                     <Text style={styles.luckyLabel}>행운의 방향</Text>
                     <Text style={styles.luckyValue}>
                       {fortuneData.luckyInfo?.direction || fortuneData.direction}

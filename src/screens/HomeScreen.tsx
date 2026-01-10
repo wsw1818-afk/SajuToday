@@ -20,8 +20,10 @@ import { generateFortune } from '../services/FortuneGenerator';
 import { generateComprehensiveFortune, ComprehensiveFortune } from '../services/FortuneTypes';
 import { formatDateWithDayOfWeek, formatLunarFromISO } from '../utils/dateFormatter';
 import { SajuCalculator } from '../services/SajuCalculator';
+import { getStemByKorean } from '../data/saju';
 
 const { width } = Dimensions.get('window');
+
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -80,6 +82,7 @@ export default function HomeScreen() {
       selectedDate
     );
   }, [profile?.birthDate, profile?.name, sajuResult?.dayMaster, selectedDateTimestamp]);
+
 
   // 오늘의 운세 해석 (일진 기반 운세 알고리즘 사용)
   const todayFortuneInterpretation = useMemo(() => {
@@ -406,24 +409,64 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* 오늘의 운세 해석 카드 */}
-          <AdviceCard
-            title={isToday ? '오늘의 운세' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 운세`}
-            mainText={todayFortuneInterpretation.main}
-            subText={todayFortuneInterpretation.sub}
-          />
+          {/* 애정운/금전운 해설 섹션 (종합운은 아래 AdviceCard에서 표시) */}
+          {fortune.detailedFortunes && (
+            <View style={styles.fortuneDetailsSection}>
+              {/* 애정운 해설 */}
+              <View style={styles.fortuneDetailCard}>
+                <View style={styles.fortuneDetailHeader}>
+                  <Text style={styles.fortuneDetailEmoji}>💕</Text>
+                  <Text style={styles.fortuneDetailTitle}>애정운</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: '#FCE7F3' }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: '#DB2777' }]}>{fortune.scores.love}점</Text>
+                  </View>
+                </View>
+                <Text style={styles.fortuneDetailSummary}>
+                  {fortune.detailedFortunes.love?.summary || '사랑하는 사람과 좋은 시간을 보내세요.'}
+                </Text>
+                <Text style={styles.fortuneDetailAdvice}>
+                  💡 {fortune.detailedFortunes.love?.advice || '진심을 담아 소통하면 좋은 결과가 있을 것입니다.'}
+                </Text>
+              </View>
 
-          {/* 종합운세 섹션 */}
+              {/* 금전운 해설 */}
+              <View style={styles.fortuneDetailCard}>
+                <View style={styles.fortuneDetailHeader}>
+                  <Text style={styles.fortuneDetailEmoji}>📈</Text>
+                  <Text style={styles.fortuneDetailTitle}>금전운</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: '#D1FAE5' }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: '#059669' }]}>{fortune.scores.money}점</Text>
+                  </View>
+                </View>
+                <Text style={styles.fortuneDetailSummary}>
+                  {fortune.detailedFortunes.money?.summary || '재정적으로 안정적인 하루입니다.'}
+                </Text>
+                <Text style={styles.fortuneDetailAdvice}>
+                  💡 {fortune.detailedFortunes.money?.advice || '계획적인 소비와 저축을 병행하세요.'}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* 통합 운세 섹션 (오늘의 운세 + 종합운세 통합) */}
           {comprehensiveFortune && (
             <View style={styles.comprehensiveSection}>
               <View style={styles.comprehensiveHeader}>
                 <View style={styles.comprehensiveTitleRow}>
-                  <Text style={styles.comprehensiveIcon}>⚡</Text>
-                  <Text style={styles.comprehensiveTitle}>{isToday ? '오늘의' : selectedDateStr.split('년')[1]?.trim()} 종합운세</Text>
+                  <Text style={styles.comprehensiveIcon}>✨</Text>
+                  <Text style={styles.comprehensiveTitle}>{isToday ? '오늘의 운세' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 운세`}</Text>
                 </View>
                 <View style={styles.comprehensiveScoreBadge}>
-                  <Text style={styles.comprehensiveScoreText}>{comprehensiveFortune.overallScore}점</Text>
+                  <Text style={styles.comprehensiveScoreText}>{fortune.scores.overall}점</Text>
                 </View>
+              </View>
+
+              {/* 운세 해석 */}
+              <View style={styles.fortuneInterpretationCard}>
+                <Text style={styles.fortuneInterpretationText}>{todayFortuneInterpretation.main}</Text>
+                {todayFortuneInterpretation.sub && (
+                  <Text style={styles.fortuneInterpretationSub}>{todayFortuneInterpretation.sub}</Text>
+                )}
               </View>
 
               {/* 오늘의 키워드 */}
@@ -717,6 +760,61 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
   },
+  // 운세별 해설 섹션 스타일
+  fortuneDetailsSection: {
+    marginBottom: 24,
+    gap: 12,
+  },
+  fortuneDetailCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  fortuneDetailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  fortuneDetailEmoji: {
+    fontSize: 20,
+  },
+  fortuneDetailTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1C1917',
+    flex: 1,
+  },
+  fortuneDetailBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  fortuneDetailScore: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  fortuneDetailSummary: {
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  fortuneDetailAdvice: {
+    fontSize: 13,
+    color: '#78716C',
+    lineHeight: 20,
+    backgroundColor: 'rgba(250, 250, 249, 0.8)',
+    padding: 12,
+    borderRadius: 10,
+  },
   // 용신 카드 스타일
   yongsinCard: {
     backgroundColor: '#FFFFFF',
@@ -730,6 +828,26 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: 'rgba(147, 51, 234, 0.2)',
+  },
+  // 운세 해석 카드 스타일
+  fortuneInterpretationCard: {
+    backgroundColor: '#FAFAFA',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+  },
+  fortuneInterpretationText: {
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 24,
+  },
+  fortuneInterpretationSub: {
+    fontSize: 13,
+    color: '#78716C',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
   },
   yongsinHeader: {
     flexDirection: 'row',

@@ -12,997 +12,30 @@ import Card from '../components/common/Card';
 import PillarCard from '../components/saju/PillarCard';
 import ElementChart from '../components/saju/ElementChart';
 import { DAY_MASTER_TRAITS, HEAVENLY_STEMS, EARTHLY_BRANCHES, SEXAGENARY_CYCLE } from '../data/saju';
+import { ILJU_INTERPRETATIONS, ELEMENT_PERSONALITY, BRANCH_TRAITS } from '../data/iljuData';
 import { Element } from '../types';
 import { SajuCalculator } from '../services/SajuCalculator';
+import {
+  calculateDaeun,
+  calculateSaeun,
+  analyzeYongsin,
+  analyzeHealth,
+  analyzeFamily,
+  getStemHanja,
+  getBranchHanja,
+} from '../utils/sajuAnalysis';
 
-// 대운 계산 함수
-function calculateDaeun(sajuResult: any, profile: any) {
-  const { pillars, dayMasterInfo } = sajuResult;
-  const monthStem = pillars.month.stem;
-  const monthBranch = pillars.month.branch;
-
-  // 년간의 음양과 성별로 대운 방향 결정 (기본값: 순행)
-  const yearStemInfo = HEAVENLY_STEMS.find(s => s.korean === pillars.year.stem);
-  const isYearYang = yearStemInfo?.yinYang === 'yang';
-  const isMale = profile.gender === 'male';
-  const isForward = (isYearYang && isMale) || (!isYearYang && !isMale);
-
-  // 월주의 60갑자 순서 찾기
-  const monthGanjiIndex = SEXAGENARY_CYCLE.findIndex(
-    c => c.stem === monthStem && c.branch === monthBranch
-  );
-
-  // 대운 리스트 생성 (8개 대운)
-  const daeunList = [];
-  for (let i = 1; i <= 8; i++) {
-    let newIndex;
-    if (isForward) {
-      newIndex = (monthGanjiIndex + i) % 60;
-    } else {
-      newIndex = (monthGanjiIndex - i + 60) % 60;
-    }
-    const ganji = SEXAGENARY_CYCLE[newIndex];
-    const stemInfo = HEAVENLY_STEMS.find(s => s.korean === ganji.stem);
-    const branchInfo = EARTHLY_BRANCHES.find(b => b.korean === ganji.branch);
-
-    daeunList.push({
-      order: i,
-      startAge: i * 10,
-      endAge: (i + 1) * 10 - 1,
-      stem: ganji.stem,
-      branch: ganji.branch,
-      korean: ganji.korean,
-      stemElement: stemInfo?.element,
-      branchElement: branchInfo?.element,
-    });
-  }
-
-  // 현재 나이 계산
-  const birthYear = parseInt(profile.birthDate.split('-')[0]);
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - birthYear + 1; // 한국 나이
-
-  // 현재 대운 찾기
-  const currentDaeun = daeunList.find(d => age >= d.startAge && age <= d.endAge) || daeunList[0];
-
-  // 현재 대운 해석 생성
-  const elementMeaning: Record<string, string> = {
-    wood: '성장과 발전의 시기입니다. 새로운 시작이나 도전에 유리하며, 배움과 자기계발에 좋은 때입니다.',
-    fire: '열정과 활동의 시기입니다. 적극적으로 나서면 성과를 얻을 수 있고, 인간관계가 활발해집니다.',
-    earth: '안정과 결실의 시기입니다. 그동안의 노력이 결실을 맺고, 기반을 다지기 좋은 때입니다.',
-    metal: '정리와 수확의 시기입니다. 불필요한 것을 정리하고 핵심에 집중하면 좋은 성과를 얻습니다.',
-    water: '지혜와 준비의 시기입니다. 내면을 성찰하고 다음을 준비하는 데 좋은 때입니다.',
-  };
-
-  let interpretation = '';
-  if (currentDaeun) {
-    const mainElement = currentDaeun.stemElement || 'earth';
-    interpretation = elementMeaning[mainElement];
-
-    // 일간과의 관계 추가
-    if (mainElement === dayMasterInfo.element) {
-      interpretation += ' 대운의 기운이 본인과 같아 자신감이 높아지는 시기입니다.';
-    }
-  }
-
-  return {
-    direction: isForward ? '순행' : '역행',
-    list: daeunList,
-    current: currentDaeun,
-    age,
-    interpretation,
-  };
-}
-
-// 세운 계산 함수 (올해 운세)
-function calculateSaeun(year: number, sajuResult?: any) {
-  const baseYear = 1984; // 갑자년
-  const diff = year - baseYear;
-  const index = ((diff % 60) + 60) % 60;
-  const ganji = SEXAGENARY_CYCLE[index];
-
-  const stemInfo = HEAVENLY_STEMS.find(s => s.korean === ganji.stem);
-  const branchInfo = EARTHLY_BRANCHES.find(b => b.korean === ganji.branch);
-
-  // 세운 해석 생성
-  const yearMeaning: Record<string, string> = {
-    wood: '올해는 새로운 시작과 성장의 해입니다. 도전정신을 발휘하고 배움에 투자하세요.',
-    fire: '올해는 열정과 활력의 해입니다. 적극적으로 행동하고 인맥을 넓히기 좋습니다.',
-    earth: '올해는 안정과 내실의 해입니다. 기반을 다지고 실속을 챙기세요.',
-    metal: '올해는 결단과 정리의 해입니다. 과감하게 결정하고 불필요한 것을 정리하세요.',
-    water: '올해는 지혜와 유연함의 해입니다. 상황에 맞게 적응하고 내면을 성찰하세요.',
-  };
-
-  const mainElement = stemInfo?.element || 'earth';
-  let interpretation = yearMeaning[mainElement];
-
-  // 띠와 관련된 해석 추가
-  if (sajuResult) {
-    const yearBranch = sajuResult.pillars.year.branch;
-    // 충 관계 확인 (간단한 충 쌍)
-    const clashPairs: Record<string, string> = {
-      '자': '오', '오': '자',
-      '축': '미', '미': '축',
-      '인': '신', '신': '인',
-      '묘': '유', '유': '묘',
-      '진': '술', '술': '진',
-      '사': '해', '해': '사',
-    };
-    if (clashPairs[yearBranch] === ganji.branch) {
-      interpretation += '\n\n【沖】 올해는 본인 띠와 충이 되는 해입니다. 변화가 많을 수 있으니 신중하게 결정하세요.';
-    }
-  }
-
-  return {
-    year,
-    stem: ganji.stem,
-    branch: ganji.branch,
-    korean: ganji.korean,
-    hanja: ganji.hanja,
-    stemElement: stemInfo?.element,
-    branchElement: branchInfo?.element,
-    animal: branchInfo?.animal,
-    interpretation,
-  };
-}
-
-// 용신 분석 함수
-function analyzeYongsin(sajuResult: any) {
-  const { elements, dayMasterInfo } = sajuResult;
-  const dayElement = dayMasterInfo.element;
-
-  const elementRelations: Record<string, { generates: string; generatedBy: string; controls: string }> = {
-    wood: { generates: 'fire', generatedBy: 'water', controls: 'earth' },
-    fire: { generates: 'earth', generatedBy: 'wood', controls: 'metal' },
-    earth: { generates: 'metal', generatedBy: 'fire', controls: 'water' },
-    metal: { generates: 'water', generatedBy: 'earth', controls: 'wood' },
-    water: { generates: 'wood', generatedBy: 'metal', controls: 'fire' },
-  };
-
-  const elementKorean: Record<string, string> = {
-    wood: '목(木)', fire: '화(火)', earth: '토(土)', metal: '금(金)', water: '수(水)',
-  };
-
-  const elementColor: Record<string, string> = {
-    wood: '청색/녹색', fire: '적색/분홍', earth: '황색/갈색', metal: '백색/은색', water: '흑색/남색',
-  };
-
-  const elementDirection: Record<string, string> = {
-    wood: '동쪽', fire: '남쪽', earth: '중앙', metal: '서쪽', water: '북쪽',
-  };
-
-  const elementNumber: Record<string, string> = {
-    wood: '3, 8', fire: '2, 7', earth: '5, 10', metal: '4, 9', water: '1, 6',
-  };
-
-  // 일간 강약 분석
-  const sameElement = elements[dayElement as keyof typeof elements] || 0;
-  const generatingElement = elements[elementRelations[dayElement].generatedBy as keyof typeof elements] || 0;
-  const supportingPower = sameElement + generatingElement;
-
-  const isStrong = supportingPower >= 4;
-
-  let yongsin: string;
-  let gisin: string;
-
-  if (isStrong) {
-    yongsin = elementRelations[dayElement].generates;
-    gisin = elementRelations[dayElement].generatedBy;
-  } else {
-    yongsin = elementRelations[dayElement].generatedBy;
-    gisin = elementRelations[dayElement].controls;
-  }
-
-  // 용신 활용 조언 생성
-  const yongsinAdvice: Record<string, string> = {
-    wood: '나무 기운을 보충하세요. 녹색 식물을 가까이하고, 아침 산책이나 등산이 좋습니다. 동쪽 방향이 유리합니다.',
-    fire: '불 기운을 보충하세요. 밝은 조명, 따뜻한 색상의 옷, 활발한 운동이 도움됩니다. 남쪽 방향이 유리합니다.',
-    earth: '흙 기운을 보충하세요. 도자기, 돌, 황토 등을 활용하고, 규칙적인 생활이 중요합니다.',
-    metal: '금 기운을 보충하세요. 금속 액세서리, 흰색 계열 옷, 결단력 있는 행동이 좋습니다. 서쪽 방향이 유리합니다.',
-    water: '물 기운을 보충하세요. 수영, 목욕, 물 가까이 가는 것이 좋습니다. 북쪽 방향이 유리합니다.',
-  };
-
-  // 기신 주의 조언
-  const gisinWarning: Record<string, string> = {
-    wood: '나무 기운이 과하면 고집이 세지고 무리하게 됩니다. 휴식을 취하세요.',
-    fire: '불 기운이 과하면 급해지고 다툼이 생깁니다. 마음을 가라앉히세요.',
-    earth: '흙 기운이 과하면 고지식해지고 변화를 거부하게 됩니다. 유연하게 생각하세요.',
-    metal: '금 기운이 과하면 냉정해지고 외로워집니다. 따뜻한 마음을 가지세요.',
-    water: '물 기운이 과하면 걱정이 많아지고 우유부단해집니다. 결단력을 가지세요.',
-  };
-
-  return {
-    isStrong,
-    strengthDesc: isStrong ? '신강(身强)' : '신약(身弱)',
-    strengthExplain: isStrong
-      ? '일간의 힘이 강한 편입니다. 에너지를 발산하고 활용하는 것이 좋습니다.'
-      : '일간의 힘이 약한 편입니다. 에너지를 보충하고 지원받는 것이 좋습니다.',
-    yongsin: {
-      element: yongsin,
-      korean: elementKorean[yongsin],
-      color: elementColor[yongsin],
-      direction: elementDirection[yongsin],
-      number: elementNumber[yongsin],
-      advice: yongsinAdvice[yongsin],
-    },
-    gisin: {
-      element: gisin,
-      korean: elementKorean[gisin],
-      warning: gisinWarning[gisin],
-    },
-  };
-}
-
-// 건강 분석 함수
-function analyzeHealth(sajuResult: any) {
-  const { elements } = sajuResult;
-
-  const elementHealth: Record<string, { organs: string; symptoms: string; advice: string; interpretation: string }> = {
-    wood: {
-      organs: '간, 담, 눈, 근육, 손톱',
-      symptoms: '시력 저하, 근육 경련, 피로감',
-      advice: '충분한 수면, 녹색 채소 섭취, 눈 휴식',
-      interpretation: '목(木) 기운이 부족하면 간과 눈에 피로가 쌓이기 쉽습니다. 아침 산책으로 나무 기운을 보충하고, 당근이나 시금치 같은 녹색 채소를 자주 드세요.',
-    },
-    fire: {
-      organs: '심장, 소장, 혀, 혈관',
-      symptoms: '두근거림, 불면증, 구내염',
-      advice: '명상, 심호흡, 매운 음식 자제',
-      interpretation: '화(火) 기운이 부족하면 혈액순환이 약해지고 손발이 차가워질 수 있습니다. 따뜻한 차를 마시고, 가벼운 유산소 운동으로 심장을 튼튼하게 하세요.',
-    },
-    earth: {
-      organs: '비장, 위장, 입술, 살',
-      symptoms: '소화불량, 식욕 변화, 부종',
-      advice: '규칙적인 식사, 과식 금지',
-      interpretation: '토(土) 기운이 부족하면 소화력이 약해지고 위장 장애가 생기기 쉽습니다. 규칙적으로 식사하고, 찬 음식보다 따뜻한 음식을 드세요.',
-    },
-    metal: {
-      organs: '폐, 대장, 코, 피부',
-      symptoms: '호흡기 질환, 피부 트러블, 변비',
-      advice: '심호흡 운동, 수분 섭취, 피부 보습',
-      interpretation: '금(金) 기운이 부족하면 폐와 피부가 건조해지기 쉽습니다. 복식호흡을 하고 물을 자주 마시며, 피부 보습에 신경 쓰세요.',
-    },
-    water: {
-      organs: '신장, 방광, 귀, 뼈',
-      symptoms: '요통, 부종, 청력 저하',
-      advice: '충분한 수분 섭취, 짠 음식 자제',
-      interpretation: '수(水) 기운이 부족하면 신장 기능이 약해지고 허리가 아플 수 있습니다. 검은콩, 검은깨 등 검은색 음식이 좋고, 짠 음식은 피하세요.',
-    },
-  };
-
-  const elementExcess: Record<string, string> = {
-    wood: '목(木) 기운이 과하면 화를 잘 내고 스트레스를 많이 받을 수 있습니다. 마음을 편히 가지고 명상이나 스트레칭으로 긴장을 풀어주세요.',
-    fire: '화(火) 기운이 과하면 가슴이 답답하고 쉽게 흥분할 수 있습니다. 심호흡으로 마음을 가라앉히고, 매운 음식을 줄이세요.',
-    earth: '토(土) 기운이 과하면 소화기에 무리가 오고 살이 찌기 쉽습니다. 과식을 피하고 가벼운 운동을 규칙적으로 하세요.',
-    metal: '금(金) 기운이 과하면 기관지가 예민해지고 피부 트러블이 생길 수 있습니다. 충분한 수분 섭취와 보습이 중요합니다.',
-    water: '수(水) 기운이 과하면 몸이 붓고 피곤하기 쉽습니다. 짠 음식을 줄이고 가볍게 몸을 움직여주세요.',
-  };
-
-  const weakElements: string[] = [];
-  const strongElements: string[] = [];
-
-  Object.entries(elements).forEach(([element, count]) => {
-    if ((count as number) === 0) {
-      weakElements.push(element);
-    } else if ((count as number) >= 3) {
-      strongElements.push(element);
-    }
-  });
-
-  return {
-    weakElements: weakElements.map(e => ({
-      element: e,
-      ...elementHealth[e],
-    })),
-    strongElements: strongElements.map(e => ({
-      element: e,
-      ...elementHealth[e],
-      interpretation: elementExcess[e],
-    })),
-  };
-}
-
-// 육친 분석 함수
-function analyzeFamily(sajuResult: any) {
-  const { tenGods } = sajuResult;
-
-  const familyMapping: Record<string, { relation: string; meaning: string; interpretation: string }> = {
-    '비견': {
-      relation: '형제/친구',
-      meaning: '동료, 경쟁자, 친구 관계',
-      interpretation: '나와 비슷한 사람들과의 인연이 강합니다. 좋은 친구나 동료를 만날 수 있지만, 경쟁 관계가 생기기도 해요. 협력하면서도 자기 주관을 지키는 게 중요합니다.',
-    },
-    '겁재': {
-      relation: '형제/동업자',
-      meaning: '형제자매, 동업자 관계',
-      interpretation: '형제자매나 동업자와의 관계가 중요합니다. 함께 일하면 시너지를 낼 수 있지만, 재물 관리는 신중하게 하세요. 명확한 역할 분담이 필요합니다.',
-    },
-    '식신': {
-      relation: '자녀/표현',
-      meaning: '표현력, 식복, 자녀운',
-      interpretation: '표현력이 뛰어나고 먹는 복이 있습니다. 요리, 글쓰기, 예술 등에서 재능을 발휘할 수 있어요. 자녀와의 관계도 원만한 편입니다.',
-    },
-    '상관': {
-      relation: '자녀/재능',
-      meaning: '재능, 자유, 자녀운',
-      interpretation: '창의적이고 자유로운 영혼입니다. 예술, 연예, 프리랜서 분야에서 두각을 나타낼 수 있어요. 다만 규칙에 얽매이는 걸 싫어해서 직장생활은 맞지 않을 수 있습니다.',
-    },
-    '편재': {
-      relation: '아버지/재물',
-      meaning: '부친운, 재물운',
-      interpretation: '사업 수완이 있고 돈 버는 능력이 좋습니다. 아버지와의 인연이 깊고, 투자나 사업에서 성과를 낼 수 있어요. 다만 너무 욕심내지 않는 게 좋습니다.',
-    },
-    '정재': {
-      relation: '배우자/재물',
-      meaning: '배우자운, 재물운',
-      interpretation: '성실하게 일해서 재물을 모으는 타입입니다. 배우자운이 좋고, 안정적인 가정을 꾸릴 수 있어요. 꾸준함이 성공의 비결입니다.',
-    },
-    '편관': {
-      relation: '자녀/직장',
-      meaning: '자녀운, 직장운',
-      interpretation: '리더십이 있고 조직을 이끄는 능력이 있습니다. 직장에서 인정받기 쉽지만, 때로는 스트레스를 받을 수 있어요. 자기 관리가 중요합니다.',
-    },
-    '정관': {
-      relation: '배우자/명예',
-      meaning: '명예운, 직장운',
-      interpretation: '사회적으로 인정받는 삶을 살 수 있습니다. 공무원, 대기업 등 안정적인 직장과 인연이 깊어요. 배우자운도 좋은 편입니다.',
-    },
-    '편인': {
-      relation: '계모/학업',
-      meaning: '학업운, 예술운',
-      interpretation: '창의적인 학문이나 예술에 재능이 있습니다. 독특한 사고방식으로 남다른 성취를 이룰 수 있어요. 자격증이나 기술을 익히면 큰 도움이 됩니다.',
-    },
-    '정인': {
-      relation: '어머니',
-      meaning: '모친운, 학업운, 문서운',
-      interpretation: '어머니의 사랑을 많이 받고 학업운이 좋습니다. 자격증, 계약서 등 문서 관련 일이 잘 풀리는 편이에요. 배움을 좋아하고 지식을 쌓는 것이 도움됩니다.',
-    },
-  };
-
-  const familyAnalysis: { pillar: string; tenGod: string; relation: string; meaning: string; interpretation: string }[] = [];
-
-  // 형제운 (비견/겁재) 체크 - 사주에 있는지 확인
-  const hasBigyeon = tenGods.year === '비견' || tenGods.month === '비견' || tenGods.hour === '비견';
-  const hasGeobjae = tenGods.year === '겁재' || tenGods.month === '겁재' || tenGods.hour === '겁재';
-  const hasSiblingInSaju = hasBigyeon || hasGeobjae;
-
-  // 형제운을 항상 맨 앞에 추가 (사주에 없어도 기본 정보 제공)
-  if (!hasSiblingInSaju) {
-    // 사주에 비견/겁재가 없는 경우 - 형제운 약함으로 표시
-    familyAnalysis.push({
-      pillar: '기본',
-      tenGod: '비견',
-      relation: '형제/친구',
-      meaning: '사주에 비견/겁재 없음',
-      interpretation: '형제자매나 친구와의 인연이 약한 편입니다. 혼자 힘으로 성장하는 경우가 많고, 독립심이 강합니다. 나중에 인연이 생기면 오히려 더 소중히 여기게 됩니다.',
-    });
-  }
-
-  if (tenGods.year && familyMapping[tenGods.year]) {
-    familyAnalysis.push({
-      pillar: '년주',
-      tenGod: tenGods.year,
-      ...familyMapping[tenGods.year],
-    });
-  }
-
-  if (tenGods.month && familyMapping[tenGods.month]) {
-    familyAnalysis.push({
-      pillar: '월주',
-      tenGod: tenGods.month,
-      ...familyMapping[tenGods.month],
-    });
-  }
-
-  if (tenGods.hour && familyMapping[tenGods.hour]) {
-    familyAnalysis.push({
-      pillar: '시주',
-      tenGod: tenGods.hour,
-      ...familyMapping[tenGods.hour],
-    });
-  }
-
-  return familyAnalysis;
-}
-
-// 일주론 상세 분석 (60갑자별 일주 해석)
+// 일주론 상세 분석 (60갑자별 일주 해석) - 데이터 파일에서 가져옴
 function analyzeIljuDetail(sajuResult: any) {
   const { pillars, dayMaster, dayMasterInfo } = sajuResult;
   const dayBranch = pillars.day.branch;
   const ilju = `${dayMaster}${dayBranch}`;
-
-  // 한자 조회 헬퍼
-  const getStemHanja = (stem: string): string => {
-    const hanjaMap: Record<string, string> = {
-      '갑': '甲', '을': '乙', '병': '丙', '정': '丁', '무': '戊',
-      '기': '己', '경': '庚', '신': '辛', '임': '壬', '계': '癸',
-    };
-    return hanjaMap[stem] || '';
-  };
-
-  const getBranchHanja = (branch: string): string => {
-    const hanjaMap: Record<string, string> = {
-      '자': '子', '축': '丑', '인': '寅', '묘': '卯', '진': '辰', '사': '巳',
-      '오': '午', '미': '未', '신': '申', '유': '酉', '술': '戌', '해': '亥',
-    };
-    return hanjaMap[branch] || '';
-  };
-
-  // 60갑자 일주별 상세 해석 (전체 60개)
-  const iljuInterpretations: Record<string, {
-    title: string;
-    hanja?: string;
-    personality: string;
-    strengths: string;
-    weaknesses: string;
-    love: string;
-    career: string;
-    advice: string;
-  }> = {
-    // ===== 갑(甲) 일간 =====
-    '갑자': {
-      title: '갑자(甲子)일주 - 큰 나무가 물 위에 떠 있는 형상',
-      personality: '총명하고 지적 호기심이 왕성합니다. 새로운 것을 배우는 것을 좋아하며, 독창적인 사고방식을 가지고 있습니다. 겉으로는 차분해 보이지만 내면에는 강한 야망과 의지가 있습니다.',
-      strengths: '머리가 비상하고 학습능력이 뛰어납니다. 어떤 분야든 빠르게 습득하며, 창의적인 아이디어를 내는 데 능합니다.',
-      weaknesses: '지나치게 생각이 많아 행동이 늦어질 수 있습니다. 완벽주의 성향이 있어 스스로를 몰아붙이기도 합니다.',
-      love: '지적인 대화가 통하는 사람에게 끌립니다. 감정보다 이성을 앞세우는 경향이 있어 속마음을 잘 드러내지 않습니다.',
-      career: '학자, 연구원, IT/기술직, 기획자, 작가, 교육자',
-      advice: '생각만 하지 말고 실행에 옮기세요. 때로는 완벽하지 않아도 시작하는 것이 중요합니다.',
-    },
-    '갑인': {
-      title: '갑인(甲寅)일주 - 큰 나무가 숲에서 우뚝 선 형상',
-      personality: '리더십이 강하고 당당합니다. 자신감이 넘치며 목표를 향해 곧게 나아갑니다. 정의롭고 불의를 보면 참지 못합니다.',
-      strengths: '추진력이 뛰어나고 결단력이 있습니다. 사람들에게 신뢰를 주며 자연스럽게 리더 역할을 맡습니다.',
-      weaknesses: '고집이 세고 융통성이 부족할 수 있습니다. 다른 의견을 수용하기 어려울 때가 있습니다.',
-      love: '당당하고 자기 주관이 뚜렷한 사람에게 끌립니다. 상대방을 보호하려는 본능이 강합니다.',
-      career: 'CEO, 정치인, 군인, 경찰, 변호사, 스포츠 지도자',
-      advice: '가끔은 한 발 물러서서 다른 사람의 의견도 들어보세요.',
-    },
-    '갑진': {
-      title: '갑진(甲辰)일주 - 큰 나무가 용의 기운을 받는 형상',
-      personality: '야망이 크고 큰 꿈을 품고 있습니다. 변화를 두려워하지 않으며 새로운 도전을 즐깁니다. 자존심이 강하고 목표 달성에 대한 의지가 굳건합니다.',
-      strengths: '상상력이 풍부하고 창조적입니다. 위기 상황에서도 침착하게 대처하며, 큰 그림을 볼 줄 압니다.',
-      weaknesses: '현실보다 이상에 치우칠 수 있습니다. 자존심이 상하면 쉽게 포기하기도 합니다.',
-      love: '자신의 꿈을 이해하고 응원해주는 사람에게 끌립니다. 파트너와 함께 성장하고 싶어합니다.',
-      career: '벤처사업가, 예술가, 건축가, 크리에이터, 발명가',
-      advice: '꿈을 현실로 만들기 위해 구체적인 계획을 세우세요.',
-    },
-    '갑오': {
-      title: '갑오(甲午)일주 - 나무가 불꽃처럼 타오르는 형상',
-      personality: '열정적이고 활동적입니다. 에너지가 넘치며 무엇이든 적극적으로 도전합니다. 표현력이 뛰어나고 사교적입니다.',
-      strengths: '밝은 에너지로 주변을 이끕니다. 시작하는 힘이 강하고 새로운 일에 두려움이 없습니다.',
-      weaknesses: '열정이 과하면 지치기 쉽습니다. 끈기가 부족하여 마무리가 약할 수 있습니다.',
-      love: '열정적이고 활발한 연애를 합니다. 상대방에게 많은 관심과 애정을 표현합니다.',
-      career: '연예인, 마케팅, 영업, 스포츠, 이벤트 기획, 교육',
-      advice: '시작한 일은 끝까지 마무리하는 습관을 들이세요.',
-    },
-    '갑신': {
-      title: '갑신(甲申)일주 - 나무가 날카로운 도끼를 만난 형상',
-      personality: '명석하고 논리적입니다. 비판적 사고를 잘하며 문제의 핵심을 빠르게 파악합니다. 언변이 좋고 설득력이 있습니다.',
-      strengths: '분석력과 판단력이 뛰어납니다. 협상과 토론에 능하며 갈등을 조정하는 능력이 있습니다.',
-      weaknesses: '지나친 비판으로 관계가 소원해질 수 있습니다. 내면의 갈등이 클 수 있습니다.',
-      love: '지적으로 대등한 상대를 원합니다. 논쟁도 소통의 일부라고 생각합니다.',
-      career: '변호사, 컨설턴트, 평론가, 기자, 교수, 분석가',
-      advice: '비판만 하지 말고 대안도 함께 제시하세요.',
-    },
-    '갑술': {
-      title: '갑술(甲戌)일주 - 나무가 가을 땅에 서 있는 형상',
-      personality: '성실하고 책임감이 강합니다. 맡은 일은 끝까지 해내며, 원칙을 중시합니다. 의리 있고 신의를 지킵니다.',
-      strengths: '꾸준하고 믿음직합니다. 어떤 상황에서도 흔들리지 않는 중심이 있습니다.',
-      weaknesses: '융통성이 부족하고 고집이 셀 수 있습니다. 변화에 적응이 느릴 수 있습니다.',
-      love: '한결같은 사랑을 합니다. 오래된 관계를 소중히 여기고 변함없이 헌신합니다.',
-      career: '공무원, 교사, 법조인, 회계사, 품질관리',
-      advice: '때로는 원칙을 유연하게 적용하는 지혜도 필요합니다.',
-    },
-    // ===== 을(乙) 일간 =====
-    '을축': {
-      title: '을축(乙丑)일주 - 작은 나무가 비옥한 땅에 뿌리내린 형상',
-      personality: '인내심이 강하고 끈기가 있습니다. 겉으로는 유순해 보이지만 속은 단단합니다. 현실적이고 실용적입니다.',
-      strengths: '꾸준히 노력하여 목표를 이룹니다. 재물을 모으는 능력이 있고, 안정적인 삶을 추구합니다.',
-      weaknesses: '변화를 두려워하고 익숙한 것에 안주하려는 경향이 있습니다.',
-      love: '안정적이고 신뢰할 수 있는 사람을 선호합니다. 한번 정을 주면 변함없이 헌신합니다.',
-      career: '금융업, 부동산, 농업, 요식업, 공무원',
-      advice: '가끔은 모험도 필요합니다. 새로운 것에 도전하는 용기를 가지세요.',
-    },
-    '을묘': {
-      title: '을묘(乙卯)일주 - 꽃나무가 봄에 활짝 핀 형상',
-      personality: '부드럽고 유연하며 사교적입니다. 적응력이 뛰어나고 주변과 조화를 잘 이룹니다. 예술적 감각이 있습니다.',
-      strengths: '인맥 관리에 능하고 협력을 잘 이끌어냅니다. 갈등을 부드럽게 해결합니다.',
-      weaknesses: '결단력이 부족할 수 있습니다. 남의 눈치를 많이 보기도 합니다.',
-      love: '로맨틱하고 감성적인 연애를 합니다. 상대방의 마음을 잘 읽습니다.',
-      career: '디자이너, 플로리스트, 상담사, 외교관, 서비스업',
-      advice: '자신의 주관을 갖고 표현하는 용기를 기르세요.',
-    },
-    '을사': {
-      title: '을사(乙巳)일주 - 덩굴이 뜨거운 불에 닿은 형상',
-      personality: '재치 있고 임기응변에 능합니다. 머리 회전이 빠르고 상황 판단이 정확합니다. 야망이 있고 성취욕이 강합니다.',
-      strengths: '변화하는 상황에 빠르게 적응합니다. 사람들의 마음을 읽고 원하는 것을 캐치합니다.',
-      weaknesses: '지나치게 계산적으로 보일 수 있습니다. 내면에 불안감이 있을 수 있습니다.',
-      love: '상대방에게 헌신하면서도 자신의 목표를 놓지 않습니다.',
-      career: '사업가, 마케터, 전략기획, 투자, 방송',
-      advice: '진심을 보여주세요. 계산만으로는 깊은 관계를 만들 수 없습니다.',
-    },
-    '을미': {
-      title: '을미(乙未)일주 - 화초가 따뜻한 흙에서 자라는 형상',
-      personality: '온화하고 포용력이 있습니다. 사람을 잘 돌보고 세심하게 배려합니다. 가정적이고 평화를 사랑합니다.',
-      strengths: '사람들에게 편안함을 줍니다. 갈등을 중재하고 화합을 이끌어냅니다.',
-      weaknesses: '우유부단할 수 있습니다. 자신보다 남을 먼저 챙기다 지치기도 합니다.',
-      love: '헌신적이고 따뜻한 사랑을 합니다. 가정을 매우 소중히 여깁니다.',
-      career: '간호사, 사회복지사, 교사, 요리사, 상담사',
-      advice: '자신도 소중히 여기세요. 나를 먼저 채워야 남도 채울 수 있습니다.',
-    },
-    '을유': {
-      title: '을유(乙酉)일주 - 작은 나무가 날카로운 도끼와 함께 있는 형상',
-      personality: '섬세하고 예민합니다. 미적 감각이 뛰어나고 완벽주의적 성향이 있습니다. 자기 기준이 명확합니다.',
-      strengths: '디테일에 강하고 정교한 일을 잘합니다. 아름다움을 추구합니다.',
-      weaknesses: '스스로에게 가혹할 수 있습니다. 남에게도 높은 기준을 요구하기도 합니다.',
-      love: '깔끔하고 세련된 사람에게 끌립니다. 상대에게도 높은 기준을 가집니다.',
-      career: '디자이너, 주얼리, 미용, 패션, 편집자, 예술가',
-      advice: '완벽함보다 과정을 즐기세요.',
-    },
-    '을해': {
-      title: '을해(乙亥)일주 - 연꽃이 물 위에 피어난 형상',
-      personality: '순수하고 이상적입니다. 내면이 깊고 정신적인 가치를 중시합니다. 예술적이고 창조적입니다.',
-      strengths: '영감이 풍부하고 창의력이 뛰어납니다. 순수한 마음으로 사람들에게 감동을 줍니다.',
-      weaknesses: '현실 감각이 부족할 수 있습니다. 세상과 타협하기 어려워합니다.',
-      love: '영혼의 교감을 원합니다. 깊고 의미 있는 사랑을 추구합니다.',
-      career: '예술가, 작가, 음악가, 종교인, 철학자, 치료사',
-      advice: '이상을 현실에서 구현하는 방법을 찾으세요.',
-    },
-    // ===== 병(丙) 일간 =====
-    '병자': {
-      title: '병자(丙子)일주 - 태양이 북쪽 물 위에 떠오른 형상',
-      personality: '밝고 활발하면서도 내면에 깊이가 있습니다. 겉은 따뜻하지만 속은 냉철합니다. 지적 호기심이 강합니다.',
-      strengths: '이성과 감성의 균형이 있습니다. 분석하면서도 직관을 활용합니다.',
-      weaknesses: '내면에 갈등이 생기면 혼란스러워집니다. 마음과 생각이 다를 때가 있습니다.',
-      love: '열정적이면서도 깊이 있는 관계를 원합니다. 지적 대화와 감정적 교류 모두 중요합니다.',
-      career: '연구원, 의사, 심리학자, 방송인, 교수',
-      advice: '마음과 머리의 조화를 찾으세요.',
-    },
-    '병인': {
-      title: '병인(丙寅)일주 - 아침 해가 동쪽 숲에서 떠오르는 형상',
-      personality: '활기차고 희망적입니다. 새로운 시작에 강하고 도전정신이 넘칩니다. 리더십과 카리스마가 있습니다.',
-      strengths: '주변에 활력을 불어넣습니다. 선구자 역할을 하며 새로운 길을 개척합니다.',
-      weaknesses: '성급하고 참을성이 부족할 수 있습니다. 시작은 좋으나 마무리가 약할 수 있습니다.',
-      love: '적극적이고 주도적으로 연애합니다. 상대를 이끌고 싶어합니다.',
-      career: 'CEO, 정치인, 방송인, 스포츠, 사업가',
-      advice: '시작한 일을 끝까지 책임지는 모습을 보여주세요.',
-    },
-    '병진': {
-      title: '병진(丙辰)일주 - 태양이 구름 위로 솟아오른 형상',
-      personality: '야망이 크고 자신감이 넘칩니다. 큰 무대에서 빛나고 싶어하며, 인정받고자 하는 욕구가 강합니다.',
-      strengths: '대범하고 배짱이 있습니다. 무대 위에서 빛나는 재능이 있습니다.',
-      weaknesses: '자만심에 빠지기 쉽습니다. 작은 일은 소홀히 할 수 있습니다.',
-      love: '자신을 존경하고 추켜세워주는 사람에게 끌립니다.',
-      career: '연예인, 정치인, 경영자, 교수, 강사',
-      advice: '겸손을 배우세요. 높이 올라갈수록 낮은 자세가 필요합니다.',
-    },
-    '병오': {
-      title: '병오(丙午)일주 - 태양이 중천에 뜬 가장 밝은 형상',
-      personality: '밝고 열정적이며 주변을 환하게 만드는 에너지가 있습니다. 자신감이 넘치고 표현력이 뛰어납니다.',
-      strengths: '카리스마가 있고 사람들을 끌어당기는 매력이 있습니다. 연설, 공연, 발표에서 두각을 나타냅니다.',
-      weaknesses: '자기중심적이 될 수 있고, 급한 성격 때문에 충동적인 결정을 내리기도 합니다.',
-      love: '연애에 적극적이고 열정적입니다. 자신을 인정해주는 사람에게 끌립니다.',
-      career: '연예인, 아나운서, 정치인, 영업직, 강사, 이벤트 기획자',
-      advice: '가끔은 조명을 끄고 쉬어가세요. 지나친 열정은 번아웃을 불러올 수 있습니다.',
-    },
-    '병신': {
-      title: '병신(丙申)일주 - 태양이 서쪽으로 기우는 형상',
-      personality: '밝으면서도 날카롭습니다. 직관과 논리를 함께 갖추고 있으며, 비판적 사고력이 뛰어납니다.',
-      strengths: '복잡한 문제를 빠르게 분석합니다. 말솜씨가 좋고 설득력이 있습니다.',
-      weaknesses: '너무 날카로워서 사람들에게 상처를 줄 수 있습니다.',
-      love: '언어로 사랑을 표현합니다. 대화가 통하는 사람을 원합니다.',
-      career: '변호사, 컨설턴트, 아나운서, 기자, MC',
-      advice: '따뜻한 말 한마디가 날카로운 비판보다 효과적일 때가 있습니다.',
-    },
-    '병술': {
-      title: '병술(丙戌)일주 - 저녁노을이 지는 형상',
-      personality: '따뜻하고 포근합니다. 가정적이며 안정을 추구합니다. 책임감이 강하고 의리가 있습니다.',
-      strengths: '사람들에게 안정감을 줍니다. 끝까지 책임지는 모습이 신뢰를 줍니다.',
-      weaknesses: '변화를 두려워하고 보수적일 수 있습니다.',
-      love: '가정을 소중히 여기고 헌신적입니다. 안정적인 관계를 원합니다.',
-      career: '교사, 공무원, 사회복지사, 요리사, 부동산',
-      advice: '새로운 변화도 받아들이는 유연함을 가지세요.',
-    },
-    // ===== 정(丁) 일간 =====
-    '정축': {
-      title: '정축(丁丑)일주 - 작은 불꽃이 땅에서 타오르는 형상',
-      personality: '섬세하고 끈기가 있습니다. 작은 일에도 정성을 다하며, 한 분야를 깊이 파고드는 집중력이 있습니다.',
-      strengths: '꼼꼼하고 세밀한 작업에 강합니다. 오랫동안 집중하는 인내심이 있습니다.',
-      weaknesses: '시야가 좁아질 수 있습니다. 융통성이 부족할 때가 있습니다.',
-      love: '조용하지만 깊은 사랑을 합니다. 표현은 서툴지만 마음은 깊습니다.',
-      career: '연구원, 기술자, 장인, 세공사, 요리사',
-      advice: '가끔은 큰 그림도 보세요.',
-    },
-    '정묘': {
-      title: '정묘(丁卯)일주 - 촛불이 봄꽃 사이에 빛나는 형상',
-      personality: '따뜻하고 감성적입니다. 예술적 감각이 뛰어나고 아름다움을 추구합니다. 부드러운 카리스마가 있습니다.',
-      strengths: '사람들의 마음을 움직이는 힘이 있습니다. 창조적이고 예술적입니다.',
-      weaknesses: '감정적으로 흔들리기 쉽습니다. 현실적인 문제에 약할 수 있습니다.',
-      love: '로맨틱하고 헌신적입니다. 사랑에 빠지면 모든 것을 바칩니다.',
-      career: '예술가, 디자이너, 뮤지션, 작가, 상담사',
-      advice: '감정에 휘둘리지 않는 객관성도 필요합니다.',
-    },
-    '정사': {
-      title: '정사(丁巳)일주 - 화염이 더욱 뜨거워진 형상',
-      personality: '열정적이고 야망이 있습니다. 목표를 향해 불타는 의지가 있으며, 자기 확신이 강합니다.',
-      strengths: '에너지가 넘치고 추진력이 있습니다. 어려운 상황에서도 포기하지 않습니다.',
-      weaknesses: '지나치게 뜨거워서 주변을 불편하게 할 수 있습니다. 급한 성격입니다.',
-      love: '열정적이고 강렬한 사랑을 합니다. 질투심이 강할 수 있습니다.',
-      career: '사업가, 예술가, 정치인, 홍보, 마케팅',
-      advice: '열정을 조절하는 법을 배우세요.',
-    },
-    '정미': {
-      title: '정미(丁未)일주 - 촛불이 따뜻한 흙에서 빛나는 형상',
-      personality: '온화하고 가정적입니다. 사람들을 보살피는 것을 좋아하며, 안정적인 환경을 추구합니다.',
-      strengths: '배려심이 깊고 포용력이 있습니다. 가정을 잘 돌봅니다.',
-      weaknesses: '자신보다 남을 먼저 챙기다 지칩니다. 결단력이 부족할 수 있습니다.',
-      love: '헌신적이고 따뜻한 사랑을 합니다. 가정을 최우선으로 생각합니다.',
-      career: '요리사, 교사, 간호사, 상담사, 사회복지사',
-      advice: '자신의 필요도 챙기세요.',
-    },
-    '정유': {
-      title: '정유(丁酉)일주 - 촛불이 금속에 비치는 형상',
-      personality: '섬세하고 예리합니다. 아름다움에 대한 안목이 있으며, 완벽을 추구합니다. 지적이고 분석적입니다.',
-      strengths: '미적 감각이 뛰어나고 디테일에 강합니다. 논리적 사고력이 있습니다.',
-      weaknesses: '비판적이고 까다로울 수 있습니다. 자신에게도 타인에게도 엄격합니다.',
-      love: '세련되고 지적인 사람에게 끌립니다. 외모와 내면 모두 중요합니다.',
-      career: '디자이너, 예술가, 평론가, 편집자, 주얼리',
-      advice: '완벽함보다 따뜻함을 선택할 때도 있습니다.',
-    },
-    '정해': {
-      title: '정해(丁亥)일주 - 촛불이 깊은 물 위에 비치는 형상',
-      personality: '감성적이고 직관력이 뛰어납니다. 예술적 감각이 있으며, 내면이 깊고 복잡합니다.',
-      strengths: '창의력과 상상력이 풍부합니다. 사람의 마음을 읽는 능력이 있어 상담이나 치유 분야에 재능이 있습니다.',
-      weaknesses: '감정 기복이 있을 수 있고, 현실보다 이상에 빠지기 쉽습니다.',
-      love: '영적으로 교감할 수 있는 사람을 찾습니다. 깊은 사랑을 추구합니다.',
-      career: '예술가, 작가, 심리상담사, 치료사, 종교인, 철학자',
-      advice: '현실에도 발을 딛고 계세요. 이상과 현실의 균형이 중요합니다.',
-    },
-    // ===== 무(戊) 일간 =====
-    '무자': {
-      title: '무자(戊子)일주 - 큰 산 아래 깊은 물이 흐르는 형상',
-      personality: '듬직하면서도 지혜롭습니다. 겉은 묵직하지만 속은 깊은 생각으로 가득합니다. 현실적이면서도 통찰력이 있습니다.',
-      strengths: '안정감을 주면서도 전략적입니다. 큰 그림을 그리며 차근차근 나아갑니다.',
-      weaknesses: '행동이 느릴 수 있습니다. 지나치게 신중해서 기회를 놓치기도 합니다.',
-      love: '안정적이고 지적인 사람에게 끌립니다. 깊은 대화를 즐깁니다.',
-      career: '투자, 부동산, 전략기획, 경영, 연구',
-      advice: '때로는 직관을 믿고 빠르게 움직이세요.',
-    },
-    '무인': {
-      title: '무인(戊寅)일주 - 큰 산에 나무가 우거진 형상',
-      personality: '포용력이 크고 듬직합니다. 사람을 품는 능력이 있으며, 자연스러운 리더십이 있습니다.',
-      strengths: '사람들에게 신뢰를 줍니다. 조직을 이끌고 키우는 능력이 있습니다.',
-      weaknesses: '고집이 세고 움직임이 느릴 수 있습니다.',
-      love: '파트너를 든든히 지켜주고 싶어합니다. 가장 역할에 충실합니다.',
-      career: '경영자, 교육자, 정치인, 부동산, 농업',
-      advice: '변화에 유연하게 대처하세요.',
-    },
-    '무진': {
-      title: '무진(戊辰)일주 - 큰 산이 용과 함께하는 형상',
-      personality: '듬직하고 포용력이 넓습니다. 큰 그릇을 가졌으며, 야망이 크고 큰일을 도모합니다.',
-      strengths: '배짱이 있고 대범합니다. 큰 사업이나 프로젝트를 이끌 수 있는 능력이 있습니다.',
-      weaknesses: '고집이 세고 자만심에 빠지기 쉽습니다. 세부적인 것을 놓치기도 합니다.',
-      love: '자신을 존경하고 따라주는 사람에게 끌립니다. 가장 역할을 충실히 합니다.',
-      career: '기업 경영, 정치, 건설업, 부동산 개발, 투자업',
-      advice: '작은 것도 소중히 여기세요. 디테일이 성공을 좌우할 때가 있습니다.',
-    },
-    '무오': {
-      title: '무오(戊午)일주 - 큰 산에서 불이 타오르는 형상',
-      personality: '듬직하면서도 열정이 있습니다. 무게감 있게 일을 추진하며, 따뜻한 카리스마가 있습니다.',
-      strengths: '신뢰를 주면서도 활력이 있습니다. 사람들을 모으고 이끄는 능력이 있습니다.',
-      weaknesses: '완고하고 고집이 셀 수 있습니다. 열정이 과하면 무리하기도 합니다.',
-      love: '든든하면서도 따뜻한 사랑을 합니다. 가정을 소중히 여깁니다.',
-      career: '경영, 교육, 종교, 정치, 부동산',
-      advice: '가끔은 쉬어가세요.',
-    },
-    '무신': {
-      title: '무신(戊申)일주 - 큰 산에 날카로운 바위가 있는 형상',
-      personality: '실용적이고 효율을 추구합니다. 불필요한 것을 정리하고 핵심에 집중합니다.',
-      strengths: '판단력이 빠르고 정확합니다. 문제 해결 능력이 뛰어납니다.',
-      weaknesses: '차갑게 느껴질 수 있습니다. 감정보다 효율을 앞세웁니다.',
-      love: '현실적이고 합리적인 사람을 원합니다.',
-      career: '엔지니어, 건축, 금융, 컨설팅',
-      advice: '효율만큼 따뜻함도 중요합니다.',
-    },
-    '무술': {
-      title: '무술(戊戌)일주 - 두 개의 산이 겹친 형상',
-      personality: '묵직하고 변하지 않습니다. 한번 정한 것은 쉽게 바꾸지 않으며, 원칙을 중시합니다.',
-      strengths: '신뢰감을 줍니다. 흔들리지 않는 중심이 있습니다.',
-      weaknesses: '너무 고집스럽고 융통성이 없을 수 있습니다.',
-      love: '변함없는 사랑을 합니다. 오래된 관계를 소중히 여깁니다.',
-      career: '부동산, 건설, 공무원, 법조, 농업',
-      advice: '때로는 변화도 필요합니다.',
-    },
-    // ===== 기(己) 일간 =====
-    '기축': {
-      title: '기축(己丑)일주 - 비옥한 논밭의 형상',
-      personality: '성실하고 꾸준합니다. 묵묵히 일하며 성과를 쌓아갑니다. 현실적이고 실용적입니다.',
-      strengths: '인내심이 강하고 끈기가 있습니다. 재물을 모으는 능력이 있습니다.',
-      weaknesses: '융통성이 부족하고 변화를 싫어합니다.',
-      love: '안정적이고 헌신적입니다. 가정을 잘 돌봅니다.',
-      career: '금융, 부동산, 농업, 요식업, 회계',
-      advice: '가끔은 새로운 것에 도전하세요.',
-    },
-    '기묘': {
-      title: '기묘(己卯)일주 - 화단에 꽃이 핀 형상',
-      personality: '부드럽고 섬세합니다. 예술적 감각이 있으며, 아름다움을 가꾸는 것을 좋아합니다.',
-      strengths: '미적 감각이 뛰어나고 세심합니다. 사람을 편하게 해줍니다.',
-      weaknesses: '결단력이 부족할 수 있습니다. 우유부단할 때가 있습니다.',
-      love: '상대방을 잘 돌봅니다. 헌신적이고 따뜻합니다.',
-      career: '플로리스트, 인테리어, 요리, 미용, 서비스업',
-      advice: '자신의 의견도 분명히 표현하세요.',
-    },
-    '기사': {
-      title: '기사(己巳)일주 - 뜨거운 모래밭의 형상',
-      personality: '머리 회전이 빠르고 재치가 있습니다. 상황 판단이 빠르며 적응력이 뛰어납니다.',
-      strengths: '임기응변에 능하고 말솜씨가 좋습니다. 사람들과 잘 어울립니다.',
-      weaknesses: '지나치게 계산적으로 보일 수 있습니다.',
-      love: '똑똑하고 센스 있는 사람에게 끌립니다.',
-      career: '영업, 마케팅, 홍보, 방송, 서비스업',
-      advice: '진심도 함께 보여주세요.',
-    },
-    '기미': {
-      title: '기미(己未)일주 - 넓은 들판의 형상',
-      personality: '온화하고 포용력이 있습니다. 사람을 잘 돌보고 편안하게 해줍니다.',
-      strengths: '배려심이 깊고 인내심이 강합니다. 갈등을 중재합니다.',
-      weaknesses: '우유부단하고 자기주장이 약할 수 있습니다.',
-      love: '헌신적이고 가정적입니다.',
-      career: '교사, 상담사, 사회복지, 요식업',
-      advice: '자신의 주장도 당당히 하세요.',
-    },
-    '기유': {
-      title: '기유(己酉)일주 - 흙 속의 금광석 형상',
-      personality: '섬세하고 예리합니다. 가치 있는 것을 알아보는 안목이 있습니다.',
-      strengths: '분석력이 뛰어나고 미적 감각이 있습니다.',
-      weaknesses: '비판적이고 까다로울 수 있습니다.',
-      love: '세련되고 가치관이 맞는 사람을 원합니다.',
-      career: '감정, 주얼리, 디자인, 금융, 예술',
-      advice: '비판보다 칭찬을 먼저 하세요.',
-    },
-    '기해': {
-      title: '기해(己亥)일주 - 논밭에 물이 가득한 형상',
-      personality: '생각이 깊고 지혜롭습니다. 현실적이면서도 통찰력이 있습니다.',
-      strengths: '지혜와 현실감각이 조화됩니다. 장기적인 관점을 가집니다.',
-      weaknesses: '생각이 많아 행동이 늦을 수 있습니다.',
-      love: '깊은 대화를 나눌 수 있는 사람을 원합니다.',
-      career: '연구, 기획, 농업, 교육',
-      advice: '생각을 행동으로 옮기세요.',
-    },
-    // ===== 경(庚) 일간 =====
-    '경자': {
-      title: '경자(庚子)일주 - 날카로운 칼이 물에 담긴 형상',
-      personality: '날카로우면서도 냉철합니다. 분석력이 뛰어나고 판단이 빠릅니다.',
-      strengths: '논리적이고 객관적입니다. 복잡한 문제를 빠르게 해결합니다.',
-      weaknesses: '차갑게 느껴질 수 있습니다. 감정 표현이 서툽니다.',
-      love: '지적인 대화가 통하는 사람에게 끌립니다.',
-      career: '법조, 금융, IT, 분석, 전략',
-      advice: '따뜻함도 함께 보여주세요.',
-    },
-    '경인': {
-      title: '경인(庚寅)일주 - 도끼가 나무를 만난 형상',
-      personality: '강인하고 결단력이 있습니다. 목표를 향해 곧게 나아갑니다.',
-      strengths: '추진력이 뛰어나고 불굴의 의지가 있습니다.',
-      weaknesses: '무리하게 밀어붙일 수 있습니다. 갈등이 생기기 쉽습니다.',
-      love: '강한 사람끼리 끌립니다. 서로 자극이 되는 관계를 원합니다.',
-      career: '군인, 경찰, 외과의, 기계, 스포츠',
-      advice: '부드러움도 힘입니다.',
-    },
-    '경진': {
-      title: '경진(庚辰)일주 - 광산에서 보석이 나온 형상',
-      personality: '야망이 크고 성취욕이 강합니다. 큰 성공을 꿈꿉니다.',
-      strengths: '결단력과 추진력이 있습니다. 위기에 강합니다.',
-      weaknesses: '조급해질 수 있습니다. 과정보다 결과에 집착하기도 합니다.',
-      love: '성공한 사람, 야망이 있는 사람에게 끌립니다.',
-      career: '사업가, 정치인, 금융, 투자',
-      advice: '과정도 즐기세요.',
-    },
-    '경오': {
-      title: '경오(庚午)일주 - 불에 달궈진 쇠의 형상',
-      personality: '열정적이면서도 강합니다. 정의롭고 불의를 참지 못합니다.',
-      strengths: '뜨거운 정의감이 있습니다. 카리스마 있는 리더십이 있습니다.',
-      weaknesses: '급하고 공격적일 수 있습니다. 충동적인 결정을 내리기도 합니다.',
-      love: '열정적이고 강렬한 사랑을 합니다.',
-      career: '군인, 경찰, 운동선수, 정치인',
-      advice: '분노를 다스리는 법을 배우세요.',
-    },
-    '경신': {
-      title: '경신(庚申)일주 - 쇠가 쇠를 만나 날카롭게 빛나는 형상',
-      personality: '결단력이 있고 실행력이 뛰어납니다. 정의롭고 불의와 타협하지 않습니다.',
-      strengths: '빠른 판단력과 결단력이 장점입니다. 복잡한 상황을 깔끔하게 정리합니다.',
-      weaknesses: '날카로워서 주변 사람들에게 상처를 줄 수 있습니다. 융통성이 부족합니다.',
-      love: '상대방에게도 명확한 기준을 요구합니다. 솔직하고 직접적인 표현을 합니다.',
-      career: '법조인, 외과의사, 군인, 경찰, 운동선수, 기계공학자',
-      advice: '때로는 부드러움도 힘입니다. 강함만이 정답이 아닙니다.',
-    },
-    '경술': {
-      title: '경술(庚戌)일주 - 가을 땅에 쇠가 묻힌 형상',
-      personality: '원칙적이고 책임감이 강합니다. 한번 결정하면 끝까지 밀어붙입니다.',
-      strengths: '신뢰할 수 있고 일관성이 있습니다.',
-      weaknesses: '융통성이 없고 완고합니다.',
-      love: '믿음직하고 책임감 있는 사람을 원합니다.',
-      career: '법조, 경찰, 군인, 공무원',
-      advice: '때로는 유연함도 필요합니다.',
-    },
-    // ===== 신(辛) 일간 =====
-    '신축': {
-      title: '신축(辛丑)일주 - 보석이 땅에 묻힌 형상',
-      personality: '인내심이 강하고 가치를 알아봅니다. 끈기 있게 목표를 향해 나아갑니다.',
-      strengths: '꾸준하고 성실합니다. 재물을 모으는 능력이 있습니다.',
-      weaknesses: '완고하고 변화를 싫어합니다.',
-      love: '안정적이고 신뢰할 수 있는 관계를 원합니다.',
-      career: '금융, 보석, 감정, 부동산',
-      advice: '변화도 가치가 있습니다.',
-    },
-    '신묘': {
-      title: '신묘(辛卯)일주 - 보석이 나무 사이에 있는 형상',
-      personality: '섬세하고 예술적입니다. 아름다움을 추구하며, 센스가 있습니다.',
-      strengths: '미적 감각이 뛰어나고 창조적입니다.',
-      weaknesses: '예민하고 상처받기 쉽습니다.',
-      love: '세련되고 감성적인 사람에게 끌립니다.',
-      career: '디자이너, 예술가, 뮤지션, 패션',
-      advice: '마음을 단단하게 하세요.',
-    },
-    '신사': {
-      title: '신사(辛巳)일주 - 보석이 불에 빛나는 형상',
-      personality: '빛나고 싶은 욕구가 강합니다. 인정받고자 하며, 섬세하면서도 야망이 있습니다.',
-      strengths: '눈에 띄는 재능이 있습니다. 빛나는 자리에서 능력을 발휘합니다.',
-      weaknesses: '질투와 경쟁심이 강할 수 있습니다.',
-      love: '자신을 빛나게 해주는 사람에게 끌립니다.',
-      career: '연예인, 디자이너, 주얼리, 패션',
-      advice: '다른 사람의 빛도 인정하세요.',
-    },
-    '신미': {
-      title: '신미(辛未)일주 - 흙 속의 옥돌 형상',
-      personality: '온화하면서도 내면에 가치를 품고 있습니다. 겸손하지만 능력이 있습니다.',
-      strengths: '진정한 가치를 알아보는 눈이 있습니다.',
-      weaknesses: '자신을 드러내는 것을 꺼립니다.',
-      love: '진심을 알아주는 사람을 원합니다.',
-      career: '감정, 예술, 교육, 상담',
-      advice: '자신의 가치를 당당히 드러내세요.',
-    },
-    '신유': {
-      title: '신유(辛酉)일주 - 보석이 빛나는 형상',
-      personality: '예리하고 완벽주의적입니다. 높은 기준을 가지고 있으며, 섬세합니다.',
-      strengths: '미적 감각이 뛰어나고 정교한 일을 잘합니다.',
-      weaknesses: '까다롭고 비판적입니다. 자신에게도 엄격합니다.',
-      love: '완벽에 가까운 사람을 찾습니다.',
-      career: '주얼리, 디자인, 예술, 비평, 편집',
-      advice: '불완전함도 아름다울 수 있습니다.',
-    },
-    '신해': {
-      title: '신해(辛亥)일주 - 보석이 물에 잠긴 형상',
-      personality: '감성적이고 지혜롭습니다. 아름다움과 지혜를 함께 추구합니다.',
-      strengths: '직관력이 뛰어나고 예술적 감각이 있습니다.',
-      weaknesses: '감정에 휩쓸리기 쉽습니다.',
-      love: '깊은 감성적 교류를 원합니다.',
-      career: '예술가, 작가, 상담사, 철학자',
-      advice: '현실에도 발을 딛으세요.',
-    },
-    // ===== 임(壬) 일간 =====
-    '임자': {
-      title: '임자(壬子)일주 - 큰 바다가 깊이를 더하는 형상',
-      personality: '지혜롭고 통찰력이 뛰어납니다. 겉으로는 고요하지만 내면에는 깊은 생각이 흐릅니다.',
-      strengths: '분석력과 판단력이 뛰어납니다. 감정에 휘둘리지 않고 이성적으로 대처합니다.',
-      weaknesses: '냉정해 보여서 거리감을 느끼게 할 수 있습니다. 감정 표현이 서툽니다.',
-      love: '지적인 대화를 나눌 수 있는 사람에게 끌립니다. 깊고 진지한 관계를 추구합니다.',
-      career: '학자, 연구원, 철학자, 전략가, 투자분석가',
-      advice: '가끔은 머리보다 마음의 소리를 들어보세요.',
-    },
-    '임인': {
-      title: '임인(壬寅)일주 - 물이 나무를 키우는 형상',
-      personality: '지혜로우면서도 진취적입니다. 새로운 것을 배우고 성장시키는 것을 좋아합니다.',
-      strengths: '사람과 조직을 키우는 능력이 있습니다. 배움에 대한 열정이 있습니다.',
-      weaknesses: '지나치게 이상적일 수 있습니다.',
-      love: '함께 성장할 수 있는 관계를 원합니다.',
-      career: '교육, 연구, 투자, 멘토링',
-      advice: '이상과 현실의 균형을 찾으세요.',
-    },
-    '임진': {
-      title: '임진(壬辰)일주 - 용이 물을 만난 형상',
-      personality: '야망이 크고 큰 꿈을 품고 있습니다. 변화무쌍하며 잠재력이 큽니다.',
-      strengths: '기회를 잘 포착하고 큰일을 도모합니다.',
-      weaknesses: '변덕스럽고 예측하기 어렵습니다.',
-      love: '자신의 꿈을 이해해주는 사람을 원합니다.',
-      career: '사업가, 투자, 정치, 예술',
-      advice: '꾸준함도 성공의 열쇠입니다.',
-    },
-    '임오': {
-      title: '임오(壬午)일주 - 물과 불이 만난 형상',
-      personality: '내면에 갈등이 있지만 그것이 창조적 에너지가 됩니다. 복잡하고 다층적입니다.',
-      strengths: '다양한 감정과 생각을 활용합니다. 창조적입니다.',
-      weaknesses: '마음이 안정되지 않을 수 있습니다.',
-      love: '복잡한 내면을 이해해주는 사람이 필요합니다.',
-      career: '예술, 창작, 상담, 치유',
-      advice: '내면의 갈등을 창작으로 승화하세요.',
-    },
-    '임신': {
-      title: '임신(壬申)일주 - 물이 금속을 만난 형상',
-      personality: '지혜롭고 언변이 좋습니다. 논리적이면서도 유연합니다.',
-      strengths: '설득력이 있고 협상에 능합니다.',
-      weaknesses: '말이 너무 많을 수 있습니다.',
-      love: '대화가 잘 통하는 사람을 원합니다.',
-      career: '외교, 컨설팅, 언론, 교육',
-      advice: '말보다 행동으로 보여주세요.',
-    },
-    '임술': {
-      title: '임술(壬戌)일주 - 물이 땅에 스며드는 형상',
-      personality: '깊이 있고 신중합니다. 한번 결정하면 쉽게 바꾸지 않습니다.',
-      strengths: '끈기와 인내심이 있습니다.',
-      weaknesses: '고집이 세고 느립니다.',
-      love: '안정적이고 믿을 수 있는 관계를 원합니다.',
-      career: '연구, 농업, 부동산, 장기투자',
-      advice: '때로는 유연함도 필요합니다.',
-    },
-    // ===== 계(癸) 일간 =====
-    '계축': {
-      title: '계축(癸丑)일주 - 이슬이 땅에 스며든 형상',
-      personality: '섬세하고 인내심이 강합니다. 조용히 실력을 쌓아갑니다.',
-      strengths: '꾸준하고 성실합니다. 집중력이 뛰어납니다.',
-      weaknesses: '소극적이고 표현이 서툽니다.',
-      love: '조용하지만 깊은 사랑을 합니다.',
-      career: '연구, 기술, 농업, 세공',
-      advice: '자신을 더 표현하세요.',
-    },
-    '계묘': {
-      title: '계묘(癸卯)일주 - 이슬이 꽃잎에 맺힌 형상',
-      personality: '감성적이고 섬세합니다. 예술적 감각이 뛰어나고 아름다움을 사랑합니다.',
-      strengths: '창의력이 풍부하고 감수성이 깊습니다.',
-      weaknesses: '현실적인 면이 부족할 수 있습니다.',
-      love: '로맨틱하고 감성적인 사랑을 합니다.',
-      career: '예술가, 작가, 디자이너, 뮤지션',
-      advice: '현실 감각도 키우세요.',
-    },
-    '계사': {
-      title: '계사(癸巳)일주 - 물이 불 옆에 있는 형상',
-      personality: '지혜롭고 영민합니다. 상황 판단이 빠르고 임기응변에 능합니다.',
-      strengths: '머리 회전이 빠르고 센스가 있습니다.',
-      weaknesses: '내면에 갈등이 있을 수 있습니다.',
-      love: '똑똑하고 센스 있는 사람에게 끌립니다.',
-      career: '기획, 마케팅, 컨설팅, 투자',
-      advice: '마음의 평화도 중요합니다.',
-    },
-    '계미': {
-      title: '계미(癸未)일주 - 이슬이 따뜻한 흙에 스며든 형상',
-      personality: '온화하고 배려심이 깊습니다. 사람을 돌보는 것을 좋아합니다.',
-      strengths: '포용력이 있고 세심합니다.',
-      weaknesses: '자신보다 남을 먼저 챙기다 지칩니다.',
-      love: '헌신적이고 따뜻한 사랑을 합니다.',
-      career: '간호, 상담, 교육, 복지',
-      advice: '자신도 소중히 여기세요.',
-    },
-    '계유': {
-      title: '계유(癸酉)일주 - 이슬이 금속에 맺힌 형상',
-      personality: '섬세하고 예리합니다. 미적 감각이 뛰어나고 완벽을 추구합니다.',
-      strengths: '정교한 일을 잘하고 안목이 있습니다.',
-      weaknesses: '비판적이고 까다롭습니다.',
-      love: '세련되고 품격 있는 사람을 원합니다.',
-      career: '디자인, 주얼리, 예술, 편집',
-      advice: '완벽함을 내려놓으면 편해집니다.',
-    },
-    '계해': {
-      title: '계해(癸亥)일주 - 작은 물이 큰 바다에 합쳐진 형상',
-      personality: '깊고 넓은 내면을 가졌습니다. 지혜롭고 통찰력이 뛰어납니다.',
-      strengths: '직관력이 뛰어나고 깊이 생각합니다.',
-      weaknesses: '현실에서 멀어지기 쉽습니다.',
-      love: '영혼의 교류를 원합니다.',
-      career: '철학, 예술, 종교, 치유, 상담',
-      advice: '현실에도 발을 딛고 계세요.',
-    },
-  };
-
-  // 기본 일주 해석 (나머지 일주)
-  const elementPersonality: Record<Element, string> = {
-    wood: '성장하고 발전하려는 욕구가 강합니다. 새로운 시작을 좋아하며 진취적입니다.',
-    fire: '열정적이고 활발합니다. 주변을 밝게 만들고 에너지가 넘칩니다.',
-    earth: '안정적이고 신뢰감을 줍니다. 현실적이며 실용적인 사고를 합니다.',
-    metal: '원칙을 중시하고 결단력이 있습니다. 공정하고 정의를 추구합니다.',
-    water: '지혜롭고 적응력이 뛰어납니다. 깊이 생각하고 통찰력이 있습니다.',
-  };
-
   const element = dayMasterInfo.element as Element;
-  const yinYangTrait = dayMasterInfo.yinYang === 'yang' ? '적극적이고 외향적인 성향도 가지고 있습니다.' : '신중하고 내면이 깊은 성향도 가지고 있습니다.';
+  const yinYangTrait = dayMasterInfo.yinYang === 'yang'
+    ? '적극적이고 외향적인 성향도 가지고 있습니다.'
+    : '신중하고 내면이 깊은 성향도 가지고 있습니다.';
 
+  // 오행별 기본 속성
   const strengthsByElement: Record<Element, string> = {
     wood: '추진력, 성장 욕구, 정의로움, 리더십',
     fire: '열정, 표현력, 카리스마, 사교성',
@@ -1043,18 +76,22 @@ function analyzeIljuDetail(sajuResult: any) {
     water: '흐르는 물처럼 유연하되, 목표는 잃지 마세요.',
   };
 
-  const defaultInterpretation = {
+  // 분리된 데이터 파일에서 해석 가져오기
+  if (ILJU_INTERPRETATIONS[ilju]) {
+    return ILJU_INTERPRETATIONS[ilju];
+  }
+
+  // 기본 해석 반환
+  return {
     title: `${ilju}(${getStemHanja(dayMaster)}${getBranchHanja(dayBranch)})일주`,
     hanja: `${getStemHanja(dayMaster)}${getBranchHanja(dayBranch)}`,
-    personality: `${elementPersonality[element]} ${yinYangTrait}`,
+    personality: `${ELEMENT_PERSONALITY[element]} ${yinYangTrait}`,
     strengths: strengthsByElement[element] || '',
     weaknesses: weaknessesByElement[element] || '',
     love: loveByElement[element] || '',
     career: careerByElement[element] || '',
     advice: adviceByElement[element] || '',
   };
-
-  return iljuInterpretations[ilju] || defaultInterpretation;
 }
 
 // 연애/결혼운 상세 분석
@@ -1580,29 +617,134 @@ function generateSimpleExplanation(sajuResult: any, traits: any) {
     return `당신의 일주는 ${ilju}입니다. 일주는 사주에서 '나 자신'을 가장 직접적으로 나타내는 기둥으로, 성격의 핵심과 배우자 운을 보여줍니다. 천간인 ${dayStem}은 나의 겉으로 드러나는 성격과 의지를, 지지인 ${dayBranch}은 나의 내면과 숨겨진 성향을 나타냅니다.`;
   };
 
-  // 종합 조언 생성
+  // 종합 조언 생성 (사주 알고리즘 기반 상세 조언)
   const getOverallAdvice = () => {
     const dayMasterElement = dayMasterInfo?.element || 'wood';
-    let advice = '종합적으로 보았을 때, ';
+    const { yang, yin } = yinYang;
+    let advice = '';
 
-    // 일간 오행에 따른 조언
+    // ===== 1. 일간 오행 기반 핵심 조언 =====
+    advice += '【나의 본성과 삶의 방향】\n';
     switch (dayMasterElement) {
       case 'wood':
-        advice += '당신은 성장과 발전을 추구하는 목(木)의 기운을 타고났습니다. 새로운 도전을 두려워하지 말고, 끊임없이 배우고 성장하세요. 유연함을 잃지 않으면서도 자신의 방향을 잃지 않는 것이 중요합니다.';
+        advice += '당신은 성장과 발전을 추구하는 목(木)의 기운을 타고났습니다. 나무가 하늘을 향해 곧게 뻗어 올라가듯, 끊임없이 배우고 성장하려는 열망이 당신의 본질입니다. 새로운 도전을 두려워하지 말고, 실패해도 다시 일어나는 나무의 생명력을 기억하세요.\n\n';
+        advice += '• 성장을 위한 배움에 투자하세요\n';
+        advice += '• 아침 시간을 활용한 계획 수립이 효과적입니다\n';
+        advice += '• 자연과 가까이하면 에너지가 충전됩니다\n';
+        advice += '• 동쪽 방향이 당신에게 유리합니다';
         break;
       case 'fire':
-        advice += '당신은 열정과 활력이 넘치는 화(火)의 기운을 타고났습니다. 그 에너지를 긍정적인 방향으로 발산하고, 주변을 밝게 비추세요. 다만 때로는 차분하게 에너지를 충전하는 시간도 필요합니다.';
+        advice += '당신은 열정과 활력이 넘치는 화(火)의 기운을 타고났습니다. 태양처럼 밝은 에너지로 주변을 환하게 비추는 것이 당신의 역할입니다. 그 열정을 긍정적인 방향으로 발산하되, 불꽃이 타오르다 꺼지지 않도록 에너지를 조절하는 지혜도 필요합니다.\n\n';
+        advice += '• 적극적인 자기표현이 기회를 만듭니다\n';
+        advice += '• 낮 시간의 활동이 가장 효율적입니다\n';
+        advice += '• 명상으로 마음을 가라앉히는 시간을 가지세요\n';
+        advice += '• 남쪽 방향이 당신에게 유리합니다';
         break;
       case 'earth':
-        advice += '당신은 안정과 신뢰를 상징하는 토(土)의 기운을 타고났습니다. 주변 사람들에게 든든한 존재가 되어주되, 때로는 변화도 받아들이세요. 안정 속에서 성장하는 지혜를 발휘하세요.';
+        advice += '당신은 안정과 신뢰를 상징하는 토(土)의 기운을 타고났습니다. 대지처럼 모든 것을 품어주는 포용력이 당신의 강점입니다. 주변 사람들에게 든든한 존재가 되어주되, 때로는 자신을 위한 시간도 챙기세요. 안정 속에서 천천히 성장하는 것이 당신의 방식입니다.\n\n';
+        advice += '• 규칙적인 생활 습관이 성공의 열쇠입니다\n';
+        advice += '• 신뢰를 바탕으로 한 관계 구축에 집중하세요\n';
+        advice += '• 급격한 변화보다 점진적 발전을 추구하세요\n';
+        advice += '• 중앙이나 집 근처에서의 활동이 유리합니다';
         break;
       case 'metal':
-        advice += '당신은 결단력과 원칙을 상징하는 금(金)의 기운을 타고났습니다. 정의롭고 올바른 길을 가되, 때로는 부드러움도 필요합니다. 강함과 유연함의 조화를 이루세요.';
+        advice += '당신은 결단력과 원칙을 상징하는 금(金)의 기운을 타고났습니다. 강철처럼 단단한 의지로 목표를 향해 나아가는 것이 당신의 방식입니다. 정의롭고 올바른 길을 가되, 때로는 부드러움으로 주변을 감싸는 지혜도 필요합니다.\n\n';
+        advice += '• 명확한 목표 설정이 성공을 이끕니다\n';
+        advice += '• 정리정돈과 체계적인 계획이 힘이 됩니다\n';
+        advice += '• 타인의 감정을 헤아리는 연습을 하세요\n';
+        advice += '• 서쪽 방향이 당신에게 유리합니다';
         break;
       case 'water':
-        advice += '당신은 지혜와 적응력을 상징하는 수(水)의 기운을 타고났습니다. 깊은 통찰력으로 상황을 파악하되, 생각만 하지 말고 행동으로 옮기세요. 흐르는 물처럼 자연스럽게 자신의 길을 찾아가세요.';
+        advice += '당신은 지혜와 적응력을 상징하는 수(水)의 기운을 타고났습니다. 물처럼 어떤 그릇에도 담기는 유연함과 깊은 바다처럼 끝없는 지혜가 당신의 본질입니다. 깊이 생각하되, 때로는 흐르는 물처럼 자연스럽게 행동으로 옮기세요.\n\n';
+        advice += '• 직관을 믿고 결정을 내리세요\n';
+        advice += '• 밤 시간의 사색이 좋은 아이디어를 줍니다\n';
+        advice += '• 물가 산책이 마음의 평화를 줍니다\n';
+        advice += '• 북쪽 방향이 당신에게 유리합니다';
         break;
     }
+
+    // ===== 2. 오행 균형에 따른 보완 조언 =====
+    const total = Object.values(elements).reduce((a: number, b: any) => a + (b as number), 0);
+    const sorted = Object.entries(elements).sort((a, b) => (b[1] as number) - (a[1] as number));
+    const strongest = sorted[0];
+    const weakest = sorted.find(([_, count]) => (count as number) === 0);
+
+    advice += '\n\n【오행 균형 보완 조언】\n';
+
+    if (weakest) {
+      const missingElement = weakest[0];
+      const elementAdvice: Record<string, string> = {
+        wood: '목(木)의 기운을 보충하세요. 초록색 옷이나 소품, 동쪽을 향한 책상 배치, 아침 산책, 식물 기르기가 도움됩니다. 봄철에 새로운 시작을 하면 좋은 결과가 있습니다.',
+        fire: '화(火)의 기운을 보충하세요. 붉은색이나 주황색 활용, 남쪽 방향 의식, 운동이나 사교 활동 늘리기가 좋습니다. 여름철 활동이 특히 효과적입니다.',
+        earth: '토(土)의 기운을 보충하세요. 황색/베이지색 활용, 규칙적인 식사와 수면, 텃밭 가꾸기나 도자기 공예가 도움됩니다. 환절기에 건강관리에 유의하세요.',
+        metal: '금(金)의 기운을 보충하세요. 흰색/금색 활용, 서쪽 방향 의식, 금속 액세서리 착용, 정리정돈 습관이 좋습니다. 가을철 중요한 결정을 하면 유리합니다.',
+        water: '수(水)의 기운을 보충하세요. 검정/남색 활용, 북쪽 방향 의식, 수영이나 물가 산책, 충분한 수분 섭취가 도움됩니다. 겨울철 내면 성찰의 시간을 가지세요.',
+      };
+      advice += elementAdvice[missingElement] || '';
+    } else {
+      advice += '사주에 모든 오행이 존재하여 기본적인 균형이 잘 잡혀 있습니다. 현재의 균형을 유지하면서, 상황에 따라 필요한 오행의 기운을 의식적으로 활용하세요.';
+    }
+
+    // ===== 3. 음양 균형에 따른 행동 조언 =====
+    advice += '\n\n【음양 균형 행동 지침】\n';
+    if (yang > yin + 2) {
+      advice += '양(陽)의 기운이 강합니다. 적극적이고 활동적인 것이 장점이지만, 때로는 쉬어가는 지혜도 필요합니다.\n';
+      advice += '• 결정을 내리기 전 하루 정도 숙고하는 습관을 들이세요\n';
+      advice += '• 저녁에는 차분한 활동(독서, 명상)으로 균형을 맞추세요\n';
+      advice += '• 상대방의 말을 끝까지 듣는 연습을 하세요';
+    } else if (yin > yang + 2) {
+      advice += '음(陰)의 기운이 강합니다. 신중하고 사려 깊은 것이 장점이지만, 때로는 과감한 행동도 필요합니다.\n';
+      advice += '• 작은 일부터 즉시 결정하고 행동하는 연습을 하세요\n';
+      advice += '• 아침 운동으로 하루를 활기차게 시작하세요\n';
+      advice += '• 새로운 사람을 만나는 기회를 의식적으로 만드세요';
+    } else {
+      advice += '음양의 균형이 잘 잡혀 있습니다. 상황에 따라 적극적으로 나서거나 신중하게 기다리는 것을 본능적으로 판단할 수 있습니다.\n';
+      advice += '• 당신의 직감을 신뢰하세요\n';
+      advice += '• 양적 활동과 음적 휴식의 균형을 유지하세요\n';
+      advice += '• 주변 사람들의 조화를 이끄는 역할을 해보세요';
+    }
+
+    // ===== 4. 십신에 따른 인간관계/재물 조언 =====
+    advice += '\n\n【인간관계와 재물 조언】\n';
+
+    const hasJaesong = tenGods.year === '정재' || tenGods.month === '정재' || tenGods.hour === '정재' ||
+                       tenGods.year === '편재' || tenGods.month === '편재' || tenGods.hour === '편재';
+    const hasGwan = tenGods.year === '정관' || tenGods.month === '정관' || tenGods.hour === '정관' ||
+                    tenGods.year === '편관' || tenGods.month === '편관' || tenGods.hour === '편관';
+    const hasIn = tenGods.year === '정인' || tenGods.month === '정인' || tenGods.hour === '정인' ||
+                  tenGods.year === '편인' || tenGods.month === '편인' || tenGods.hour === '편인';
+    const hasSiksang = tenGods.year === '식신' || tenGods.month === '식신' || tenGods.hour === '식신' ||
+                       tenGods.year === '상관' || tenGods.month === '상관' || tenGods.hour === '상관';
+
+    if (hasJaesong) {
+      advice += '사주에 재성(財星)이 있어 재물운이 있습니다. 돈을 다루는 능력이 있으니 저축과 투자에 관심을 가지세요. 다만 과욕은 금물입니다.\n';
+    }
+    if (hasGwan) {
+      advice += '사주에 관성(官星)이 있어 직장운과 명예운이 좋습니다. 조직에서 인정받기 쉬우니 맡은 일에 최선을 다하세요.\n';
+    }
+    if (hasIn) {
+      advice += '사주에 인성(印星)이 있어 학업운이 좋습니다. 배움에 투자하면 큰 성과를 얻을 수 있으니 자기계발을 게을리하지 마세요.\n';
+    }
+    if (hasSiksang) {
+      advice += '사주에 식상(食傷)이 있어 표현력과 창의력이 뛰어납니다. 예술, 글쓰기, 강의 등 자신을 표현하는 분야에서 재능을 발휘하세요.\n';
+    }
+
+    if (!hasJaesong && !hasGwan && !hasIn && !hasSiksang) {
+      advice += '사주의 기본 구성상, 자신의 힘으로 개척해 나가는 삶이 적합합니다. 독립적이고 자주적인 길을 가면서 자신만의 영역을 구축하세요.\n';
+    }
+
+    // ===== 5. 충(沖)이 있는 경우 조언 =====
+    if (relations.clashes && relations.clashes.length > 0) {
+      advice += '\n【변화와 도전에 대한 조언】\n';
+      advice += '사주에 충(沖)이 있어 삶에 변화가 많을 수 있습니다. 이것은 단점이 아니라, 정체되지 않고 끊임없이 발전할 수 있다는 의미입니다.\n';
+      advice += '• 변화를 두려워하지 말고 기회로 받아들이세요\n';
+      advice += '• 이동, 이직, 여행 등이 오히려 행운을 가져올 수 있습니다\n';
+      advice += '• 급한 결정보다는 충분히 검토 후 행동하세요';
+    }
+
+    // ===== 6. 마무리 격려 =====
+    advice += '\n\n【사주 활용 조언】\n';
+    advice += '사주는 타고난 기질을 보여줄 뿐, 운명을 결정하지 않습니다. 자신의 강점을 살리고 약점을 보완하며, 매 순간 최선의 선택을 하는 것이 진정한 운명 개척입니다. 당신의 노력이 좋은 결실을 맺기를 응원합니다.';
 
     return advice;
   };
@@ -2267,10 +1409,6 @@ export default function ProfileScreen() {
               <View style={styles.luckyItem}>
                 <Text style={styles.luckyLabel}>方 행운방향</Text>
                 <Text style={styles.luckyValue}>{yongsinInfo.yongsin.direction}</Text>
-              </View>
-              <View style={styles.luckyItem}>
-                <Text style={styles.luckyLabel}>數 행운숫자</Text>
-                <Text style={styles.luckyValue}>{yongsinInfo.yongsin.number}</Text>
               </View>
             </View>
           </View>
