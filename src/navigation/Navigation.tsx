@@ -21,6 +21,18 @@ import CompatibilityResultScreen from '../screens/CompatibilityResultScreen';
 import SavedPeopleScreen from '../screens/SavedPeopleScreen';
 import DatePickerScreen from '../screens/DatePickerScreen';
 import MenuScreen from '../screens/MenuScreen';
+import SinsalScreen from '../screens/SinsalScreen';
+import FortuneQnAScreen from '../screens/FortuneQnAScreen';
+import FortuneCalendarScreen from '../screens/FortuneCalendarScreen';
+import LuckyItemsScreen from '../screens/LuckyItemsScreen';
+// 새로운 화면들
+import DaeunScreen from '../screens/DaeunScreen';
+import TaekilScreen from '../screens/TaekilScreen';
+import NameAnalysisScreen from '../screens/NameAnalysisScreen';
+import DreamDiaryScreen from '../screens/DreamDiaryScreen';
+import FamilyGroupScreen from '../screens/FamilyGroupScreen';
+import BookmarkScreen from '../screens/BookmarkScreen';
+import FortuneReportScreen from '../screens/FortuneReportScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -136,6 +148,18 @@ export default function Navigation() {
               component={MenuScreen}
               options={{ presentation: 'modal' }}
             />
+            <Stack.Screen name="Sinsal" component={SinsalScreen} />
+            <Stack.Screen name="FortuneQnA" component={FortuneQnAScreen} />
+            <Stack.Screen name="FortuneCalendar" component={FortuneCalendarScreen} />
+            <Stack.Screen name="LuckyItems" component={LuckyItemsScreen} />
+            {/* 새로운 화면들 */}
+            <Stack.Screen name="Daeun" component={DaeunScreen} />
+            <Stack.Screen name="Taekil" component={TaekilScreen} />
+            <Stack.Screen name="NameAnalysis" component={NameAnalysisScreen} />
+            <Stack.Screen name="DreamDiary" component={DreamDiaryScreen} />
+            <Stack.Screen name="FamilyGroup" component={FamilyGroupScreen} />
+            <Stack.Screen name="Bookmark" component={BookmarkScreen} />
+            <Stack.Screen name="FortuneReport" component={FortuneReportScreen} />
           </>
         )}
       </Stack.Navigator>

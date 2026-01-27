@@ -313,11 +313,32 @@ export interface DayMasterTraits {
 export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: undefined;
+  FortuneDetail: { category: string };
+  FortuneMenu: undefined;
+  FortuneType: { type: string };
+  CompatibilityInput: undefined;
+  CompatibilityResult: { personA: SavedPerson; personB: SavedPerson };
+  SavedPeople: undefined;
+  DatePicker: undefined;
+  Menu: undefined;
+  Sinsal: undefined;
+  FortuneQnA: undefined;
+  FortuneCalendar: undefined;
+  LuckyItems: undefined;
+  // 새로운 화면들
+  Daeun: undefined;
+  Taekil: undefined;
+  NameAnalysis: undefined;
+  DreamDiary: undefined;
+  FamilyGroup: undefined;
+  Bookmark: undefined;
+  FortuneReport: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
   Profile: undefined;
+  Fortune: undefined;
   History: undefined;
   Settings: undefined;
 };

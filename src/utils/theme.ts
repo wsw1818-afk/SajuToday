@@ -9,8 +9,10 @@ export const COLORS = {
   background: '#FFFEF5',   // 아이보리
   card: '#FFFFFF',
   cardAlt: '#FFF8E1',
+  surface: '#F5F5F5',      // 표면 색상 (카드, 입력 필드 배경 등)
 
   // 텍스트 컬러
+  text: '#3D3D3D',         // 기본 텍스트 (textPrimary와 동일)
   textPrimary: '#3D3D3D',
   textSecondary: '#7D7D7D',
   textLight: '#AAAAAA',

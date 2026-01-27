@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -21,97 +21,241 @@ const branchIndex = (currentYear - 4) % 12;
 const yearGanji = `${HEAVENLY_STEMS[stemIndex]}${EARTHLY_BRANCHES[branchIndex]}`;
 const yearAnimal = BRANCH_ANIMALS[branchIndex];
 
-// 운세 종류 정의 (오늘의 운세는 홈 화면에서 제공)
-const FORTUNE_TYPES = [
+// 카테고리별 운세 정의 - 쉬운 용어로 변경
+const FORTUNE_CATEGORIES = [
   {
-    id: 'yearly',
-    title: '신년운세',
-    subtitle: `${currentYear}년 ${yearGanji}년 운세`,
-    description: `${yearAnimal}띠 해, 전체 운의 흐름과 월별 운세`,
-    emoji: '✨',
-    color: '#8B5CF6',
-    available: true,
-    source: '명리학 대운/세운론',
+    id: 'recommend',
+    title: '🌟 처음이라면 이것부터!',
+    description: '가장 인기 있는 운세예요',
+    color: '#F59E0B',
+    items: [
+      {
+        id: 'yearly',
+        title: '올해 운세',
+        subtitle: `${currentYear}년 나의 한 해 운세`,
+        description: '올해 전체 운의 흐름을 알려드려요',
+        emoji: '✨',
+        color: '#8B5CF6',
+        help: '1년 동안의 전반적인 운세를 미리 알 수 있어요',
+      },
+      {
+        id: 'compatibility',
+        title: '궁합 보기',
+        subtitle: '나와 상대방의 궁합은?',
+        description: '두 사람이 얼마나 잘 맞는지 확인해요',
+        emoji: '💕',
+        color: '#EC4899',
+        route: 'CompatibilityInput',
+        help: '연인, 친구, 가족과의 궁합 점수를 알 수 있어요',
+      },
+      {
+        id: 'luckyItems',
+        title: '오늘의 행운',
+        subtitle: '행운을 부르는 색상, 숫자, 방향',
+        description: '오늘 나에게 행운을 가져다 줄 정보',
+        emoji: '🍀',
+        color: '#10B981',
+        route: 'LuckyItems',
+        help: '오늘 입을 옷 색깔, 가면 좋은 방향 등을 알려줘요',
+      },
+    ],
   },
   {
-    id: 'animal',
-    title: '띠 운세',
-    subtitle: '12지 동물띠 운세',
-    description: '태어난 해의 동물띠로 보는 운세',
-    emoji: '🐰',
-    color: '#10B981',
-    available: true,
-    source: '12지신 운세론',
-  },
-  {
-    id: 'tojeong',
-    title: '토정비결',
-    subtitle: '조선 전통 운세서',
-    description: '토정 이지함 선생의 전통 운세 해석',
-    emoji: '📜',
-    color: '#6B7280',
-    available: true,
-    source: '토정비결 원문',
-  },
-  {
-    id: 'zodiac',
-    title: '별자리 운세',
-    subtitle: '12별자리 운세',
-    description: '탄생 별자리로 보는 오늘의 운세',
-    emoji: '⭐',
+    id: 'basic',
+    title: '📅 기본 운세',
+    description: '매일매일 확인하는 운세',
     color: '#3B82F6',
-    available: true,
-    source: '서양 점성술',
+    items: [
+      {
+        id: 'fortuneCalendar',
+        title: '운세 달력',
+        subtitle: '한 달 운세를 한눈에',
+        description: '달력에서 좋은 날, 조심할 날을 확인해요',
+        emoji: '📅',
+        color: '#059669',
+        route: 'FortuneCalendar',
+        help: '중요한 약속을 잡을 때 좋은 날을 찾아보세요',
+      },
+      {
+        id: 'animal',
+        title: '띠 운세',
+        subtitle: '나의 띠로 보는 운세',
+        description: '쥐띠, 소띠 등 12가지 띠별 운세',
+        emoji: '🐰',
+        color: '#10B981',
+        help: '태어난 해의 동물로 보는 친근한 운세예요',
+      },
+      {
+        id: 'zodiac',
+        title: '별자리 운세',
+        subtitle: '내 별자리로 보는 운세',
+        description: '물병자리, 양자리 등 12별자리 운세',
+        emoji: '⭐',
+        color: '#3B82F6',
+        help: '서양 점성술 기반의 별자리 운세예요',
+      },
+      {
+        id: 'tojeong',
+        title: '토정비결',
+        subtitle: '조선시대 전통 운세',
+        description: '500년 전해온 한국 전통 운세',
+        emoji: '📜',
+        color: '#6B7280',
+        help: '토정 이지함 선생님이 만든 전통 점술서예요',
+      },
+    ],
   },
   {
-    id: 'luckyInfo',
-    title: '오늘의 길운',
-    subtitle: '맞춤 행운 정보',
-    description: '오늘의 행운 색상, 숫자, 방향, 시간대',
-    emoji: '🎁',
-    color: '#F97316',
-    available: true,
-    source: '명리학 용신론',
+    id: 'life',
+    title: '🔮 인생 분석',
+    description: '나의 타고난 운명을 알아봐요',
+    color: '#8B5CF6',
+    items: [
+      {
+        id: 'daeun',
+        title: '10년 대운',
+        subtitle: '인생의 큰 흐름 보기',
+        description: '10년 단위로 인생의 운이 어떻게 바뀌는지',
+        emoji: '📊',
+        color: '#0EA5E9',
+        route: 'Daeun',
+        help: '지금 내가 어떤 시기를 지나고 있는지 알 수 있어요',
+      },
+      {
+        id: 'fiveSpirits',
+        title: '나에게 좋은 것',
+        subtitle: '나를 돕는 오행 찾기',
+        description: '나에게 도움이 되는 색상, 방향, 직업 등',
+        emoji: '🧭',
+        color: '#9333EA',
+        help: '금, 목, 수, 화, 토 중 나와 맞는 것을 알려줘요',
+      },
+      {
+        id: 'sinsal',
+        title: '타고난 기운',
+        subtitle: '내 사주의 특별한 기운',
+        description: '귀인, 도화살 등 사주에 있는 특별한 기운',
+        emoji: '⚡',
+        color: '#DC2626',
+        route: 'Sinsal',
+        help: '연예인 기운, 귀인 운 등 특별한 운을 알려줘요',
+      },
+      {
+        id: 'nameAnalysis',
+        title: '이름 풀이',
+        subtitle: '내 이름의 의미와 운',
+        description: '이름에 담긴 오행과 운명을 분석해요',
+        emoji: '✍️',
+        color: '#8B5CF6',
+        route: 'NameAnalysis',
+        help: '이름이 나의 운명에 어떤 영향을 주는지 알아봐요',
+      },
+    ],
   },
   {
-    id: 'compatibility',
-    title: '전통 궁합',
-    subtitle: '사주 궁합 분석',
-    description: '두 사람의 사주로 보는 궁합',
-    emoji: '💕',
-    color: '#EC4899',
-    available: true,
-    route: 'CompatibilityInput',
-    source: '명리학 궁합론',
+    id: 'daily',
+    title: '📝 일상 활용',
+    description: '실생활에 도움되는 기능',
+    color: '#10B981',
+    items: [
+      {
+        id: 'taekil',
+        title: '좋은 날 찾기',
+        subtitle: '결혼, 이사, 계약 등 길일 선택',
+        description: '중요한 일에 좋은 날짜를 찾아드려요',
+        emoji: '📆',
+        color: '#14B8A6',
+        route: 'Taekil',
+        help: '결혼식, 이사, 개업 등 좋은 날을 알려줘요',
+      },
+      {
+        id: 'fortuneQnA',
+        title: '운세 질문',
+        subtitle: '궁금한 것을 물어보세요',
+        description: 'AI가 사주 관점에서 답변해드려요',
+        emoji: '💬',
+        color: '#0891B2',
+        route: 'FortuneQnA',
+        help: '취업, 이직, 연애 등 고민을 상담해보세요',
+      },
+      {
+        id: 'dreamDiary',
+        title: '꿈 일기',
+        subtitle: '꿈 기록하고 해몽받기',
+        description: '어젯밤 꿈이 무슨 의미인지 알아봐요',
+        emoji: '🌙',
+        color: '#6366F1',
+        route: 'DreamDiary',
+        help: '꿈을 기록하면 자동으로 해몽해드려요',
+      },
+      {
+        id: 'dream',
+        title: '꿈 해몽',
+        subtitle: '꿈에서 본 것의 의미',
+        description: '뱀, 돼지, 물 등 꿈 상징 해석',
+        emoji: '💭',
+        color: '#A855F7',
+        help: '꿈에 나온 것이 무슨 의미인지 알려줘요',
+      },
+    ],
   },
   {
-    id: 'dream',
-    title: '꿈풀이',
-    subtitle: '꿈 해몽 사전',
-    description: '꿈에서 본 것의 의미를 알아봅니다',
-    emoji: '🌙',
-    color: '#6366F1',
-    available: true,
-    source: '전통 해몽서/주공해몽',
-  },
-  {
-    id: 'fiveSpirits',
-    title: '5신 분석',
-    subtitle: '용신/희신/기신/구신/한신',
-    description: '나에게 필요한 오행과 피해야 할 오행 분석',
-    emoji: '🧭',
-    color: '#9333EA',
-    available: true,
-    source: '적천수, 자평진전',
+    id: 'manage',
+    title: '👥 관리 기능',
+    description: '운세 기록과 가족 관리',
+    color: '#EF4444',
+    items: [
+      {
+        id: 'familyGroup',
+        title: '가족·친구 관리',
+        subtitle: '소중한 사람들의 사주 저장',
+        description: '가족, 친구의 사주를 저장하고 궁합도 확인',
+        emoji: '👨‍👩‍👧‍👦',
+        color: '#EF4444',
+        route: 'FamilyGroup',
+        help: '한 번 등록하면 언제든 운세와 궁합을 볼 수 있어요',
+      },
+      {
+        id: 'bookmark',
+        title: '저장한 운세',
+        subtitle: '북마크한 운세 모아보기',
+        description: '좋았던 운세, 중요한 운세를 다시 확인',
+        emoji: '⭐',
+        color: '#F59E0B',
+        route: 'Bookmark',
+        help: '마음에 드는 운세는 저장해두세요',
+      },
+      {
+        id: 'fortuneReport',
+        title: '나의 운세 리포트',
+        subtitle: '지금까지의 운세 분석',
+        description: '내 사주 종합 분석과 사용 통계',
+        emoji: '📈',
+        color: '#22C55E',
+        route: 'FortuneReport',
+        help: '오행 분포, 길몽 횟수 등 통계를 볼 수 있어요',
+      },
+    ],
   },
 ];
 
+interface FortuneItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  emoji: string;
+  color: string;
+  route?: string;
+  help: string;
+}
+
 export default function FortuneMenuScreen() {
   const navigation = useNavigation<any>();
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('recommend');
+  const [showHelp, setShowHelp] = useState<string | null>(null);
 
-  const handleFortuneSelect = (fortune: typeof FORTUNE_TYPES[0]) => {
-    if (!fortune.available) return;
-
+  const handleFortuneSelect = (fortune: FortuneItem) => {
     if (fortune.route) {
       navigation.navigate(fortune.route);
     } else {
@@ -119,57 +263,101 @@ export default function FortuneMenuScreen() {
     }
   };
 
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
+  };
+
+  const renderFortuneCard = (item: FortuneItem) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.fortuneCard}
+      onPress={() => handleFortuneSelect(item)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
+        <Text style={styles.iconEmoji}>{item.emoji}</Text>
+      </View>
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+        <Text style={styles.cardDescription}>{item.description}</Text>
+      </View>
+      <View style={styles.cardRight}>
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            setShowHelp(showHelp === item.id ? null : item.id);
+          }}
+        >
+          <Text style={styles.helpButtonText}>?</Text>
+        </TouchableOpacity>
+        <Text style={styles.cardArrow}>›</Text>
+      </View>
+
+      {/* 도움말 표시 */}
+      {showHelp === item.id && (
+        <View style={styles.helpBubble}>
+          <Text style={styles.helpText}>💡 {item.help}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 헤더 - 탭용 간소화 */}
+      {/* 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🔮 운세 종류</Text>
+        <Text style={styles.headerTitle}>🔮 운세 모음</Text>
+        <Text style={styles.headerSubtitle}>원하는 운세를 선택하세요</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* 안내 문구 */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>다양한 운세를 확인하세요</Text>
-          <Text style={styles.infoText}>
-            전통 명리학, 동양 점술, 서양 점성술의{'\n'}지혜로 당신의 운명을 풀어드립니다.
+        {/* 카테고리별 운세 */}
+        {FORTUNE_CATEGORIES.map((category) => (
+          <View key={category.id} style={styles.categoryContainer}>
+            <TouchableOpacity
+              style={[
+                styles.categoryHeader,
+                expandedCategory === category.id && styles.categoryHeaderExpanded,
+              ]}
+              onPress={() => toggleCategory(category.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.categoryTitleContainer}>
+                <Text style={styles.categoryTitle}>{category.title}</Text>
+                <Text style={styles.categoryDescription}>{category.description}</Text>
+              </View>
+              <Text style={[
+                styles.expandIcon,
+                expandedCategory === category.id && styles.expandIconRotated,
+              ]}>
+                ▼
+              </Text>
+            </TouchableOpacity>
+
+            {expandedCategory === category.id && (
+              <View style={styles.categoryContent}>
+                {category.items.map(renderFortuneCard)}
+              </View>
+            )}
+          </View>
+        ))}
+
+        {/* 하단 안내 */}
+        <View style={styles.bottomInfo}>
+          <Text style={styles.bottomInfoTitle}>💡 알아두세요</Text>
+          <Text style={styles.bottomInfoText}>
+            • 운세는 참고용이에요. 최종 결정은 본인이 하는 거예요!{'\n'}
+            • 같은 날이라도 마음가짐에 따라 운이 달라질 수 있어요{'\n'}
+            • 좋은 운세는 더 좋게, 나쁜 운세는 조심하면 돼요
           </Text>
         </View>
 
-        {/* 운세 카드 목록 */}
-        {FORTUNE_TYPES.map((fortune) => (
-          <TouchableOpacity
-            key={fortune.id}
-            style={[
-              styles.fortuneCard,
-              !fortune.available && styles.fortuneCardDisabled,
-            ]}
-            onPress={() => handleFortuneSelect(fortune)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: `${fortune.color}15` }]}>
-              <Text style={styles.iconEmoji}>{fortune.emoji}</Text>
-            </View>
-            <View style={styles.cardContent}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{fortune.title}</Text>
-                {!fortune.available && (
-                  <View style={styles.comingSoonBadge}>
-                    <Text style={styles.comingSoonText}>준비중</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.cardSubtitle}>{fortune.subtitle}</Text>
-              <Text style={styles.cardDescription}>{fortune.description}</Text>
-              <Text style={styles.cardSource}>출처: {fortune.source}</Text>
-            </View>
-            <Text style={styles.cardArrow}>›</Text>
-          </TouchableOpacity>
-        ))}
-
-        <View style={{ height: 20 }} />
+        <View style={{ height: 30 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -181,9 +369,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
@@ -195,96 +380,155 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
+  headerSubtitle: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
   content: {
-    padding: SPACING.lg,
+    padding: SPACING.md,
     paddingBottom: 20,
   },
-  infoBox: {
+  categoryContainer: {
+    marginBottom: SPACING.md,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
+    padding: SPACING.md,
     ...SHADOWS.sm,
   },
-  infoTitle: {
+  categoryHeaderExpanded: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  categoryTitleContainer: {
+    flex: 1,
+  },
+  categoryTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
   },
-  infoText: {
+  categoryDescription: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
-    lineHeight: 20,
+    marginTop: 2,
+  },
+  expandIcon: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginLeft: SPACING.sm,
+  },
+  expandIconRotated: {
+    transform: [{ rotate: '180deg' }],
+  },
+  categoryContent: {
+    backgroundColor: COLORS.white,
+    borderBottomLeftRadius: BORDER_RADIUS.lg,
+    borderBottomRightRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: SPACING.sm,
+    paddingBottom: SPACING.sm,
+    ...SHADOWS.sm,
+    marginTop: -1,
   },
   fortuneCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-    ...SHADOWS.sm,
-  },
-  fortuneCardDisabled: {
-    opacity: 0.6,
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginTop: SPACING.sm,
+    position: 'relative',
   },
   iconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: BORDER_RADIUS.lg,
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
   },
   iconEmoji: {
-    fontSize: 24,
+    fontSize: 22,
   },
   cardContent: {
     flex: 1,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   cardTitle: {
-    fontSize: FONT_SIZES.lg,
+    fontSize: FONT_SIZES.lg,  // 더 큰 글자
     fontWeight: '700',
     color: COLORS.textPrimary,
-  },
-  comingSoonBadge: {
-    backgroundColor: COLORS.border,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.sm,
-  },
-  comingSoonText: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   cardSubtitle: {
-    fontSize: FONT_SIZES.sm,
+    fontSize: FONT_SIZES.md,  // 더 큰 글자
     color: COLORS.primary,
     fontWeight: '600',
-    marginTop: 2,
+    marginTop: 3,
   },
   cardDescription: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
-    lineHeight: 18,
+    fontSize: FONT_SIZES.md,  // 더 큰 글자
+    color: '#57534E',  // 더 진한 색상
+    marginTop: 6,
+    lineHeight: 21,  // 더 넓은 줄간격
   },
-  cardSource: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textLight,
-    marginTop: SPACING.xs,
-    fontStyle: 'italic',
+  cardRight: {
+    alignItems: 'center',
+    marginLeft: SPACING.sm,
+  },
+  helpButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  helpButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
   },
   cardArrow: {
-    fontSize: 24,
+    fontSize: 20,
     color: COLORS.textLight,
-    marginLeft: SPACING.sm,
+  },
+  helpBubble: {
+    position: 'absolute',
+    top: '100%',
+    left: SPACING.md,
+    right: SPACING.md,
+    backgroundColor: '#1E293B',
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.sm,
+    marginTop: 4,
+    zIndex: 100,
+  },
+  helpText: {
+    fontSize: FONT_SIZES.md,  // 더 큰 글자
+    color: 'white',
+    lineHeight: 21,  // 더 넓은 줄간격
+  },
+  bottomInfo: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,  // 더 넓은 패딩
+    marginTop: SPACING.md,
+  },
+  bottomInfoTitle: {
+    fontSize: FONT_SIZES.lg,  // 더 큰 글자
+    fontWeight: '700',
+    color: '#78350F',  // 더 진한 색상 (대비 개선)
+    marginBottom: SPACING.sm,
+  },
+  bottomInfoText: {
+    fontSize: FONT_SIZES.md,  // 더 큰 글자
+    color: '#78350F',  // 더 진한 색상 (대비 개선)
+    lineHeight: 24,  // 더 넓은 줄간격
   },
 });

@@ -21,6 +21,7 @@ import { generateComprehensiveFortune, ComprehensiveFortune } from '../services/
 import { formatDateWithDayOfWeek, formatLunarFromISO } from '../utils/dateFormatter';
 import { SajuCalculator } from '../services/SajuCalculator';
 import { getStemByKorean } from '../data/saju';
+import { getScoreMessage, getScoreLevel, getScoreColor, getScoreLabel } from '../data/simpleInterpretations';
 
 const { width } = Dimensions.get('window');
 
@@ -84,96 +85,56 @@ export default function HomeScreen() {
   }, [profile?.birthDate, profile?.name, sajuResult?.dayMaster, selectedDateTimestamp]);
 
 
-  // 오늘의 운세 해석 (일진 기반 운세 알고리즘 사용)
+  // 쉬운 점수 메시지 가져오기 (새로운 해석 시스템)
+  const easyScoreMessages = useMemo(() => {
+    if (!fortune) return null;
+    return {
+      overall: getScoreMessage('overall', fortune.scores.overall),
+      love: getScoreMessage('love', fortune.scores.love),
+      money: getScoreMessage('money', fortune.scores.money),
+      work: getScoreMessage('work', fortune.scores.work),
+      health: getScoreMessage('health', fortune.scores.health),
+    };
+  }, [fortune]);
+
+  // 오늘의 운세 해석 (쉬운 말 버전으로 개선)
   const todayFortuneInterpretation = useMemo(() => {
-    if (!fortune || !sajuResult) {
+    if (!fortune || !sajuResult || !easyScoreMessages) {
       return {
         main: '운세 정보를 불러오는 중입니다...',
         sub: '',
+        emoji: '⏳',
       };
     }
 
     try {
-      const dayMaster = sajuResult.dayMaster || '갑';
-
-      // fortune 객체에서 일진 기반 운세 데이터 사용
+      const overallMessage = easyScoreMessages.overall;
       const overallScore = fortune.scores.overall;
-      const todayGanji = fortune.todayGanji; // 해당 날짜의 일진
-      const elementAnalysis = fortune.elementAnalysis; // 오행 분석
-      const branchAnalysis = fortune.branchAnalysis; // 지지 분석
-      const detailedFortunes = fortune.detailedFortunes; // 상세 운세
 
-      // 점수에 따른 운세 해석
-      let fortuneLevel = '';
-      let fortuneAdvice = '';
-      if (overallScore >= 85) {
-        fortuneLevel = '매우 좋은 운세';
-        fortuneAdvice = detailedFortunes?.overall?.advice || '적극적으로 행동하면 좋은 결과를 얻을 수 있습니다.';
-      } else if (overallScore >= 75) {
-        fortuneLevel = '좋은 운세';
-        fortuneAdvice = detailedFortunes?.overall?.advice || '전반적으로 순조로운 흐름이 예상됩니다.';
-      } else if (overallScore >= 65) {
-        fortuneLevel = '무난한 운세';
-        fortuneAdvice = detailedFortunes?.overall?.advice || '큰 변동 없이 안정적인 하루가 예상됩니다.';
-      } else if (overallScore >= 55) {
-        fortuneLevel = '주의가 필요한 운세';
-        fortuneAdvice = detailedFortunes?.overall?.advice || '작은 실수나 오해가 생길 수 있으니 신중하게 행동하세요.';
-      } else {
-        fortuneLevel = '조심해야 할 운세';
-        fortuneAdvice = detailedFortunes?.overall?.advice || '예상치 못한 변수가 생길 수 있습니다.';
-      }
+      // 쉬운 메인 메시지 구성
+      const mainText = `${overallMessage.emoji} ${overallMessage.title}\n\n` +
+        `${overallMessage.message}\n\n` +
+        `💡 오늘의 조언: ${overallMessage.advice}`;
 
-      // 일간 해석
-      const dayMasterMeaning: Record<string, string> = {
-        '갑': '굳센 나무처럼 곧은 심성을 가진',
-        '을': '유연한 풀처럼 적응력이 뛰어난',
-        '병': '밝은 태양처럼 활발한 에너지를 가진',
-        '정': '따뜻한 촛불처럼 섬세한 마음을 가진',
-        '무': '높은 산처럼 듬직한 신뢰감을 가진',
-        '기': '비옥한 땅처럼 포용력이 넓은',
-        '경': '단단한 쇠처럼 의지가 강한',
-        '신': '빛나는 보석처럼 섬세한 감각을 가진',
-        '임': '넓은 바다처럼 지혜가 깊은',
-        '계': '맑은 시냇물처럼 순수한 마음을 가진',
-      };
-
-      const dayMasterDesc = dayMasterMeaning[dayMaster] || '고유한 기운을 가진';
-
-      // 일진 정보 포함 (날짜별로 다른 간지)
-      const ganjiInfo = todayGanji ? `\n\n📅 일진: ${todayGanji.fullName}` : '';
-
-      // 오행 관계 분석 추가
-      const elementInfo = elementAnalysis?.relation
-        ? `\n${elementAnalysis.relationDescription || ''}`
-        : '';
-
-      // 지지 관계 분석 추가
-      const branchInfo = branchAnalysis?.relation && branchAnalysis.relation !== '무관계'
-        ? `\n${branchAnalysis.simpleExplanation || branchAnalysis.relationDescription || ''}`
-        : '';
-
-      // 키워드 (fortune 객체에서 가져옴)
-      const keywords = fortune.keywords || ['성장', '발전', '기회'];
-      const keywordText = keywords.join("', '");
-
-      // 종합 해석 생성 (일진 기반)
-      const mainText = `${dayMasterDesc} ${profile?.name || '당신'}님의 운세는 ${overallScore}점으로 "${fortuneLevel}"입니다.${ganjiInfo}${elementInfo}${branchInfo}\n\n` +
-        `${fortuneAdvice}\n\n` +
-        `오늘의 키워드: '${keywordText}'`;
-
-      // 부가 정보 (fortune 객체에서 가져옴)
+      // 행운 정보 (fortune 객체에서 가져옴)
       const luckyInfo = fortune.luckyInfo || { color: '초록색', number: '3, 8', direction: '동쪽' };
-      const subText = `💡 행운의 색상: ${luckyInfo.color} | 행운의 숫자: ${luckyInfo.number} | 길한 방향: ${luckyInfo.direction}`;
+      const subText = `🎨 ${luckyInfo.color} | 🔢 ${luckyInfo.number} | 🧭 ${luckyInfo.direction}`;
 
-      return { main: mainText, sub: subText };
+      return {
+        main: mainText,
+        sub: subText,
+        emoji: overallMessage.emoji,
+        color: overallMessage.color,
+      };
     } catch (error) {
       console.error('운세 해석 생성 오류:', error);
       return {
         main: '오늘 하루도 긍정적인 마음으로 시작해보세요.',
         sub: '',
+        emoji: '🌈',
       };
     }
-  }, [fortune, sajuResult, profile?.name, selectedDateTimestamp]);
+  }, [fortune, sajuResult, easyScoreMessages]);
 
   // 커스텀 모달에서는 handleDateChange가 필요 없음 (모달 내에서 직접 처리)
 
@@ -384,86 +345,148 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Luck Cards */}
+          {/* Luck Cards - 쉬운 라벨 추가 */}
           <View style={styles.luckRow}>
             <LuckCard
               label="종합운"
-              emoji="✨"
-              color="#F59E0B"
-              value={`${fortune.scores.overall}점`}
+              emoji={easyScoreMessages?.overall?.emoji || "✨"}
+              color={getScoreColor(fortune.scores.overall)}
+              value={getScoreLabel(fortune.scores.overall)}
               score={fortune.scores.overall}
             />
             <LuckCard
               label="애정운"
-              emoji="💕"
-              color="#F43F5E"
-              value={`${fortune.scores.love}점`}
+              emoji={easyScoreMessages?.love?.emoji || "💕"}
+              color={getScoreColor(fortune.scores.love)}
+              value={getScoreLabel(fortune.scores.love)}
               score={fortune.scores.love}
             />
             <LuckCard
               label="금전운"
-              emoji="📈"
-              color="#10B981"
-              value={fortune.scores.money >= 85 ? '대길' : `${fortune.scores.money}점`}
+              emoji={easyScoreMessages?.money?.emoji || "📈"}
+              color={getScoreColor(fortune.scores.money)}
+              value={getScoreLabel(fortune.scores.money)}
               score={fortune.scores.money}
             />
           </View>
 
-          {/* 애정운/금전운 해설 섹션 (종합운은 아래 AdviceCard에서 표시) */}
-          {fortune.detailedFortunes && (
+          {/* 카테고리별 쉬운 운세 해설 */}
+          {easyScoreMessages && (
             <View style={styles.fortuneDetailsSection}>
-              {/* 애정운 해설 */}
-              <View style={styles.fortuneDetailCard}>
+              {/* 애정운 해설 - 쉬운 버전 */}
+              <View style={[styles.fortuneDetailCard, { borderLeftWidth: 4, borderLeftColor: easyScoreMessages.love.color }]}>
                 <View style={styles.fortuneDetailHeader}>
-                  <Text style={styles.fortuneDetailEmoji}>💕</Text>
-                  <Text style={styles.fortuneDetailTitle}>애정운</Text>
-                  <View style={[styles.fortuneDetailBadge, { backgroundColor: '#FCE7F3' }]}>
-                    <Text style={[styles.fortuneDetailScore, { color: '#DB2777' }]}>{fortune.scores.love}점</Text>
+                  <Text style={styles.fortuneDetailEmoji}>{easyScoreMessages.love.emoji}</Text>
+                  <Text style={styles.fortuneDetailTitle}>{easyScoreMessages.love.title}</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: `${easyScoreMessages.love.color}20` }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: easyScoreMessages.love.color }]}>
+                      {getScoreLabel(fortune.scores.love)}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.fortuneDetailSummary}>
-                  {fortune.detailedFortunes.love?.summary || '사랑하는 사람과 좋은 시간을 보내세요.'}
+                  {easyScoreMessages.love.message}
                 </Text>
-                <Text style={styles.fortuneDetailAdvice}>
-                  💡 {fortune.detailedFortunes.love?.advice || '진심을 담아 소통하면 좋은 결과가 있을 것입니다.'}
-                </Text>
+                <View style={styles.fortuneDetailAdviceBox}>
+                  <Text style={styles.fortuneDetailAdvice}>
+                    💡 {easyScoreMessages.love.advice}
+                  </Text>
+                </View>
               </View>
 
-              {/* 금전운 해설 */}
-              <View style={styles.fortuneDetailCard}>
+              {/* 금전운 해설 - 쉬운 버전 */}
+              <View style={[styles.fortuneDetailCard, { borderLeftWidth: 4, borderLeftColor: easyScoreMessages.money.color }]}>
                 <View style={styles.fortuneDetailHeader}>
-                  <Text style={styles.fortuneDetailEmoji}>📈</Text>
-                  <Text style={styles.fortuneDetailTitle}>금전운</Text>
-                  <View style={[styles.fortuneDetailBadge, { backgroundColor: '#D1FAE5' }]}>
-                    <Text style={[styles.fortuneDetailScore, { color: '#059669' }]}>{fortune.scores.money}점</Text>
+                  <Text style={styles.fortuneDetailEmoji}>{easyScoreMessages.money.emoji}</Text>
+                  <Text style={styles.fortuneDetailTitle}>{easyScoreMessages.money.title}</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: `${easyScoreMessages.money.color}20` }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: easyScoreMessages.money.color }]}>
+                      {getScoreLabel(fortune.scores.money)}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.fortuneDetailSummary}>
-                  {fortune.detailedFortunes.money?.summary || '재정적으로 안정적인 하루입니다.'}
+                  {easyScoreMessages.money.message}
                 </Text>
-                <Text style={styles.fortuneDetailAdvice}>
-                  💡 {fortune.detailedFortunes.money?.advice || '계획적인 소비와 저축을 병행하세요.'}
+                <View style={styles.fortuneDetailAdviceBox}>
+                  <Text style={styles.fortuneDetailAdvice}>
+                    💡 {easyScoreMessages.money.advice}
+                  </Text>
+                </View>
+              </View>
+
+              {/* 업무운 해설 - 새로 추가 */}
+              <View style={[styles.fortuneDetailCard, { borderLeftWidth: 4, borderLeftColor: easyScoreMessages.work.color }]}>
+                <View style={styles.fortuneDetailHeader}>
+                  <Text style={styles.fortuneDetailEmoji}>{easyScoreMessages.work.emoji}</Text>
+                  <Text style={styles.fortuneDetailTitle}>{easyScoreMessages.work.title}</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: `${easyScoreMessages.work.color}20` }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: easyScoreMessages.work.color }]}>
+                      {getScoreLabel(fortune.scores.work)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.fortuneDetailSummary}>
+                  {easyScoreMessages.work.message}
                 </Text>
+                <View style={styles.fortuneDetailAdviceBox}>
+                  <Text style={styles.fortuneDetailAdvice}>
+                    💡 {easyScoreMessages.work.advice}
+                  </Text>
+                </View>
+              </View>
+
+              {/* 건강운 해설 - 새로 추가 */}
+              <View style={[styles.fortuneDetailCard, { borderLeftWidth: 4, borderLeftColor: easyScoreMessages.health.color }]}>
+                <View style={styles.fortuneDetailHeader}>
+                  <Text style={styles.fortuneDetailEmoji}>{easyScoreMessages.health.emoji}</Text>
+                  <Text style={styles.fortuneDetailTitle}>{easyScoreMessages.health.title}</Text>
+                  <View style={[styles.fortuneDetailBadge, { backgroundColor: `${easyScoreMessages.health.color}20` }]}>
+                    <Text style={[styles.fortuneDetailScore, { color: easyScoreMessages.health.color }]}>
+                      {getScoreLabel(fortune.scores.health)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.fortuneDetailSummary}>
+                  {easyScoreMessages.health.message}
+                </Text>
+                <View style={styles.fortuneDetailAdviceBox}>
+                  <Text style={styles.fortuneDetailAdvice}>
+                    💡 {easyScoreMessages.health.advice}
+                  </Text>
+                </View>
               </View>
             </View>
           )}
 
-          {/* 통합 운세 섹션 (오늘의 운세 + 종합운세 통합) */}
-          {comprehensiveFortune && (
-            <View style={styles.comprehensiveSection}>
+          {/* 통합 운세 섹션 (쉬운 해석 버전) */}
+          {comprehensiveFortune && easyScoreMessages && (
+            <View style={[styles.comprehensiveSection, { borderTopWidth: 4, borderTopColor: easyScoreMessages.overall.color }]}>
               <View style={styles.comprehensiveHeader}>
                 <View style={styles.comprehensiveTitleRow}>
-                  <Text style={styles.comprehensiveIcon}>✨</Text>
+                  <Text style={styles.comprehensiveIcon}>{easyScoreMessages.overall.emoji}</Text>
                   <Text style={styles.comprehensiveTitle}>{isToday ? '오늘의 운세' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 운세`}</Text>
                 </View>
-                <View style={styles.comprehensiveScoreBadge}>
-                  <Text style={styles.comprehensiveScoreText}>{fortune.scores.overall}점</Text>
+                <View style={[styles.comprehensiveScoreBadge, { backgroundColor: easyScoreMessages.overall.color }]}>
+                  <Text style={styles.comprehensiveScoreText}>{getScoreLabel(fortune.scores.overall)}</Text>
                 </View>
               </View>
 
-              {/* 운세 해석 */}
+              {/* 핵심 메시지 (쉬운 버전) */}
+              <View style={[styles.mainMessageCard, { backgroundColor: `${easyScoreMessages.overall.color}10` }]}>
+                <Text style={[styles.mainMessageTitle, { color: easyScoreMessages.overall.color }]}>
+                  {easyScoreMessages.overall.title}
+                </Text>
+                <Text style={styles.mainMessageText}>
+                  {easyScoreMessages.overall.message}
+                </Text>
+              </View>
+
+              {/* 행운 정보 */}
               <View style={styles.fortuneInterpretationCard}>
-                <Text style={styles.fortuneInterpretationText}>{todayFortuneInterpretation.main}</Text>
+                <Text style={styles.fortuneInterpretationAdvice}>
+                  💡 {easyScoreMessages.overall.advice}
+                </Text>
                 {todayFortuneInterpretation.sub && (
                   <Text style={styles.fortuneInterpretationSub}>{todayFortuneInterpretation.sub}</Text>
                 )}
@@ -607,14 +630,16 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   mainTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#1C1917',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
   subTitle: {
-    fontSize: 14,
-    color: '#78716C',
+    fontSize: 15,
+    color: '#57534E',  // 더 진한 색상으로 대비 개선
+    lineHeight: 22,
   },
   horoscopeSheet: {
     borderTopLeftRadius: 40,
@@ -802,18 +827,44 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fortuneDetailSummary: {
-    fontSize: 14,
-    color: '#44403C',
-    lineHeight: 22,
-    marginBottom: 10,
+    fontSize: 15,  // 더 큰 글자
+    color: '#3D3D3D',  // 더 진한 색상
+    lineHeight: 24,  // 더 넓은 줄간격
+    marginBottom: 12,
   },
   fortuneDetailAdvice: {
     fontSize: 13,
     color: '#78716C',
     lineHeight: 20,
+  },
+  fortuneDetailAdviceBox: {
     backgroundColor: 'rgba(250, 250, 249, 0.8)',
     padding: 12,
     borderRadius: 10,
+  },
+  // 핵심 메시지 카드 스타일
+  mainMessageCard: {
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+  },
+  mainMessageTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  mainMessageText: {
+    fontSize: 15,
+    color: '#44403C',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  fortuneInterpretationAdvice: {
+    fontSize: 14,
+    color: '#57534E',
+    lineHeight: 22,
+    fontWeight: '500',
   },
   // 용신 카드 스타일
   yongsinCard: {
@@ -833,21 +884,22 @@ const styles = StyleSheet.create({
   fortuneInterpretationCard: {
     backgroundColor: '#FAFAFA',
     borderRadius: 14,
-    padding: 16,
+    padding: 18,  // 더 넓은 패딩
     marginBottom: 16,
   },
   fortuneInterpretationText: {
-    fontSize: 14,
-    color: '#44403C',
-    lineHeight: 24,
+    fontSize: 15,  // 더 큰 글자
+    color: '#3D3D3D',  // 더 진한 색상
+    lineHeight: 26,  // 더 넓은 줄간격
   },
   fortuneInterpretationSub: {
-    fontSize: 13,
-    color: '#78716C',
-    marginTop: 12,
-    paddingTop: 12,
+    fontSize: 14,  // 더 큰 글자
+    color: '#57534E',  // 더 진한 색상
+    marginTop: 14,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
+    lineHeight: 22,
   },
   yongsinHeader: {
     flexDirection: 'row',
@@ -1123,9 +1175,9 @@ const styles = StyleSheet.create({
   },
   timeAdviceText: {
     flex: 1,
-    fontSize: 13,
-    color: '#44403C',
-    lineHeight: 18,
+    fontSize: 14,  // 더 큰 글자
+    color: '#3D3D3D',  // 더 진한 색상
+    lineHeight: 21,  // 더 넓은 줄간격
   },
   dosDontsCard: {
     flexDirection: 'column',
@@ -1165,9 +1217,9 @@ const styles = StyleSheet.create({
   },
   dosDontsText: {
     flex: 1,
-    fontSize: 14,
-    color: '#44403C',
-    lineHeight: 20,
+    fontSize: 15,  // 더 큰 글자
+    color: '#3D3D3D',  // 더 진한 색상
+    lineHeight: 22,  // 더 넓은 줄간격
   },
   luckyInfoSummary: {
     flexDirection: 'row',
@@ -1181,14 +1233,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   luckyInfoLabel: {
-    fontSize: 11,
-    color: '#78716C',
+    fontSize: 12,  // 더 큰 글자
+    color: '#57534E',  // 더 진한 색상
     marginBottom: 4,
+    fontWeight: '500',
   },
   luckyInfoValue: {
-    fontSize: 14,
+    fontSize: 15,  // 더 큰 글자
     fontWeight: '700',
-    color: '#8B5CF6',
+    color: '#7C3AED',  // 더 진한 보라색
   },
   luckyInfoDivider: {
     width: 1,
