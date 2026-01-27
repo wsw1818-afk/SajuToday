@@ -22,6 +22,11 @@ import { formatDateWithDayOfWeek, formatLunarFromISO } from '../utils/dateFormat
 import { SajuCalculator } from '../services/SajuCalculator';
 import { getStemByKorean } from '../data/saju';
 import { getScoreMessage, getScoreLevel, getScoreColor, getScoreLabel } from '../data/simpleInterpretations';
+import {
+  getRichIljuInterpretation,
+  generateRichDailyFortune,
+  generateCategoryFortune,
+} from '../services/RichFortuneService';
 
 const { width } = Dimensions.get('window');
 
@@ -96,6 +101,25 @@ export default function HomeScreen() {
       health: getScoreMessage('health', fortune.scores.health),
     };
   }, [fortune]);
+
+  // 풍부한 일주 해석 (문학적 비유 포함)
+  const richIljuData = useMemo(() => {
+    return getRichIljuInterpretation(sajuResult);
+  }, [sajuResult]);
+
+  // 풍부한 오늘 운세 해석
+  const richDailyFortune = useMemo(() => {
+    if (!sajuResult || !todayInfo?.ganji) return null;
+    const todayStem = todayInfo.ganji.stem;
+    const todayBranch = todayInfo.ganji.branch;
+    return generateRichDailyFortune(sajuResult, todayStem, todayBranch);
+  }, [sajuResult, todayInfo?.ganji]);
+
+  // 카테고리별 맞춤 해석
+  const categoryFortune = useMemo(() => {
+    if (!fortune) return null;
+    return generateCategoryFortune(sajuResult, fortune.scores);
+  }, [sajuResult, fortune]);
 
   // 오늘의 운세 해석 (쉬운 말 버전으로 개선)
   const todayFortuneInterpretation = useMemo(() => {
@@ -256,6 +280,34 @@ export default function HomeScreen() {
             monthPillar={sajuResult?.pillars.month}
             hourPillar={sajuResult?.pillars.hour}
           />
+
+          {/* 일주 문학적 비유 섹션 */}
+          {richIljuData && (
+            <View style={styles.iljuMetaphorSection}>
+              <View style={styles.iljuMetaphorHeader}>
+                <Text style={styles.iljuMetaphorImage}>{richIljuData.image}</Text>
+                <View style={styles.iljuMetaphorTitleBox}>
+                  <Text style={styles.iljuMetaphorTitle}>나의 일주 - {sajuResult?.pillars.day.stem}{sajuResult?.pillars.day.branch}</Text>
+                  <Text style={styles.iljuMetaphorEssence}>{richIljuData.essence}</Text>
+                </View>
+              </View>
+              <View style={styles.iljuMetaphorContent}>
+                <Text style={styles.iljuMetaphorText}>{richIljuData.metaphor}</Text>
+                <View style={styles.iljuMetaphorDivider} />
+                <Text style={styles.iljuMetaphorTheme}>
+                  <Text style={styles.iljuMetaphorLabel}>인생 테마: </Text>
+                  {richIljuData.lifeTheme}
+                </Text>
+                <View style={styles.iljuMetaphorKeywords}>
+                  {richIljuData.strengthKeywords.slice(0, 3).map((keyword, index) => (
+                    <View key={index} style={styles.iljuStrengthBadge}>
+                      <Text style={styles.iljuStrengthText}>✨ {keyword}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Horoscope Section */}
@@ -455,6 +507,35 @@ export default function HomeScreen() {
                     💡 {easyScoreMessages.health.advice}
                   </Text>
                 </View>
+              </View>
+            </View>
+          )}
+
+          {/* 오늘의 운세 - 문학적 해석 */}
+          {richDailyFortune && (
+            <View style={styles.richDailyFortuneSection}>
+              <View style={styles.richDailyFortuneHeader}>
+                <Text style={styles.richDailyFortuneTitle}>🌟 오늘의 운세 풀이</Text>
+              </View>
+              <View style={styles.richDailyFortuneCard}>
+                <Text style={styles.richDailyFortuneRelation}>
+                  <Text style={styles.richDailyFortuneLabel}>오늘과의 인연: </Text>
+                  {richDailyFortune.dayRelation}
+                </Text>
+                <Text style={styles.richDailyFortuneInterpretation}>
+                  {richDailyFortune.interpretation}
+                </Text>
+                <View style={styles.richDailyFortuneAdviceBox}>
+                  <Text style={styles.richDailyFortuneAdviceLabel}>💫 오늘의 핵심 조언</Text>
+                  <Text style={styles.richDailyFortuneAdvice}>{richDailyFortune.advice}</Text>
+                </View>
+                {richDailyFortune.luckyTime && (
+                  <View style={styles.richDailyFortuneLucky}>
+                    <Text style={styles.richDailyFortuneLuckyItem}>
+                      ⏰ 행운의 시간: {richDailyFortune.luckyTime}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -1410,5 +1491,147 @@ const styles = StyleSheet.create({
   },
   timeAdviceEmoji: {
     fontSize: 14,
+  },
+  // 일주 문학적 비유 섹션 스타일
+  iljuMetaphorSection: {
+    marginTop: 20,
+    marginHorizontal: 20,
+    backgroundColor: 'rgba(147, 51, 234, 0.08)',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(147, 51, 234, 0.2)',
+  },
+  iljuMetaphorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 12,
+  },
+  iljuMetaphorImage: {
+    fontSize: 40,
+  },
+  iljuMetaphorTitleBox: {
+    flex: 1,
+  },
+  iljuMetaphorTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#5B21B6',
+    marginBottom: 4,
+  },
+  iljuMetaphorEssence: {
+    fontSize: 14,
+    color: '#7C3AED',
+    fontWeight: '500',
+  },
+  iljuMetaphorContent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 14,
+    padding: 14,
+  },
+  iljuMetaphorText: {
+    fontSize: 15,
+    color: '#44403C',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  iljuMetaphorDivider: {
+    height: 1,
+    backgroundColor: 'rgba(147, 51, 234, 0.15)',
+    marginVertical: 12,
+  },
+  iljuMetaphorTheme: {
+    fontSize: 14,
+    color: '#57534E',
+    lineHeight: 22,
+    marginBottom: 12,
+  },
+  iljuMetaphorLabel: {
+    fontWeight: '600',
+    color: '#7C3AED',
+  },
+  iljuMetaphorKeywords: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  iljuStrengthBadge: {
+    backgroundColor: 'rgba(147, 51, 234, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  iljuStrengthText: {
+    fontSize: 12,
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
+  // 오늘의 운세 풍부한 해석 섹션 스타일
+  richDailyFortuneSection: {
+    marginBottom: 20,
+  },
+  richDailyFortuneHeader: {
+    marginBottom: 12,
+  },
+  richDailyFortuneTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1C1917',
+  },
+  richDailyFortuneCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  richDailyFortuneRelation: {
+    fontSize: 14,
+    color: '#57534E',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  richDailyFortuneLabel: {
+    fontWeight: '600',
+    color: '#D97706',
+  },
+  richDailyFortuneInterpretation: {
+    fontSize: 15,
+    color: '#3D3D3D',
+    lineHeight: 26,
+    marginBottom: 16,
+  },
+  richDailyFortuneAdviceBox: {
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  richDailyFortuneAdviceLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#D97706',
+    marginBottom: 6,
+  },
+  richDailyFortuneAdvice: {
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 22,
+  },
+  richDailyFortuneLucky: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  richDailyFortuneLuckyItem: {
+    fontSize: 13,
+    color: '#78716C',
+    fontWeight: '500',
   },
 });
