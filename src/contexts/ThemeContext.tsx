@@ -3,13 +3,23 @@
  * 다크 모드 / 라이트 모드 지원
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const THEME_STORAGE_KEY = '@saju_theme';
+const FONT_SIZE_STORAGE_KEY = '@saju_font_size';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+export type FontSizeLevel = 'small' | 'medium' | 'large' | 'xlarge';
+
+// 글꼴 크기 배율
+const FONT_SCALE: Record<FontSizeLevel, number> = {
+  small: 0.85,
+  medium: 1,
+  large: 1.15,
+  xlarge: 1.3,
+};
 
 // 라이트 테마 색상
 export const lightColors = {
@@ -61,8 +71,12 @@ interface ThemeContextType {
   mode: ThemeMode;
   isDark: boolean;
   colors: ThemeColors;
+  fontSizeLevel: FontSizeLevel;
+  fontScale: number;
   setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
+  setFontSizeLevel: (level: FontSizeLevel) => void;
+  scaledFontSize: (baseSize: number) => number;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -74,21 +88,30 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const systemColorScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('system');
+  const [fontSizeLevel, setFontSizeLevelState] = useState<FontSizeLevel>('medium');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // 저장된 테마 모드 로드
+  // 저장된 테마 모드 및 글꼴 크기 로드
   useEffect(() => {
-    loadThemeMode();
+    loadSettings();
   }, []);
 
-  const loadThemeMode = async () => {
+  const loadSettings = async () => {
     try {
-      const savedMode = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      const [savedMode, savedFontSize] = await Promise.all([
+        AsyncStorage.getItem(THEME_STORAGE_KEY),
+        AsyncStorage.getItem(FONT_SIZE_STORAGE_KEY),
+      ]);
+
       if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
         setModeState(savedMode as ThemeMode);
       }
+
+      if (savedFontSize && ['small', 'medium', 'large', 'xlarge'].includes(savedFontSize)) {
+        setFontSizeLevelState(savedFontSize as FontSizeLevel);
+      }
     } catch (error) {
-      console.error('Failed to load theme mode:', error);
+      console.error('Failed to load settings:', error);
     } finally {
       setIsLoaded(true);
     }
@@ -113,6 +136,22 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   };
 
+  // 글꼴 크기 설정
+  const setFontSizeLevel = async (level: FontSizeLevel) => {
+    setFontSizeLevelState(level);
+    try {
+      await AsyncStorage.setItem(FONT_SIZE_STORAGE_KEY, level);
+    } catch (error) {
+      console.error('Failed to save font size:', error);
+    }
+  };
+
+  // 글꼴 배율 계산
+  const fontScale = useMemo(() => FONT_SCALE[fontSizeLevel], [fontSizeLevel]);
+
+  // 글꼴 크기 계산 함수
+  const scaledFontSize = (baseSize: number) => Math.round(baseSize * fontScale);
+
   // 실제 적용할 다크 모드 여부 계산
   const isDark =
     mode === 'dark' || (mode === 'system' && systemColorScheme === 'dark');
@@ -130,8 +169,12 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         mode,
         isDark,
         colors,
+        fontSizeLevel,
+        fontScale,
         setMode,
         toggleTheme,
+        setFontSizeLevel,
+        scaledFontSize,
       }}
     >
       {children}
@@ -152,4 +195,12 @@ export const THEME_OPTIONS = [
   { value: 'light' as ThemeMode, label: '라이트 모드', icon: '☀️' },
   { value: 'dark' as ThemeMode, label: '다크 모드', icon: '🌙' },
   { value: 'system' as ThemeMode, label: '시스템 설정', icon: '⚙️' },
+];
+
+// 글꼴 크기 옵션
+export const FONT_SIZE_OPTIONS = [
+  { value: 'small' as FontSizeLevel, label: '작게', description: '가독성 ↓' },
+  { value: 'medium' as FontSizeLevel, label: '보통', description: '기본값' },
+  { value: 'large' as FontSizeLevel, label: '크게', description: '가독성 ↑' },
+  { value: 'xlarge' as FontSizeLevel, label: '매우 크게', description: '고령자용' },
 ];

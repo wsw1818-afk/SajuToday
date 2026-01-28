@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,15 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { Tone, Length, Gender, CalendarType } from '../types';
 import KasiService from '../services/KasiService';
+import {
+  requestNotificationPermission,
+  getNotificationEnabled,
+  setNotificationEnabled,
+  getNotificationTime,
+  setNotificationTime,
+  sendTestNotification,
+} from '../services/NotificationService';
+import { useTheme, THEME_OPTIONS, FONT_SIZE_OPTIONS, FontSizeLevel, ThemeMode } from '../contexts/ThemeContext';
 
 const TONE_OPTIONS: { value: Tone; label: string; description: string }[] = [
   { value: 'friendly', label: '친근함', description: '친구처럼 편하게' },
@@ -34,6 +43,7 @@ const LENGTH_OPTIONS: { value: Length; label: string; description: string }[] = 
 
 export default function SettingsScreen() {
   const { profile, settings, setSettings, setProfile, setSajuResult, calculateSaju, resetApp } = useApp();
+  const { mode: themeMode, setMode: setThemeMode, fontSizeLevel, setFontSizeLevel, scaledFontSize } = useTheme();
   const [localSettings, setLocalSettings] = useState(settings);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -59,6 +69,27 @@ export default function SettingsScreen() {
   const [showDayPicker, setShowDayPicker] = useState(false);
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showMinutePicker, setShowMinutePicker] = useState(false);
+
+  // 알림 시간 선택 모달 상태
+  const [showNotificationTimePicker, setShowNotificationTimePicker] = useState(false);
+  const [notificationHour, setNotificationHour] = useState(8);
+  const [notificationMinute, setNotificationMinute] = useState(0);
+
+  // 앱 시작 시 알림 설정 로드
+  useEffect(() => {
+    const loadNotificationSettings = async () => {
+      const enabled = await getNotificationEnabled();
+      const time = await getNotificationTime();
+      setLocalSettings(prev => ({
+        ...prev,
+        notificationEnabled: enabled,
+        notificationTime: `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`,
+      }));
+      setNotificationHour(time.hour);
+      setNotificationMinute(time.minute);
+    };
+    loadNotificationSettings();
+  }, []);
 
   // 년도 옵션 생성 (1920 ~ 현재)
   const currentYear = new Date().getFullYear();
@@ -94,8 +125,41 @@ export default function SettingsScreen() {
     setLocalSettings(prev => ({ ...prev, length }));
   };
 
-  const handleNotificationToggle = (enabled: boolean) => {
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      // 권한 요청
+      const hasPermission = await requestNotificationPermission();
+      if (!hasPermission) {
+        Alert.alert(
+          '알림 권한 필요',
+          '오늘의 운세 알림을 받으려면 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
+          [{ text: '확인' }]
+        );
+        return;
+      }
+    }
+
     setLocalSettings(prev => ({ ...prev, notificationEnabled: enabled }));
+    await setNotificationEnabled(enabled);
+
+    if (enabled) {
+      Alert.alert('알림 설정', `매일 ${notificationHour}시 ${notificationMinute}분에 운세 알림을 보내드립니다.`);
+    }
+  };
+
+  // 알림 시간 저장
+  const handleSaveNotificationTime = async () => {
+    const timeStr = `${notificationHour.toString().padStart(2, '0')}:${notificationMinute.toString().padStart(2, '0')}`;
+    setLocalSettings(prev => ({ ...prev, notificationTime: timeStr }));
+    await setNotificationTime(notificationHour, notificationMinute);
+    setShowNotificationTimePicker(false);
+    Alert.alert('알림 시간 변경', `매일 ${notificationHour}시 ${notificationMinute}분에 알림을 보내드립니다.`);
+  };
+
+  // 테스트 알림 보내기
+  const handleTestNotification = async () => {
+    await sendTestNotification();
+    Alert.alert('테스트 알림', '알림이 전송되었습니다!');
   };
 
   const handleSave = async () => {
@@ -334,6 +398,71 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
+        {/* 화면 테마 설정 */}
+        <Card title="화면 테마" style={styles.card}>
+          <View style={styles.themeOptionsRow}>
+            {THEME_OPTIONS.map(option => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.themeButton,
+                  themeMode === option.value && styles.themeButtonSelected,
+                ]}
+                onPress={() => setThemeMode(option.value)}
+              >
+                <Text style={styles.themeIcon}>{option.icon}</Text>
+                <Text
+                  style={[
+                    styles.themeLabel,
+                    themeMode === option.value && styles.themeLabelSelected,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Card>
+
+        {/* 글꼴 크기 설정 */}
+        <Card title="글꼴 크기" style={styles.card}>
+          <View style={styles.fontSizeOptionsRow}>
+            {FONT_SIZE_OPTIONS.map(option => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.fontSizeButton,
+                  fontSizeLevel === option.value && styles.fontSizeButtonSelected,
+                ]}
+                onPress={() => setFontSizeLevel(option.value)}
+              >
+                <Text
+                  style={[
+                    styles.fontSizeLabel,
+                    fontSizeLevel === option.value && styles.fontSizeLabelSelected,
+                    { fontSize: option.value === 'small' ? 12 : option.value === 'medium' ? 14 : option.value === 'large' ? 16 : 18 },
+                  ]}
+                >
+                  {option.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.fontSizeDescription,
+                    fontSizeLevel === option.value && styles.fontSizeDescriptionSelected,
+                  ]}
+                >
+                  {option.description}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.fontSizePreview}>
+            <Text style={[styles.fontSizePreviewText, { fontSize: scaledFontSize(14) }]}>
+              미리보기: 오늘의 운세를 확인해보세요
+            </Text>
+          </View>
+        </Card>
+
         {/* 알림 설정 */}
         <Card title="알림" style={styles.card}>
           <View style={styles.switchRow}>
@@ -351,10 +480,24 @@ export default function SettingsScreen() {
             />
           </View>
           {localSettings.notificationEnabled && (
-            <TouchableOpacity style={styles.timeButton}>
-              <Text style={styles.timeLabel}>알림 시간</Text>
-              <Text style={styles.timeValue}>{localSettings.notificationTime}</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowNotificationTimePicker(true)}
+              >
+                <Text style={styles.timeLabel}>알림 시간</Text>
+                <View style={styles.timeValueRow}>
+                  <Text style={styles.timeValue}>{localSettings.notificationTime}</Text>
+                  <Text style={styles.timeArrow}>→</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.testNotificationButton}
+                onPress={handleTestNotification}
+              >
+                <Text style={styles.testNotificationText}>알림 테스트</Text>
+              </TouchableOpacity>
+            </>
           )}
         </Card>
 
@@ -788,6 +931,74 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* 알림 시간 피커 모달 */}
+      <Modal visible={showNotificationTimePicker} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.pickerOverlay}
+          activeOpacity={1}
+          onPress={() => setShowNotificationTimePicker(false)}
+        >
+          <View style={styles.notificationTimeContainer}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>알림 시간 설정</Text>
+              <TouchableOpacity onPress={handleSaveNotificationTime}>
+                <Text style={styles.pickerClose}>저장</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.notificationTimePickerRow}>
+              <View style={styles.notificationTimeColumn}>
+                <Text style={styles.notificationTimeLabel}>시</Text>
+                <ScrollView style={styles.notificationTimeScroll}>
+                  {hourOptions.map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      style={[
+                        styles.notificationTimeItem,
+                        notificationHour === hour && styles.notificationTimeItemSelected,
+                      ]}
+                      onPress={() => setNotificationHour(hour)}
+                    >
+                      <Text style={[
+                        styles.notificationTimeItemText,
+                        notificationHour === hour && styles.notificationTimeItemTextSelected,
+                      ]}>
+                        {hour.toString().padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+              <Text style={styles.notificationTimeColon}>:</Text>
+              <View style={styles.notificationTimeColumn}>
+                <Text style={styles.notificationTimeLabel}>분</Text>
+                <ScrollView style={styles.notificationTimeScroll}>
+                  {[0, 10, 20, 30, 40, 50].map((minute) => (
+                    <TouchableOpacity
+                      key={minute}
+                      style={[
+                        styles.notificationTimeItem,
+                        notificationMinute === minute && styles.notificationTimeItemSelected,
+                      ]}
+                      onPress={() => setNotificationMinute(minute)}
+                    >
+                      <Text style={[
+                        styles.notificationTimeItemText,
+                        notificationMinute === minute && styles.notificationTimeItemTextSelected,
+                      ]}>
+                        {minute.toString().padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+            <Text style={styles.notificationTimePreview}>
+              매일 {notificationHour.toString().padStart(2, '0')}:{notificationMinute.toString().padStart(2, '0')}에 알림
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1190,5 +1401,161 @@ const styles = StyleSheet.create({
   pickerItemTextSelected: {
     color: COLORS.primary,
     fontWeight: '600',
+  },
+  // 알림 관련 스타일
+  timeValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  timeArrow: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+  },
+  testNotificationButton: {
+    marginTop: SPACING.md,
+    paddingVertical: SPACING.sm,
+    alignItems: 'center',
+    backgroundColor: `${COLORS.primary}15`,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  testNotificationText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  // 알림 시간 피커 모달
+  notificationTimeContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.lg,
+    width: '80%',
+    ...SHADOWS.lg,
+  },
+  notificationTimePickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    gap: SPACING.md,
+  },
+  notificationTimeColumn: {
+    alignItems: 'center',
+    width: 80,
+  },
+  notificationTimeLabel: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.sm,
+  },
+  notificationTimeScroll: {
+    height: 180,
+  },
+  notificationTimeItem: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    marginVertical: 2,
+    borderRadius: BORDER_RADIUS.sm,
+  },
+  notificationTimeItemSelected: {
+    backgroundColor: COLORS.primary,
+  },
+  notificationTimeItemText: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  notificationTimeItemTextSelected: {
+    color: COLORS.white,
+    fontWeight: '700',
+  },
+  notificationTimeColon: {
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  notificationTimePreview: {
+    textAlign: 'center',
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    paddingBottom: SPACING.lg,
+  },
+  // 테마 설정 스타일
+  themeOptionsRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  themeButton: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  themeButtonSelected: {
+    backgroundColor: `${COLORS.primary}15`,
+    borderColor: COLORS.primary,
+  },
+  themeIcon: {
+    fontSize: 24,
+    marginBottom: SPACING.xs,
+  },
+  themeLabel: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  themeLabelSelected: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  // 글꼴 크기 설정 스타일
+  fontSizeOptionsRow: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
+  },
+  fontSizeButton: {
+    flex: 1,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.xs,
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  fontSizeButtonSelected: {
+    backgroundColor: `${COLORS.primary}15`,
+    borderColor: COLORS.primary,
+  },
+  fontSizeLabel: {
+    color: COLORS.textPrimary,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  fontSizeLabelSelected: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  fontSizeDescription: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+  },
+  fontSizeDescriptionSelected: {
+    color: COLORS.primary,
+  },
+  fontSizePreview: {
+    marginTop: SPACING.md,
+    paddingTop: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.divider,
+    alignItems: 'center',
+  },
+  fontSizePreviewText: {
+    color: COLORS.textSecondary,
   },
 });

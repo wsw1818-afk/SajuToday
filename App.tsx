@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet, View } from 'react-native';
 
 import { AppProvider } from './src/contexts/AppContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import Navigation from './src/navigation/Navigation';
+import { initializeNotifications } from './src/services/NotificationService';
 
 // 테스트 모드: true면 DatePickerTest 화면만 표시
 const TEST_MODE = false;
@@ -13,6 +15,10 @@ const TEST_MODE = false;
 const DatePickerTest = TEST_MODE ? require('./src/screens/DatePickerTest').default : null;
 
 export default function App() {
+  // 알림 초기화
+  useEffect(() => {
+    initializeNotifications();
+  }, []);
   // 테스트 모드일 때는 테스트 화면만 표시
   if (TEST_MODE && DatePickerTest) {
     return (
@@ -28,10 +34,12 @@ export default function App() {
   return (
     <View style={styles.container}>
       <SafeAreaProvider>
-        <AppProvider>
-          <Navigation />
-          <StatusBar style="dark" />
-        </AppProvider>
+        <ThemeProvider>
+          <AppProvider>
+            <Navigation />
+            <StatusBar style="auto" />
+          </AppProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </View>
   );

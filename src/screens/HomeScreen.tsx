@@ -8,6 +8,7 @@ import {
   Dimensions,
   StatusBar,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +28,7 @@ import {
   generateRichDailyFortune,
   generateCategoryFortune,
 } from '../services/RichFortuneService';
+import { shareFortuneText, createDailyFortuneMessage } from '../services/FortuneShare';
 
 const { width } = Dimensions.get('window');
 
@@ -249,6 +251,28 @@ export default function HomeScreen() {
     navigation.navigate('Menu');
   }, [navigation]);
 
+  // 운세 공유 핸들러
+  const handleShareFortune = useCallback(async () => {
+    if (!fortune || !profile) return;
+
+    const luckyInfo = fortune.luckyInfo || { color: '초록색', number: '3, 8', direction: '동쪽' };
+    const keywords = richDailyFortune?.keywords || ['행운', '희망', '성공'];
+
+    const shareContent = createDailyFortuneMessage(
+      profile.name || '사용자',
+      selectedDateStr,
+      fortune.scores.overall,
+      keywords,
+      luckyInfo.color,
+      luckyInfo.number
+    );
+
+    const success = await shareFortuneText(shareContent);
+    if (success) {
+      // 공유 성공 시 별도 알림 불필요 (시스템 공유 UI에서 처리)
+    }
+  }, [fortune, profile, selectedDateStr, richDailyFortune]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FDFBF7" />
@@ -264,6 +288,9 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <TouchableOpacity style={styles.iconButton} onPress={handleOpenMenu}>
               <Text style={styles.menuIconButton}>☰</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareButton} onPress={handleShareFortune}>
+              <Text style={styles.shareButtonText}>📤 공유</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -1588,6 +1615,19 @@ const styles = StyleSheet.create({
   menuIconButton: {
     fontSize: 24,
     color: '#1C1917',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
   arrowText: {
     fontSize: 20,
