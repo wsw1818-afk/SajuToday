@@ -1,1 +1,1 @@
-✨ 접근성/다크모드 대응: 다크 모드 전체 적용, 반응형 SajuWheel, 접근성 라벨, 에러 바운더리, 용어 툴팁
+✨ 보안/성능/테스트 개선: API 키 .env 분리, SecureStorageService 암호화, KasiService 오프라인 캐시, ErrorLogService, 커스텀 훅 분리, Jest 테스트 30개 추가

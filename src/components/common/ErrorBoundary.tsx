@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { FullScreenError } from './FeedbackUI';
+import ErrorLogService from '../../services/ErrorLogService';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +16,7 @@ interface State {
  * 에러 바운더리 컴포넌트
  * React 컴포넌트 트리에서 발생하는 JavaScript 오류를 잡아서
  * FullScreenError UI를 표시합니다.
+ * ErrorLogService를 통해 에러를 기록합니다.
  */
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -27,8 +29,8 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // 에러 로깅 (필요시 원격 로깅 서비스로 전송)
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // ErrorLogService로 에러 기록 (UI 에러는 critical)
+    ErrorLogService.logUIError(error, errorInfo.componentStack || undefined);
   }
 
   handleRetry = () => {

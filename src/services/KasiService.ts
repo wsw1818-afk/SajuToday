@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import NetInfo from '@react-native-community/netinfo';
 import { TodayInfo, Pillar } from '../types';
 import { getTodayGanji } from './SajuCalculator';
 import { SOLAR_TERMS } from '../data/saju';
@@ -10,11 +10,31 @@ const KASI_BASE_URL = 'http://apis.data.go.kr/B090041/openapi/service';
 const LUNAR_API_URL = `${KASI_BASE_URL}/LrsrCldInfoService`;
 const SPECIAL_DAY_API_URL = `${KASI_BASE_URL}/SpcdeInfoService`;
 
-// API 키 (app.json extra에서 가져옴)
-const API_KEY = Constants.expoConfig?.extra?.kasiApiKey || '';
+// API 키 (환경변수에서 가져옴 - .env 파일)
+const API_KEY = process.env.EXPO_PUBLIC_KASI_API_KEY || '';
 
 // 캐시 키 접두사
 const CACHE_PREFIX = '@kasi_cache_';
+
+// 캐시 만료 시간 (밀리초)
+const CACHE_TTL = {
+  LUNAR: 365 * 24 * 60 * 60 * 1000,    // 음력 데이터: 1년 (변하지 않음)
+  GANJI: 365 * 24 * 60 * 60 * 1000,    // 간지 데이터: 1년 (변하지 않음)
+  SOLAR_TERMS: 365 * 24 * 60 * 60 * 1000,  // 절기 데이터: 1년
+  HOLIDAYS: 30 * 24 * 60 * 60 * 1000,  // 공휴일 데이터: 30일
+  TODAY_INFO: 24 * 60 * 60 * 1000,     // 오늘 정보: 24시간
+};
+
+// 캐시 데이터 타입
+interface CacheData<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+}
+
+// 네트워크 상태
+let isOnline = true;
+let networkUnsubscribe: (() => void) | null = null;
 
 interface LunarInfo {
   lunYear: number;
@@ -39,24 +59,145 @@ interface HolidayInfo {
 
 /**
  * KASI API 서비스
+ * 오프라인 캐시 전략:
+ * - 캐시 우선: 캐시가 있으면 즉시 반환 (TTL 확인)
+ * - 백그라운드 갱신: 온라인이면 백그라운드에서 API 호출 후 캐시 갱신
+ * - 오프라인 폴백: 오프라인이면 만료된 캐시라도 반환
  */
 export class KasiService {
+  /**
+   * 네트워크 상태 모니터링 시작
+   */
+  static initNetworkListener(): void {
+    if (networkUnsubscribe) return; // 이미 시작됨
+
+    networkUnsubscribe = NetInfo.addEventListener(state => {
+      const wasOnline = isOnline;
+      isOnline = state.isConnected ?? false;
+
+      if (!wasOnline && isOnline) {
+        console.log('네트워크 연결됨 - 캐시 갱신 가능');
+      } else if (wasOnline && !isOnline) {
+        console.log('네트워크 연결 끊김 - 오프라인 모드');
+      }
+    });
+  }
+
+  /**
+   * 네트워크 상태 모니터링 중지
+   */
+  static stopNetworkListener(): void {
+    if (networkUnsubscribe) {
+      networkUnsubscribe();
+      networkUnsubscribe = null;
+    }
+  }
+
+  /**
+   * 현재 네트워크 상태 확인
+   */
+  static async checkNetworkStatus(): Promise<boolean> {
+    try {
+      const state = await NetInfo.fetch();
+      isOnline = state.isConnected ?? false;
+      return isOnline;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 캐시 저장 (TTL 포함)
+   */
+  private static async setCache<T>(key: string, data: T, ttl: number): Promise<void> {
+    try {
+      const cacheData: CacheData<T> = {
+        data,
+        timestamp: Date.now(),
+        ttl,
+      };
+      await AsyncStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (e) {
+      console.log('캐시 저장 실패:', e);
+    }
+  }
+
+  /**
+   * 캐시 조회 (TTL 확인)
+   * @param forceReturn true면 만료된 캐시도 반환 (오프라인 모드용)
+   */
+  private static async getCache<T>(key: string, forceReturn: boolean = false): Promise<T | null> {
+    try {
+      const cached = await AsyncStorage.getItem(key);
+      if (!cached) return null;
+
+      const cacheData: CacheData<T> = JSON.parse(cached);
+      const isExpired = Date.now() - cacheData.timestamp > cacheData.ttl;
+
+      if (isExpired && !forceReturn) {
+        return null; // 만료됨, 새로운 데이터 필요
+      }
+
+      return cacheData.data;
+    } catch (e) {
+      console.log('캐시 조회 실패:', e);
+      return null;
+    }
+  }
+
+  /**
+   * 레거시 캐시 조회 (TTL 없는 구버전 호환)
+   */
+  private static async getLegacyCache<T>(key: string): Promise<T | null> {
+    try {
+      const cached = await AsyncStorage.getItem(key);
+      if (!cached) return null;
+
+      const parsed = JSON.parse(cached);
+      // TTL이 없으면 레거시 데이터
+      if (parsed.timestamp === undefined) {
+        return parsed as T;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * 양력 -> 음력 변환
    */
   static async solarToLunar(solarDate: string): Promise<LunarInfo | null> {
     const cacheKey = `${CACHE_PREFIX}lunar_${solarDate}`;
 
-    // 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-    } catch (e) {
-      console.log('Cache read error:', e);
+    // 1. 캐시 확인 (유효한 캐시 우선)
+    const cached = await this.getCache<LunarInfo>(cacheKey);
+    if (cached) {
+      return cached;
     }
 
+    // 레거시 캐시 확인 (구버전 호환)
+    const legacyCached = await this.getLegacyCache<LunarInfo>(cacheKey);
+    if (legacyCached) {
+      // 새 형식으로 마이그레이션
+      await this.setCache(cacheKey, legacyCached, CACHE_TTL.LUNAR);
+      return legacyCached;
+    }
+
+    // 2. 네트워크 상태 확인
+    const online = await this.checkNetworkStatus();
+    if (!online) {
+      // 오프라인: 만료된 캐시라도 반환
+      const expiredCache = await this.getCache<LunarInfo>(cacheKey, true);
+      if (expiredCache) {
+        console.log('오프라인 모드: 만료된 캐시 사용');
+        return expiredCache;
+      }
+      console.log('오프라인 모드: 캐시 없음');
+      return null;
+    }
+
+    // 3. API 호출
     const [year, month, day] = solarDate.split('-');
 
     try {
@@ -70,7 +211,6 @@ export class KasiService {
         timeout: 10000,
       });
 
-      // XML 응답 파싱 (간단한 정규식 사용)
       const xml = response.data;
 
       const lunYear = this.extractXmlValue(xml, 'lunYear');
@@ -95,16 +235,18 @@ export class KasiService {
         dayGanji: lunIljin || '',
       };
 
-      // 캐시 저장 (영구)
-      try {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-      } catch (e) {
-        console.log('Cache write error:', e);
-      }
+      // 캐시 저장 (1년)
+      await this.setCache(cacheKey, result, CACHE_TTL.LUNAR);
 
       return result;
     } catch (error) {
       console.error('KASI solarToLunar error:', error);
+      // API 실패 시 만료된 캐시라도 반환
+      const fallbackCache = await this.getCache<LunarInfo>(cacheKey, true);
+      if (fallbackCache) {
+        console.log('API 실패: 만료된 캐시 폴백 사용');
+        return fallbackCache;
+      }
       return null;
     }
   }
@@ -120,16 +262,35 @@ export class KasiService {
   ): Promise<string | null> {
     const cacheKey = `${CACHE_PREFIX}solar_${lunYear}_${lunMonth}_${lunDay}_${isLeapMonth}`;
 
-    // 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        return cached;
-      }
-    } catch (e) {
-      console.log('Cache read error:', e);
+    // 1. 캐시 확인
+    const cached = await this.getCache<string>(cacheKey);
+    if (cached) {
+      return cached;
     }
 
+    // 레거시 캐시 확인 (문자열 직접 저장된 경우)
+    try {
+      const legacyCached = await AsyncStorage.getItem(cacheKey);
+      if (legacyCached && !legacyCached.includes('timestamp')) {
+        await this.setCache(cacheKey, legacyCached, CACHE_TTL.LUNAR);
+        return legacyCached;
+      }
+    } catch {
+      // 무시
+    }
+
+    // 2. 네트워크 상태 확인
+    const online = await this.checkNetworkStatus();
+    if (!online) {
+      const expiredCache = await this.getCache<string>(cacheKey, true);
+      if (expiredCache) {
+        console.log('오프라인 모드: 만료된 캐시 사용');
+        return expiredCache;
+      }
+      return null;
+    }
+
+    // 3. API 호출
     try {
       const response = await axios.get(`${LUNAR_API_URL}/getSolCalInfo`, {
         params: {
@@ -154,16 +315,13 @@ export class KasiService {
       const result = `${solYear}-${solMonth?.padStart(2, '0')}-${solDay?.padStart(2, '0')}`;
 
       // 캐시 저장
-      try {
-        await AsyncStorage.setItem(cacheKey, result);
-      } catch (e) {
-        console.log('Cache write error:', e);
-      }
+      await this.setCache(cacheKey, result, CACHE_TTL.LUNAR);
 
       return result;
     } catch (error) {
       console.error('KASI lunarToSolar error:', error);
-      return null;
+      const fallbackCache = await this.getCache<string>(cacheKey, true);
+      return fallbackCache;
     }
   }
 
@@ -173,16 +331,32 @@ export class KasiService {
   static async getSolarTerms(year: number): Promise<SolarTermInfo[]> {
     const cacheKey = `${CACHE_PREFIX}solarterms_${year}`;
 
-    // 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-    } catch (e) {
-      console.log('Cache read error:', e);
+    // 1. 캐시 확인
+    const cached = await this.getCache<SolarTermInfo[]>(cacheKey);
+    if (cached) {
+      return cached;
     }
 
+    // 레거시 캐시 확인
+    const legacyCached = await this.getLegacyCache<SolarTermInfo[]>(cacheKey);
+    if (legacyCached) {
+      await this.setCache(cacheKey, legacyCached, CACHE_TTL.SOLAR_TERMS);
+      return legacyCached;
+    }
+
+    // 2. 네트워크 상태 확인
+    const online = await this.checkNetworkStatus();
+    if (!online) {
+      const expiredCache = await this.getCache<SolarTermInfo[]>(cacheKey, true);
+      if (expiredCache) {
+        console.log('오프라인 모드: 만료된 절기 캐시 사용');
+        return expiredCache;
+      }
+      // 로컬 데이터로 폴백
+      return this.getLocalSolarTerms(year);
+    }
+
+    // 3. API 호출
     try {
       const response = await axios.get(`${SPECIAL_DAY_API_URL}/get24DivisionsInfo`, {
         params: {
@@ -201,18 +375,29 @@ export class KasiService {
         name: this.getItemValue(item, 'dateName') || '',
       })).filter(item => item.date && item.name);
 
-      // 캐시 저장 (1년간)
-      try {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-      } catch (e) {
-        console.log('Cache write error:', e);
-      }
+      // 캐시 저장
+      await this.setCache(cacheKey, result, CACHE_TTL.SOLAR_TERMS);
 
       return result;
     } catch (error) {
       console.error('KASI getSolarTerms error:', error);
-      return [];
+      const fallbackCache = await this.getCache<SolarTermInfo[]>(cacheKey, true);
+      if (fallbackCache) {
+        return fallbackCache;
+      }
+      // 로컬 데이터로 폴백
+      return this.getLocalSolarTerms(year);
     }
+  }
+
+  /**
+   * 로컬 절기 데이터 (오프라인 폴백용)
+   */
+  private static getLocalSolarTerms(year: number): SolarTermInfo[] {
+    return SOLAR_TERMS.map(term => ({
+      date: `${year}-${term.month.toString().padStart(2, '0')}-${term.approxDay.toString().padStart(2, '0')}`,
+      name: term.korean,
+    }));
   }
 
   /**
@@ -221,16 +406,31 @@ export class KasiService {
   static async getHolidays(year: number, month?: number): Promise<HolidayInfo[]> {
     const cacheKey = `${CACHE_PREFIX}holidays_${year}_${month || 'all'}`;
 
-    // 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-    } catch (e) {
-      console.log('Cache read error:', e);
+    // 1. 캐시 확인
+    const cached = await this.getCache<HolidayInfo[]>(cacheKey);
+    if (cached) {
+      return cached;
     }
 
+    // 레거시 캐시 확인
+    const legacyCached = await this.getLegacyCache<HolidayInfo[]>(cacheKey);
+    if (legacyCached) {
+      await this.setCache(cacheKey, legacyCached, CACHE_TTL.HOLIDAYS);
+      return legacyCached;
+    }
+
+    // 2. 네트워크 상태 확인
+    const online = await this.checkNetworkStatus();
+    if (!online) {
+      const expiredCache = await this.getCache<HolidayInfo[]>(cacheKey, true);
+      if (expiredCache) {
+        console.log('오프라인 모드: 만료된 공휴일 캐시 사용');
+        return expiredCache;
+      }
+      return [];
+    }
+
+    // 3. API 호출
     try {
       const params: Record<string, string> = {
         ServiceKey: API_KEY,
@@ -257,16 +457,13 @@ export class KasiService {
       })).filter(item => item.date && item.name);
 
       // 캐시 저장
-      try {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-      } catch (e) {
-        console.log('Cache write error:', e);
-      }
+      await this.setCache(cacheKey, result, CACHE_TTL.HOLIDAYS);
 
       return result;
     } catch (error) {
       console.error('KASI getHolidays error:', error);
-      return [];
+      const fallbackCache = await this.getCache<HolidayInfo[]>(cacheKey, true);
+      return fallbackCache || [];
     }
   }
 
@@ -280,16 +477,33 @@ export class KasiService {
   } | null> {
     const cacheKey = `${CACHE_PREFIX}ganji_${solarDate}`;
 
-    // 캐시 확인
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        return JSON.parse(cached);
-      }
-    } catch (e) {
-      console.log('Cache read error:', e);
+    type GanjiResult = { yearGanji: string; monthGanji: string; dayGanji: string };
+
+    // 1. 캐시 확인
+    const cached = await this.getCache<GanjiResult>(cacheKey);
+    if (cached) {
+      return cached;
     }
 
+    // 레거시 캐시 확인
+    const legacyCached = await this.getLegacyCache<GanjiResult>(cacheKey);
+    if (legacyCached) {
+      await this.setCache(cacheKey, legacyCached, CACHE_TTL.GANJI);
+      return legacyCached;
+    }
+
+    // 2. 네트워크 상태 확인
+    const online = await this.checkNetworkStatus();
+    if (!online) {
+      const expiredCache = await this.getCache<GanjiResult>(cacheKey, true);
+      if (expiredCache) {
+        console.log('오프라인 모드: 만료된 간지 캐시 사용');
+        return expiredCache;
+      }
+      return null;
+    }
+
+    // 3. API 호출
     const [year, month, day] = solarDate.split('-');
 
     try {
@@ -313,23 +527,20 @@ export class KasiService {
         return null;
       }
 
-      const result = {
+      const result: GanjiResult = {
         yearGanji: lunSecha || '',
         monthGanji: lunWolgeon || '',
         dayGanji: lunIljin || '',
       };
 
-      // 캐시 저장 (영구)
-      try {
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-      } catch (e) {
-        console.log('Cache write error:', e);
-      }
+      // 캐시 저장
+      await this.setCache(cacheKey, result, CACHE_TTL.GANJI);
 
       return result;
     } catch (error) {
       console.error('KASI getGanjiInfo error:', error);
-      return null;
+      const fallbackCache = await this.getCache<GanjiResult>(cacheKey, true);
+      return fallbackCache;
     }
   }
 

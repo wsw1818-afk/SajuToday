@@ -1,14 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SQLite from 'expo-sqlite';
 import { UserProfile, SajuResult, Settings, Fortune, FortuneHistory, SavedPerson } from '../types';
+import { SecureStorageService } from './SecureStorageService';
 
-// AsyncStorage 키
+// AsyncStorage 키 (일반 데이터용)
 const STORAGE_KEYS = {
-  PROFILE: '@saju_profile',
-  SAJU_RESULT: '@saju_result',
-  SETTINGS: '@saju_settings',
-  ONBOARDING_COMPLETE: '@onboarding_complete',
-  SAVED_PEOPLE: '@saved_people',
+  PROFILE: '@saju_profile',           // Legacy (마이그레이션 후 제거)
+  SAJU_RESULT: '@saju_result',        // Legacy (마이그레이션 후 제거)
+  SETTINGS: '@saju_settings',         // Legacy (마이그레이션 후 제거)
+  ONBOARDING_COMPLETE: '@onboarding_complete',  // 민감하지 않음
+  SAVED_PEOPLE: '@saved_people',      // Legacy (마이그레이션 후 제거)
+};
+
+// 보안 저장소 키 (민감 데이터용)
+const SECURE_KEYS = {
+  PROFILE: 'profile',
+  SAJU_RESULT: 'saju_result',
+  SETTINGS: 'settings',
+  SAVED_PEOPLE: 'saved_people',
 };
 
 // 기본 설정
@@ -60,23 +69,39 @@ export class StorageService {
     await this.db.runAsync('DELETE FROM fortune_history WHERE date < ?', dateStr);
   }
 
-  // ===== 프로필 관련 =====
+  // ===== 프로필 관련 (암호화 저장) =====
 
   /**
-   * 프로필 저장
+   * 프로필 저장 (암호화)
    */
   static async saveProfile(profile: UserProfile): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+    await SecureStorageService.setSecureObject(SECURE_KEYS.PROFILE, profile);
   }
 
   /**
-   * 프로필 조회
+   * 프로필 조회 (복호화)
    */
   static async getProfile(): Promise<UserProfile | null> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.PROFILE);
-      return data ? JSON.parse(data) : null;
-    } catch {
+      // 1. 보안 저장소에서 먼저 조회
+      const secureProfile = await SecureStorageService.getSecureObject<UserProfile>(SECURE_KEYS.PROFILE);
+      if (secureProfile) return secureProfile;
+
+      // 2. 레거시 저장소에서 마이그레이션 시도
+      const legacyData = await AsyncStorage.getItem(STORAGE_KEYS.PROFILE);
+      if (legacyData) {
+        const profile = JSON.parse(legacyData) as UserProfile;
+        // 보안 저장소로 마이그레이션
+        await SecureStorageService.setSecureObject(SECURE_KEYS.PROFILE, profile);
+        // 레거시 데이터 삭제 (선택적)
+        await AsyncStorage.removeItem(STORAGE_KEYS.PROFILE);
+        console.log('프로필 데이터를 보안 저장소로 마이그레이션 완료');
+        return profile;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('프로필 조회 실패:', error);
       return null;
     }
   }
@@ -85,47 +110,76 @@ export class StorageService {
    * 프로필 삭제
    */
   static async deleteProfile(): Promise<void> {
-    await AsyncStorage.removeItem(STORAGE_KEYS.PROFILE);
+    await SecureStorageService.removeSecureItem(SECURE_KEYS.PROFILE);
+    await AsyncStorage.removeItem(STORAGE_KEYS.PROFILE); // 레거시도 삭제
   }
 
-  // ===== 사주 결과 관련 =====
+  // ===== 사주 결과 관련 (암호화 저장) =====
 
   /**
-   * 사주 결과 저장
+   * 사주 결과 저장 (암호화)
    */
   static async saveSajuResult(result: SajuResult): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.SAJU_RESULT, JSON.stringify(result));
+    await SecureStorageService.setSecureObject(SECURE_KEYS.SAJU_RESULT, result);
   }
 
   /**
-   * 사주 결과 조회
+   * 사주 결과 조회 (복호화)
    */
   static async getSajuResult(): Promise<SajuResult | null> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.SAJU_RESULT);
-      return data ? JSON.parse(data) : null;
-    } catch {
+      // 1. 보안 저장소에서 먼저 조회
+      const secureResult = await SecureStorageService.getSecureObject<SajuResult>(SECURE_KEYS.SAJU_RESULT);
+      if (secureResult) return secureResult;
+
+      // 2. 레거시 저장소에서 마이그레이션 시도
+      const legacyData = await AsyncStorage.getItem(STORAGE_KEYS.SAJU_RESULT);
+      if (legacyData) {
+        const result = JSON.parse(legacyData) as SajuResult;
+        await SecureStorageService.setSecureObject(SECURE_KEYS.SAJU_RESULT, result);
+        await AsyncStorage.removeItem(STORAGE_KEYS.SAJU_RESULT);
+        console.log('사주 결과를 보안 저장소로 마이그레이션 완료');
+        return result;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('사주 결과 조회 실패:', error);
       return null;
     }
   }
 
-  // ===== 설정 관련 =====
+  // ===== 설정 관련 (암호화 저장) =====
 
   /**
-   * 설정 저장
+   * 설정 저장 (암호화)
    */
   static async saveSettings(settings: Settings): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    await SecureStorageService.setSecureObject(SECURE_KEYS.SETTINGS, settings);
   }
 
   /**
-   * 설정 조회
+   * 설정 조회 (복호화)
    */
   static async getSettings(): Promise<Settings> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return data ? { ...DEFAULT_SETTINGS, ...JSON.parse(data) } : DEFAULT_SETTINGS;
-    } catch {
+      // 1. 보안 저장소에서 먼저 조회
+      const secureSettings = await SecureStorageService.getSecureObject<Settings>(SECURE_KEYS.SETTINGS);
+      if (secureSettings) return { ...DEFAULT_SETTINGS, ...secureSettings };
+
+      // 2. 레거시 저장소에서 마이그레이션 시도
+      const legacyData = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (legacyData) {
+        const settings = JSON.parse(legacyData) as Settings;
+        await SecureStorageService.setSecureObject(SECURE_KEYS.SETTINGS, settings);
+        await AsyncStorage.removeItem(STORAGE_KEYS.SETTINGS);
+        console.log('설정을 보안 저장소로 마이그레이션 완료');
+        return { ...DEFAULT_SETTINGS, ...settings };
+      }
+
+      return DEFAULT_SETTINGS;
+    } catch (error) {
+      console.error('설정 조회 실패:', error);
       return DEFAULT_SETTINGS;
     }
   }
@@ -222,22 +276,38 @@ export class StorageService {
     return results.map(row => row.date);
   }
 
-  // ===== 저장된 사람 관리 =====
+  // ===== 저장된 사람 관리 (암호화 저장) =====
 
   /**
-   * 저장된 사람 목록 조회
+   * 저장된 사람 목록 조회 (복호화)
    */
   static async getSavedPeople(): Promise<SavedPerson[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.SAVED_PEOPLE);
-      return data ? JSON.parse(data) : [];
-    } catch {
+      // 1. 보안 저장소에서 먼저 조회
+      const securePeople = await SecureStorageService.getSecureObject<SavedPerson[]>(SECURE_KEYS.SAVED_PEOPLE);
+      if (securePeople && securePeople.length > 0) return securePeople;
+
+      // 2. 레거시 저장소에서 마이그레이션 시도
+      const legacyData = await AsyncStorage.getItem(STORAGE_KEYS.SAVED_PEOPLE);
+      if (legacyData) {
+        const people = JSON.parse(legacyData) as SavedPerson[];
+        if (people.length > 0) {
+          await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
+          await AsyncStorage.removeItem(STORAGE_KEYS.SAVED_PEOPLE);
+          console.log('저장된 사람 목록을 보안 저장소로 마이그레이션 완료');
+        }
+        return people;
+      }
+
+      return [];
+    } catch (error) {
+      console.error('저장된 사람 목록 조회 실패:', error);
       return [];
     }
   }
 
   /**
-   * 사람 저장 (추가 또는 수정)
+   * 사람 저장 (추가 또는 수정, 암호화)
    */
   static async savePerson(person: SavedPerson): Promise<void> {
     try {
@@ -259,7 +329,7 @@ export class StorageService {
         });
       }
 
-      await AsyncStorage.setItem(STORAGE_KEYS.SAVED_PEOPLE, JSON.stringify(people));
+      await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
       console.log('사람 저장 성공:', person.name);
     } catch (error) {
       console.error('사람 저장 실패:', error);
@@ -268,10 +338,10 @@ export class StorageService {
   }
 
   /**
-   * 여러 사람 한번에 저장
+   * 여러 사람 한번에 저장 (암호화)
    */
   static async savePeople(people: SavedPerson[]): Promise<void> {
-    await AsyncStorage.setItem(STORAGE_KEYS.SAVED_PEOPLE, JSON.stringify(people));
+    await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
   }
 
   /**
@@ -283,12 +353,12 @@ export class StorageService {
   }
 
   /**
-   * 사람 삭제
+   * 사람 삭제 (암호화된 저장소에서)
    */
   static async deletePerson(id: string): Promise<void> {
     const people = await this.getSavedPeople();
     const filtered = people.filter(p => p.id !== id);
-    await AsyncStorage.setItem(STORAGE_KEYS.SAVED_PEOPLE, JSON.stringify(filtered));
+    await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, filtered);
   }
 
   /**
@@ -306,9 +376,16 @@ export class StorageService {
   // ===== 전체 초기화 =====
 
   /**
-   * 모든 데이터 초기화
+   * 모든 데이터 초기화 (보안 저장소 + 레거시 + SQLite)
    */
   static async clearAll(): Promise<void> {
+    // 보안 저장소 초기화
+    await SecureStorageService.removeSecureItem(SECURE_KEYS.PROFILE);
+    await SecureStorageService.removeSecureItem(SECURE_KEYS.SAJU_RESULT);
+    await SecureStorageService.removeSecureItem(SECURE_KEYS.SETTINGS);
+    await SecureStorageService.removeSecureItem(SECURE_KEYS.SAVED_PEOPLE);
+
+    // 레거시 저장소 초기화
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.PROFILE,
       STORAGE_KEYS.SAJU_RESULT,
@@ -317,8 +394,27 @@ export class StorageService {
       STORAGE_KEYS.SAVED_PEOPLE,
     ]);
 
+    // SQLite 초기화
     if (this.db) {
       await this.db.runAsync('DELETE FROM fortune_history');
+    }
+  }
+
+  /**
+   * 모든 민감 데이터를 보안 저장소로 마이그레이션
+   * (앱 시작 시 한 번 호출)
+   */
+  static async migrateToSecureStorage(): Promise<void> {
+    try {
+      // 프로필, 설정, 저장된 사람 목록을 자동으로 마이그레이션
+      // getProfile, getSettings, getSavedPeople 호출 시 자동으로 마이그레이션됨
+      await this.getProfile();
+      await this.getSajuResult();
+      await this.getSettings();
+      await this.getSavedPeople();
+      console.log('보안 저장소 마이그레이션 체크 완료');
+    } catch (error) {
+      console.error('보안 저장소 마이그레이션 실패:', error);
     }
   }
 }

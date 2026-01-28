@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { UserProfile, SajuResult, Settings, Fortune, TodayInfo } from '../types';
 import StorageService from '../services/StorageService';
 import KasiService from '../services/KasiService';
@@ -48,6 +48,14 @@ export function AppProvider({ children }: AppProviderProps) {
   // 앱 초기화
   useEffect(() => {
     initializeApp();
+
+    // 네트워크 상태 모니터링 시작
+    KasiService.initNetworkListener();
+
+    return () => {
+      // 컴포넌트 언마운트 시 리스너 정리
+      KasiService.stopNetworkListener();
+    };
   }, []);
 
   const initializeApp = async () => {
@@ -55,7 +63,10 @@ export function AppProvider({ children }: AppProviderProps) {
       // 데이터베이스 초기화
       await StorageService.initDatabase();
 
-      // 저장된 데이터 로드
+      // 보안 저장소 마이그레이션 체크 (레거시 데이터 자동 암호화)
+      await StorageService.migrateToSecureStorage();
+
+      // 저장된 데이터 로드 (암호화된 보안 저장소에서)
       const [
         savedProfile,
         savedSajuResult,

@@ -27,9 +27,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "kasiApiKey": "b77da0b9605d7560c2f877be7f215b0127b89b2f7e28b348603dbe3c76c75596"
     }
   }
 }
