@@ -25,6 +25,7 @@ import {
   getNotificationTime,
   setNotificationTime,
   sendTestNotification,
+  isNotificationsAvailable,
 } from '../services/NotificationService';
 import { useTheme, THEME_OPTIONS, FONT_SIZE_OPTIONS, FontSizeLevel, ThemeMode } from '../contexts/ThemeContext';
 
@@ -130,19 +131,28 @@ export default function SettingsScreen() {
       // 권한 요청
       const hasPermission = await requestNotificationPermission();
       if (!hasPermission) {
-        Alert.alert(
-          '알림 권한 필요',
-          '오늘의 운세 알림을 받으려면 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
-          [{ text: '확인' }]
-        );
-        return;
+        // 네이티브 모듈이 없는 경우
+        if (!isNotificationsAvailable()) {
+          Alert.alert(
+            '알림 기능 준비 중',
+            '푸시 알림 기능은 다음 앱 업데이트에서 사용 가능합니다. 설정은 저장되며, 업데이트 후 자동으로 적용됩니다.',
+            [{ text: '확인' }]
+          );
+        } else {
+          Alert.alert(
+            '알림 권한 필요',
+            '오늘의 운세 알림을 받으려면 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
+            [{ text: '확인' }]
+          );
+          return;
+        }
       }
     }
 
     setLocalSettings(prev => ({ ...prev, notificationEnabled: enabled }));
     await setNotificationEnabled(enabled);
 
-    if (enabled) {
+    if (enabled && isNotificationsAvailable()) {
       Alert.alert('알림 설정', `매일 ${notificationHour}시 ${notificationMinute}분에 운세 알림을 보내드립니다.`);
     }
   };

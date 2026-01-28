@@ -1,9 +1,11 @@
 /**
  * 푸시 알림 서비스
  * 매일 운세 알림 기능
+ *
+ * 참고: expo-notifications는 네이티브 모듈이 필요합니다.
+ * dev client 재빌드 전까지는 알림 기능이 비활성화됩니다.
  */
 
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -15,22 +17,56 @@ const NOTIFICATION_TIME_KEY = '@notification_time';
 const DEFAULT_HOUR = 8;
 const DEFAULT_MINUTE = 0;
 
-// 알림 채널 설정 (Android)
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// 네이티브 모듈 사용 가능 여부
+let notificationsAvailable = false;
+let Notifications: typeof import('expo-notifications') | null = null;
+
+// 동적으로 expo-notifications 로드 시도
+async function loadNotificationsModule() {
+  if (Notifications) return true;
+
+  try {
+    Notifications = await import('expo-notifications');
+
+    // 알림 핸들러 설정
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    notificationsAvailable = true;
+    console.log('푸시 알림 모듈 로드 성공');
+    return true;
+  } catch (error) {
+    console.log('푸시 알림 모듈 사용 불가 (dev client 재빌드 필요)');
+    notificationsAvailable = false;
+    return false;
+  }
+}
+
+/**
+ * 알림 기능 사용 가능 여부 확인
+ */
+export function isNotificationsAvailable(): boolean {
+  return notificationsAvailable;
+}
 
 /**
  * 알림 권한 요청
  */
 export async function requestNotificationPermission(): Promise<boolean> {
   try {
+    const loaded = await loadNotificationsModule();
+    if (!loaded || !Notifications) {
+      console.log('알림 모듈이 로드되지 않아 권한 요청을 건너뜁니다.');
+      return false;
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -81,6 +117,12 @@ export async function setNotificationEnabled(enabled: boolean): Promise<void> {
   try {
     await AsyncStorage.setItem(NOTIFICATION_ENABLED_KEY, enabled ? 'true' : 'false');
 
+    const loaded = await loadNotificationsModule();
+    if (!loaded) {
+      console.log('알림 모듈이 없어 알림 예약을 건너뜁니다.');
+      return;
+    }
+
     if (enabled) {
       const time = await getNotificationTime();
       await scheduleDailyNotification(time.hour, time.minute);
@@ -129,6 +171,12 @@ export async function setNotificationTime(hour: number, minute: number): Promise
  */
 export async function scheduleDailyNotification(hour: number, minute: number): Promise<void> {
   try {
+    const loaded = await loadNotificationsModule();
+    if (!loaded || !Notifications) {
+      console.log('알림 모듈이 없어 예약을 건너뜁니다.');
+      return;
+    }
+
     // 기존 알림 취소
     await cancelAllNotifications();
 
@@ -172,6 +220,7 @@ export async function scheduleDailyNotification(hour: number, minute: number): P
  */
 export async function cancelAllNotifications(): Promise<void> {
   try {
+    if (!Notifications) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
     console.log('모든 예약 알림 취소됨');
   } catch (error) {
@@ -184,6 +233,7 @@ export async function cancelAllNotifications(): Promise<void> {
  */
 export async function getScheduledNotifications() {
   try {
+    if (!Notifications) return [];
     return await Notifications.getAllScheduledNotificationsAsync();
   } catch (error) {
     console.error('예약 알림 조회 오류:', error);
@@ -194,8 +244,14 @@ export async function getScheduledNotifications() {
 /**
  * 테스트 알림 전송 (즉시)
  */
-export async function sendTestNotification(): Promise<void> {
+export async function sendTestNotification(): Promise<boolean> {
   try {
+    const loaded = await loadNotificationsModule();
+    if (!loaded || !Notifications) {
+      console.log('알림 모듈이 없어 테스트 알림을 보낼 수 없습니다.');
+      return false;
+    }
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '사주투데이 테스트',
@@ -204,8 +260,10 @@ export async function sendTestNotification(): Promise<void> {
       },
       trigger: null, // 즉시 전송
     });
+    return true;
   } catch (error) {
     console.error('테스트 알림 오류:', error);
+    return false;
   }
 }
 
@@ -214,6 +272,13 @@ export async function sendTestNotification(): Promise<void> {
  */
 export async function initializeNotifications(): Promise<void> {
   try {
+    // 먼저 모듈 로드 시도
+    const loaded = await loadNotificationsModule();
+    if (!loaded) {
+      console.log('푸시 알림 기능이 비활성화됩니다. (dev client 재빌드 필요)');
+      return;
+    }
+
     const enabled = await getNotificationEnabled();
     if (enabled) {
       const hasPermission = await requestNotificationPermission();
