@@ -26,3 +26,6 @@ export {
 
 // 사주 용어 도움말 컴포넌트
 export { TermTooltip, TermGlossary } from './TermTooltip';
+
+// 에러 바운더리
+export { default as ErrorBoundary } from './ErrorBoundary';

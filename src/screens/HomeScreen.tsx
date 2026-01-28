@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 // DateTimePicker 대신 커스텀 모달 사용 (네이티브 모듈 크래시 방지)
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { SajuWheel, LuckCard, AdviceCard } from '../components/saju';
 import { Fortune } from '../types';
 import { generateFortune } from '../services/FortuneGenerator';
@@ -29,14 +30,21 @@ import {
   generateCategoryFortune,
 } from '../services/RichFortuneService';
 import { shareFortuneText, createDailyFortuneMessage } from '../services/FortuneShare';
+import { TermTooltip } from '../components/common';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// 반응형 사주휠 크기 계산
+const SAJU_WHEEL_SIZE = Math.min(width * 0.7, 280);
 
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { profile, todayInfo, refreshTodayInfo } = useApp();
+
+  // 테마 및 글꼴 크기 설정
+  const { isDark, colors, scaledFontSize } = useTheme();
 
   // 모든 useState를 최상단에 선언 (Hook 규칙 준수)
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -273,24 +281,180 @@ export default function HomeScreen() {
     }
   }, [fortune, profile, selectedDateStr, richDailyFortune]);
 
+  // 동적 스타일 (다크모드/글꼴 크기 적용)
+  const dynamicStyles = useMemo(() => ({
+    container: {
+      backgroundColor: isDark ? colors.background : '#FDFBF7',
+    },
+    mainTitle: {
+      fontSize: scaledFontSize(26),
+      color: isDark ? colors.text : '#1C1917',
+    },
+    subTitle: {
+      fontSize: scaledFontSize(15),
+      color: isDark ? colors.textSecondary : '#57534E',
+    },
+    menuIcon: {
+      color: isDark ? colors.text : '#1C1917',
+    },
+    card: {
+      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      borderColor: isDark ? colors.border : 'rgba(0, 0, 0, 0.05)',
+    },
+    cardText: {
+      color: isDark ? colors.text : '#1C1917',
+    },
+    secondaryText: {
+      color: isDark ? colors.textSecondary : '#57534E',
+    },
+    horoscopeSheet: {
+      backgroundColor: isDark ? colors.surface : 'rgba(255, 255, 255, 1)',
+    },
+    // 일주 섹션 스타일
+    iljuMetaphorSection: {
+      backgroundColor: isDark ? 'rgba(30, 27, 75, 0.4)' : 'rgba(245, 243, 255, 0.9)',
+      borderColor: isDark ? 'rgba(129, 140, 248, 0.3)' : '#E9D5FF',
+    },
+    iljuMetaphorTitle: {
+      color: isDark ? '#C4B5FD' : '#6B21A8',
+      fontSize: scaledFontSize(16),
+    },
+    iljuMetaphorEssence: {
+      color: isDark ? '#A5B4FC' : '#7C3AED',
+      fontSize: scaledFontSize(13),
+    },
+    iljuMetaphorText: {
+      color: isDark ? '#E0E7FF' : '#4C1D95',
+      fontSize: scaledFontSize(15),
+    },
+    iljuMetaphorTheme: {
+      color: isDark ? '#A5B4FC' : '#7C3AED',
+      fontSize: scaledFontSize(14),
+    },
+    // 날짜 선택 영역
+    dateNavigator: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+      borderColor: isDark ? 'rgba(63, 63, 70, 0.5)' : 'rgba(168, 162, 158, 0.2)',
+    },
+    lunarBadge: {
+      backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : 'rgba(231, 229, 228, 0.5)',
+    },
+    lunarText: {
+      color: isDark ? '#A1A1AA' : '#57534E',
+      fontSize: scaledFontSize(12),
+    },
+    dateTitle: {
+      color: isDark ? '#FAFAFA' : '#1C1917',
+      fontSize: scaledFontSize(22),
+    },
+    todayLabel: {
+      color: isDark ? '#A1A1AA' : '#57534E',
+      fontSize: scaledFontSize(12),
+    },
+    arrowButton: {
+      backgroundColor: isDark ? 'rgba(63, 63, 70, 0.6)' : 'rgba(231, 229, 228, 0.6)',
+    },
+    arrowText: {
+      color: isDark ? '#A1A1AA' : '#78716C',
+    },
+    dateCenterBox: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : 'rgba(250, 250, 249, 0.8)',
+    },
+    // 운세 카드 영역
+    richDailyFortuneCard: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+      borderColor: isDark ? 'rgba(63, 63, 70, 0.5)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    richDailySummary: {
+      color: isDark ? '#E4E4E7' : '#292524',
+      fontSize: scaledFontSize(15),
+    },
+    todayMeetingCard: {
+      backgroundColor: isDark ? 'rgba(79, 70, 229, 0.15)' : 'rgba(238, 242, 255, 0.9)',
+      borderColor: isDark ? 'rgba(129, 140, 248, 0.3)' : '#C7D2FE',
+    },
+    todayMeetingText: {
+      color: isDark ? '#C7D2FE' : '#4338CA',
+      fontSize: scaledFontSize(14),
+    },
+    // 탭 스타일
+    fortuneTab: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.5)' : 'rgba(231, 229, 228, 0.5)',
+    },
+    fortuneTabActive: {
+      backgroundColor: isDark ? '#4F46E5' : '#FFFFFF',
+    },
+    fortuneTabText: {
+      color: isDark ? '#A1A1AA' : '#57534E',
+      fontSize: scaledFontSize(14),
+    },
+    fortuneTabTextActive: {
+      color: isDark ? '#FFFFFF' : '#1C1917',
+    },
+    // 행운 정보
+    luckyInfoSummary: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : 'rgba(250, 250, 249, 0.9)',
+      borderColor: isDark ? 'rgba(63, 63, 70, 0.5)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    luckyInfoLabel: {
+      color: isDark ? '#A1A1AA' : '#78716C',
+      fontSize: scaledFontSize(12),
+    },
+    luckyInfoValue: {
+      color: isDark ? '#E4E4E7' : '#1C1917',
+      fontSize: scaledFontSize(14),
+    },
+    // 카테고리 카드
+    categoryCard: {
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : '#FFFFFF',
+    },
+    categoryName: {
+      color: isDark ? '#E4E4E7' : '#1C1917',
+      fontSize: scaledFontSize(15),
+    },
+    categoryMessage: {
+      color: isDark ? '#A1A1AA' : '#57534E',
+      fontSize: scaledFontSize(13),
+    },
+  }), [isDark, colors, scaledFontSize]);
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FDFBF7" />
+    <View style={[styles.container, dynamicStyles.container]}>
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={isDark ? colors.background : "#FDFBF7"}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={isDark ? colors.primary : undefined}
+          />
         }
       >
         {/* Header */}
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
-            <TouchableOpacity style={styles.iconButton} onPress={handleOpenMenu}>
-              <Text style={styles.menuIconButton}>☰</Text>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleOpenMenu}
+              accessibilityLabel="메뉴 열기"
+              accessibilityRole="button"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={[styles.menuIconButton, dynamicStyles.menuIcon]}>☰</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.shareButton} onPress={handleShareFortune}>
-              <Text style={styles.shareButtonText}>📤 공유</Text>
+            <TouchableOpacity
+              style={[styles.shareButton, { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(139, 92, 246, 0.1)' }]}
+              onPress={handleShareFortune}
+              accessibilityLabel="오늘 운세 공유하기"
+              accessibilityRole="button"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={[styles.shareButtonText, { color: isDark ? colors.primary : '#8B5CF6' }]}>📤 공유</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -298,39 +462,52 @@ export default function HomeScreen() {
         {/* Main Content */}
         <View style={styles.mainContent}>
           <View style={styles.titleSection}>
-            <Text style={styles.mainTitle}>나의 사주팔자</Text>
-            <Text style={styles.subTitle}>당신의 운명을 확인해보세요</Text>
+            <Text
+              style={[styles.mainTitle, dynamicStyles.mainTitle]}
+              accessibilityRole="header"
+            >
+              나의 사주팔자
+            </Text>
+            <Text style={[styles.subTitle, dynamicStyles.subTitle]}>
+              당신의 운명을 확인해보세요
+            </Text>
           </View>
 
-          {/* Saju Wheel */}
+          {/* Saju Wheel - 반응형 크기 적용 */}
           <SajuWheel
             dayPillar={sajuResult?.pillars.day}
             yearPillar={sajuResult?.pillars.year}
             monthPillar={sajuResult?.pillars.month}
             hourPillar={sajuResult?.pillars.hour}
+            size={SAJU_WHEEL_SIZE}
+            isDark={isDark}
           />
 
           {/* 일주 문학적 비유 섹션 */}
           {richIljuData && (
-            <View style={styles.iljuMetaphorSection}>
+            <View style={[styles.iljuMetaphorSection, dynamicStyles.iljuMetaphorSection]}>
               <View style={styles.iljuMetaphorHeader}>
                 <Text style={styles.iljuMetaphorImage}>{richIljuData.image}</Text>
                 <View style={styles.iljuMetaphorTitleBox}>
-                  <Text style={styles.iljuMetaphorTitle}>나의 일주 - {sajuResult?.pillars.day.stem}{sajuResult?.pillars.day.branch}</Text>
-                  <Text style={styles.iljuMetaphorEssence}>{richIljuData.essence}</Text>
+                  <View style={styles.iljuTitleRow}>
+                    <Text style={[styles.iljuMetaphorTitle, dynamicStyles.iljuMetaphorTitle]}>나의 </Text>
+                    <TermTooltip term="일주" style={[styles.iljuMetaphorTitle, dynamicStyles.iljuMetaphorTitle, { textDecorationLine: 'underline' }]} />
+                    <Text style={[styles.iljuMetaphorTitle, dynamicStyles.iljuMetaphorTitle]}> - {sajuResult?.pillars.day.stem}{sajuResult?.pillars.day.branch}</Text>
+                  </View>
+                  <Text style={[styles.iljuMetaphorEssence, dynamicStyles.iljuMetaphorEssence]}>{richIljuData.essence}</Text>
                 </View>
               </View>
               <View style={styles.iljuMetaphorContent}>
-                <Text style={styles.iljuMetaphorText}>{richIljuData.metaphor}</Text>
-                <View style={styles.iljuMetaphorDivider} />
-                <Text style={styles.iljuMetaphorTheme}>
-                  <Text style={styles.iljuMetaphorLabel}>인생 테마: </Text>
+                <Text style={[styles.iljuMetaphorText, dynamicStyles.iljuMetaphorText]}>{richIljuData.metaphor}</Text>
+                <View style={[styles.iljuMetaphorDivider, { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.3)' : '#E9D5FF' }]} />
+                <Text style={[styles.iljuMetaphorTheme, dynamicStyles.iljuMetaphorTheme]}>
+                  <Text style={[styles.iljuMetaphorLabel, { color: isDark ? '#A5B4FC' : '#7C3AED' }]}>인생 테마: </Text>
                   {richIljuData.lifeTheme}
                 </Text>
                 <View style={styles.iljuMetaphorKeywords}>
                   {richIljuData.strengthKeywords.slice(0, 3).map((keyword, index) => (
-                    <View key={index} style={styles.iljuStrengthBadge}>
-                      <Text style={styles.iljuStrengthText}>✨ {keyword}</Text>
+                    <View key={index} style={[styles.iljuStrengthBadge, { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(147, 51, 234, 0.1)' }]}>
+                      <Text style={[styles.iljuStrengthText, { color: isDark ? '#C4B5FD' : '#7C3AED' }]}>✨ {keyword}</Text>
                     </View>
                   ))}
                 </View>
@@ -341,21 +518,23 @@ export default function HomeScreen() {
 
         {/* Horoscope Section */}
         <LinearGradient
-          colors={['rgba(250, 250, 249, 0.8)', 'rgba(255, 255, 255, 1)']}
+          colors={isDark
+            ? ['rgba(24, 24, 27, 0.95)', 'rgba(39, 39, 42, 1)']
+            : ['rgba(250, 250, 249, 0.8)', 'rgba(255, 255, 255, 1)']}
           style={styles.horoscopeSheet}
         >
-          <View style={styles.sheetHandle} />
+          <View style={[styles.sheetHandle, { backgroundColor: isDark ? '#52525B' : '#E5E5E5' }]} />
 
           {/* Date Header - 개선된 날짜 선택 UI */}
-          <View style={styles.dateNavigator}>
+          <View style={[styles.dateNavigator, dynamicStyles.dateNavigator]}>
             {/* 상단: 음력 정보 + 절기/오늘로 버튼 */}
             <View style={styles.dateInfoRow}>
-              <View style={styles.lunarBadge}>
-                <Text style={styles.lunarText}>{selectedLunarStr}</Text>
+              <View style={[styles.lunarBadge, dynamicStyles.lunarBadge]}>
+                <Text style={[styles.lunarText, dynamicStyles.lunarText]}>{selectedLunarStr}</Text>
                 {isToday && todayInfo?.solarTerm && (
                   <>
-                    <View style={styles.dotSeparator} />
-                    <Text style={styles.lunarText}>{todayInfo.solarTerm}</Text>
+                    <View style={[styles.dotSeparator, { backgroundColor: isDark ? '#52525B' : '#A8A29E' }]} />
+                    <Text style={[styles.lunarText, dynamicStyles.lunarText]}>{todayInfo.solarTerm}</Text>
                   </>
                 )}
               </View>
@@ -374,16 +553,19 @@ export default function HomeScreen() {
             <View style={styles.dateControlRow}>
               {/* 이전 날짜 버튼 */}
               <TouchableOpacity
-                style={styles.dateArrowButton}
+                style={[styles.dateArrowButton, dynamicStyles.arrowButton]}
                 onPress={handlePrevDay}
                 activeOpacity={0.6}
+                accessibilityLabel="이전 날짜"
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text style={styles.arrowText}>◀</Text>
+                <Text style={[styles.arrowText, dynamicStyles.arrowText]}>◀</Text>
               </TouchableOpacity>
 
               {/* 날짜 표시 - 클릭하면 날짜 선택 화면으로 이동 */}
               <TouchableOpacity
-                style={styles.dateCenterBox}
+                style={[styles.dateCenterBox, dynamicStyles.dateCenterBox]}
                 onPress={() => {
                   navigation.navigate('DatePicker', {
                     selectedDate: selectedDate.toISOString(),
@@ -393,35 +575,44 @@ export default function HomeScreen() {
                   });
                 }}
                 activeOpacity={0.7}
+                accessibilityLabel={`${headerDateStr} 날짜 선택`}
+                accessibilityRole="button"
               >
                 <View style={styles.dateMainRow}>
-                  <Text style={[styles.dateTitle, !isToday && styles.dateTitleSelected]}>
+                  <Text style={[styles.dateTitle, dynamicStyles.dateTitle, !isToday && { color: isDark ? '#A78BFA' : '#8B5CF6' }]}>
                     {headerDateStr}
                   </Text>
                   <Text style={[
                     styles.calendarEmoji,
-                    { color: isToday ? '#A8A29E' : (isFuture ? '#10B981' : '#8B5CF6') }
+                    { color: isToday ? (isDark ? '#71717A' : '#A8A29E') : (isFuture ? '#10B981' : '#8B5CF6') }
                   ]}>📅</Text>
                 </View>
                 {!isToday && (
-                  <View style={[styles.dateTypeBadge, isFuture ? styles.dateTypeBadgeFuture : styles.dateTypeBadgePast]}>
-                    <Text style={styles.dateTypeBadgeText}>
+                  <View style={[
+                    styles.dateTypeBadge,
+                    isFuture ? styles.dateTypeBadgeFuture : styles.dateTypeBadgePast,
+                    isDark && { backgroundColor: isFuture ? 'rgba(16, 185, 129, 0.25)' : 'rgba(139, 92, 246, 0.25)' }
+                  ]}>
+                    <Text style={[styles.dateTypeBadgeText, { color: isDark ? '#A1A1AA' : '#6B7280' }]}>
                       {isFuture ? '미래 운세' : '과거 운세'}
                     </Text>
                   </View>
                 )}
                 {isToday && (
-                  <Text style={styles.todayLabel}>오늘의 운세</Text>
+                  <Text style={[styles.todayLabel, dynamicStyles.todayLabel]}>오늘의 운세</Text>
                 )}
               </TouchableOpacity>
 
               {/* 다음 날짜 버튼 */}
               <TouchableOpacity
-                style={styles.dateArrowButton}
+                style={[styles.dateArrowButton, dynamicStyles.arrowButton]}
                 onPress={handleNextDay}
                 activeOpacity={0.6}
+                accessibilityLabel="다음 날짜"
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text style={styles.arrowText}>▶</Text>
+                <Text style={[styles.arrowText, dynamicStyles.arrowText]}>▶</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -455,28 +646,37 @@ export default function HomeScreen() {
           {richDailyFortune && easyScoreMessages && (
             <View style={styles.richDailyFortuneSection}>
               {/* 탭 메뉴 (3개로 축소 - 터치 영역 개선) */}
-              <View style={styles.fortuneTabContainer}>
+              <View style={[styles.fortuneTabContainer, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.5)' : 'rgba(231, 229, 228, 0.5)' }]}>
                 <TouchableOpacity
-                  style={[styles.fortuneTab, fortuneTab === 'summary' && styles.fortuneTabActive]}
+                  style={[styles.fortuneTab, dynamicStyles.fortuneTab, fortuneTab === 'summary' && dynamicStyles.fortuneTabActive]}
                   onPress={() => setFortuneTab('summary')}
+                  accessibilityLabel="오늘 운세 탭"
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: fortuneTab === 'summary' }}
                 >
-                  <Text style={[styles.fortuneTabText, fortuneTab === 'summary' && styles.fortuneTabTextActive]}>
+                  <Text style={[styles.fortuneTabText, dynamicStyles.fortuneTabText, fortuneTab === 'summary' && dynamicStyles.fortuneTabTextActive]}>
                     오늘 운세
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.fortuneTab, fortuneTab === 'detail' && styles.fortuneTabActive]}
+                  style={[styles.fortuneTab, dynamicStyles.fortuneTab, fortuneTab === 'detail' && dynamicStyles.fortuneTabActive]}
                   onPress={() => setFortuneTab('detail')}
+                  accessibilityLabel="상세 풀이 탭"
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: fortuneTab === 'detail' }}
                 >
-                  <Text style={[styles.fortuneTabText, fortuneTab === 'detail' && styles.fortuneTabTextActive]}>
+                  <Text style={[styles.fortuneTabText, dynamicStyles.fortuneTabText, fortuneTab === 'detail' && dynamicStyles.fortuneTabTextActive]}>
                     상세 풀이
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.fortuneTab, fortuneTab === 'category' && styles.fortuneTabActive]}
+                  style={[styles.fortuneTab, dynamicStyles.fortuneTab, fortuneTab === 'category' && dynamicStyles.fortuneTabActive]}
                   onPress={() => setFortuneTab('category')}
+                  accessibilityLabel="분야별 운세 탭"
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: fortuneTab === 'category' }}
                 >
-                  <Text style={[styles.fortuneTabText, fortuneTab === 'category' && styles.fortuneTabTextActive]}>
+                  <Text style={[styles.fortuneTabText, dynamicStyles.fortuneTabText, fortuneTab === 'category' && dynamicStyles.fortuneTabTextActive]}>
                     분야별
                   </Text>
                 </TouchableOpacity>
@@ -486,44 +686,44 @@ export default function HomeScreen() {
               {fortuneTab === 'summary' && (
                 <>
                   {/* 나의 일주와 오늘의 만남 */}
-                  <View style={styles.todayMeetingCard}>
-                    <Text style={styles.todayMeetingText}>
+                  <View style={[styles.todayMeetingCard, dynamicStyles.todayMeetingCard]}>
+                    <Text style={[styles.todayMeetingText, dynamicStyles.todayMeetingText]}>
                       {richDailyFortune.todayMeeting}
                     </Text>
                   </View>
 
                   {/* 메인 카드 */}
-                  <View style={styles.richDailyFortuneCard}>
+                  <View style={[styles.richDailyFortuneCard, dynamicStyles.richDailyFortuneCard]}>
                     <View style={styles.richDailyThemeHeader}>
-                      <Text style={styles.richDailyThemeTitle}>{richDailyFortune.dayRelation}</Text>
+                      <Text style={[styles.richDailyThemeTitle, { color: isDark ? '#A78BFA' : '#7C3AED' }]}>{richDailyFortune.dayRelation}</Text>
                     </View>
-                    <Text style={styles.richDailySummary}>
+                    <Text style={[styles.richDailySummary, dynamicStyles.richDailySummary]}>
                       {richDailyFortune.summary}
                     </Text>
 
                     {/* 구체적 상황 예시 */}
                     {richDailyFortune.situations && richDailyFortune.situations.length > 0 && (
-                      <View style={styles.situationsBox}>
-                        <Text style={styles.situationsTitle}>📋 오늘 이런 일이 있을 수 있어요</Text>
+                      <View style={[styles.situationsBox, { backgroundColor: isDark ? 'rgba(63, 63, 70, 0.4)' : 'rgba(250, 250, 249, 0.9)' }]}>
+                        <Text style={[styles.situationsTitle, { color: isDark ? '#E4E4E7' : '#292524' }]}>📋 오늘 이런 일이 있을 수 있어요</Text>
                         {richDailyFortune.situations.map((situation, index) => (
                           <View key={index} style={styles.situationItem}>
-                            <Text style={styles.situationDot}>•</Text>
-                            <Text style={styles.situationText}>{situation}</Text>
+                            <Text style={[styles.situationDot, { color: isDark ? '#A78BFA' : '#8B5CF6' }]}>•</Text>
+                            <Text style={[styles.situationText, { color: isDark ? '#A1A1AA' : '#57534E' }]}>{situation}</Text>
                           </View>
                         ))}
                       </View>
                     )}
 
-                    <View style={styles.personalMessageBox}>
-                      <Text style={styles.personalMessageLabel}>💬 오늘 당신에게</Text>
-                      <Text style={styles.personalMessageText}>
+                    <View style={[styles.personalMessageBox, { backgroundColor: isDark ? 'rgba(79, 70, 229, 0.15)' : 'rgba(238, 242, 255, 0.8)' }]}>
+                      <Text style={[styles.personalMessageLabel, { color: isDark ? '#A5B4FC' : '#6366F1' }]}>💬 오늘 당신에게</Text>
+                      <Text style={[styles.personalMessageText, { color: isDark ? '#E0E7FF' : '#4338CA' }]}>
                         "{richDailyFortune.personalMessage}"
                       </Text>
                     </View>
                     <View style={styles.richDailyKeywords}>
                       {richDailyFortune.keywords.map((keyword, index) => (
-                        <View key={index} style={styles.richDailyKeywordBadge}>
-                          <Text style={styles.richDailyKeywordText}>#{keyword}</Text>
+                        <View key={index} style={[styles.richDailyKeywordBadge, { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.1)' }]}>
+                          <Text style={[styles.richDailyKeywordText, { color: isDark ? '#A5B4FC' : '#4F46E5' }]}>#{keyword}</Text>
                         </View>
                       ))}
                     </View>
@@ -531,27 +731,27 @@ export default function HomeScreen() {
 
                   {/* 행운 정보 (시간/행운 탭에서 통합) */}
                   {comprehensiveFortune && (
-                    <View style={styles.luckyInfoSummary}>
+                    <View style={[styles.luckyInfoSummary, dynamicStyles.luckyInfoSummary]}>
                       <View style={styles.luckyInfoItem}>
-                        <Text style={styles.luckyInfoLabel}>🎨 색상</Text>
-                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.color || '초록색'}</Text>
+                        <Text style={[styles.luckyInfoLabel, dynamicStyles.luckyInfoLabel]}>🎨 색상</Text>
+                        <Text style={[styles.luckyInfoValue, dynamicStyles.luckyInfoValue]}>{comprehensiveFortune.luckyInfo?.color || '초록색'}</Text>
                       </View>
-                      <View style={styles.luckyInfoDivider} />
+                      <View style={[styles.luckyInfoDivider, { backgroundColor: isDark ? '#52525B' : '#E7E5E4' }]} />
                       <View style={styles.luckyInfoItem}>
-                        <Text style={styles.luckyInfoLabel}>🔢 숫자</Text>
-                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.number || '3, 8'}</Text>
+                        <Text style={[styles.luckyInfoLabel, dynamicStyles.luckyInfoLabel]}>🔢 숫자</Text>
+                        <Text style={[styles.luckyInfoValue, dynamicStyles.luckyInfoValue]}>{comprehensiveFortune.luckyInfo?.number || '3, 8'}</Text>
                       </View>
-                      <View style={styles.luckyInfoDivider} />
+                      <View style={[styles.luckyInfoDivider, { backgroundColor: isDark ? '#52525B' : '#E7E5E4' }]} />
                       <View style={styles.luckyInfoItem}>
-                        <Text style={styles.luckyInfoLabel}>🧭 방향</Text>
-                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.direction || '동쪽'}</Text>
+                        <Text style={[styles.luckyInfoLabel, dynamicStyles.luckyInfoLabel]}>🧭 방향</Text>
+                        <Text style={[styles.luckyInfoValue, dynamicStyles.luckyInfoValue]}>{comprehensiveFortune.luckyInfo?.direction || '동쪽'}</Text>
                       </View>
                       {richDailyFortune.luckyTime && (
                         <>
-                          <View style={styles.luckyInfoDivider} />
+                          <View style={[styles.luckyInfoDivider, { backgroundColor: isDark ? '#52525B' : '#E7E5E4' }]} />
                           <View style={styles.luckyInfoItem}>
-                            <Text style={styles.luckyInfoLabel}>⏰ 시간</Text>
-                            <Text style={styles.luckyInfoValue}>{richDailyFortune.luckyTime}</Text>
+                            <Text style={[styles.luckyInfoLabel, dynamicStyles.luckyInfoLabel]}>⏰ 시간</Text>
+                            <Text style={[styles.luckyInfoValue, dynamicStyles.luckyInfoValue]}>{richDailyFortune.luckyTime}</Text>
                           </View>
                         </>
                       )}
@@ -745,48 +945,64 @@ export default function HomeScreen() {
               {fortuneTab === 'category' && (
                 <View style={styles.categoryGrid}>
                   {/* 애정운 */}
-                  <View style={[styles.categoryCard, { borderLeftColor: easyScoreMessages.love.color }]}>
+                  <View
+                    style={[styles.categoryCard, dynamicStyles.categoryCard, { borderLeftColor: easyScoreMessages.love.color }]}
+                    accessible={true}
+                    accessibilityLabel={`애정운 ${fortune.scores.love}점, ${easyScoreMessages.love.message}`}
+                  >
                     <View style={styles.categoryHeader}>
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.love.emoji}</Text>
-                      <Text style={styles.categoryName}>애정</Text>
+                      <Text style={[styles.categoryName, dynamicStyles.categoryName]}>애정</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.love.color }]}>
                         {getScoreLabel(fortune.scores.love)} ({fortune.scores.love}점)
                       </Text>
                     </View>
-                    <Text style={styles.categoryMessage}>{easyScoreMessages.love.message}</Text>
+                    <Text style={[styles.categoryMessage, dynamicStyles.categoryMessage]}>{easyScoreMessages.love.message}</Text>
                   </View>
                   {/* 금전운 */}
-                  <View style={[styles.categoryCard, { borderLeftColor: easyScoreMessages.money.color }]}>
+                  <View
+                    style={[styles.categoryCard, dynamicStyles.categoryCard, { borderLeftColor: easyScoreMessages.money.color }]}
+                    accessible={true}
+                    accessibilityLabel={`금전운 ${fortune.scores.money}점, ${easyScoreMessages.money.message}`}
+                  >
                     <View style={styles.categoryHeader}>
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.money.emoji}</Text>
-                      <Text style={styles.categoryName}>금전</Text>
+                      <Text style={[styles.categoryName, dynamicStyles.categoryName]}>금전</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.money.color }]}>
                         {getScoreLabel(fortune.scores.money)} ({fortune.scores.money}점)
                       </Text>
                     </View>
-                    <Text style={styles.categoryMessage}>{easyScoreMessages.money.message}</Text>
+                    <Text style={[styles.categoryMessage, dynamicStyles.categoryMessage]}>{easyScoreMessages.money.message}</Text>
                   </View>
                   {/* 업무운 */}
-                  <View style={[styles.categoryCard, { borderLeftColor: easyScoreMessages.work.color }]}>
+                  <View
+                    style={[styles.categoryCard, dynamicStyles.categoryCard, { borderLeftColor: easyScoreMessages.work.color }]}
+                    accessible={true}
+                    accessibilityLabel={`업무운 ${fortune.scores.work}점, ${easyScoreMessages.work.message}`}
+                  >
                     <View style={styles.categoryHeader}>
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.work.emoji}</Text>
-                      <Text style={styles.categoryName}>업무</Text>
+                      <Text style={[styles.categoryName, dynamicStyles.categoryName]}>업무</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.work.color }]}>
                         {getScoreLabel(fortune.scores.work)} ({fortune.scores.work}점)
                       </Text>
                     </View>
-                    <Text style={styles.categoryMessage}>{easyScoreMessages.work.message}</Text>
+                    <Text style={[styles.categoryMessage, dynamicStyles.categoryMessage]}>{easyScoreMessages.work.message}</Text>
                   </View>
                   {/* 건강운 */}
-                  <View style={[styles.categoryCard, { borderLeftColor: easyScoreMessages.health.color }]}>
+                  <View
+                    style={[styles.categoryCard, dynamicStyles.categoryCard, { borderLeftColor: easyScoreMessages.health.color }]}
+                    accessible={true}
+                    accessibilityLabel={`건강운 ${fortune.scores.health}점, ${easyScoreMessages.health.message}`}
+                  >
                     <View style={styles.categoryHeader}>
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.health.emoji}</Text>
-                      <Text style={styles.categoryName}>건강</Text>
+                      <Text style={[styles.categoryName, dynamicStyles.categoryName]}>건강</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.health.color }]}>
                         {getScoreLabel(fortune.scores.health)} ({fortune.scores.health}점)
                       </Text>
                     </View>
-                    <Text style={styles.categoryMessage}>{easyScoreMessages.health.message}</Text>
+                    <Text style={[styles.categoryMessage, dynamicStyles.categoryMessage]}>{easyScoreMessages.health.message}</Text>
                   </View>
                 </View>
               )}
@@ -1656,6 +1872,11 @@ const styles = StyleSheet.create({
   },
   iljuMetaphorTitleBox: {
     flex: 1,
+  },
+  iljuTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   iljuMetaphorTitle: {
     fontSize: 17,

@@ -7,6 +7,7 @@ import { AppProvider } from './src/contexts/AppContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import Navigation from './src/navigation/Navigation';
 import { initializeNotifications } from './src/services/NotificationService';
+import { ErrorBoundary } from './src/components/common';
 
 // 테스트 모드: true면 DatePickerTest 화면만 표시
 const TEST_MODE = false;
@@ -34,12 +35,14 @@ export default function App() {
   return (
     <View style={styles.container}>
       <SafeAreaProvider>
-        <ThemeProvider>
-          <AppProvider>
-            <Navigation />
-            <StatusBar style="auto" />
-          </AppProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AppProvider>
+              <Navigation />
+              <StatusBar style="auto" />
+            </AppProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </View>
   );
