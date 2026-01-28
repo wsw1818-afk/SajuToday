@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS, SHADOWS } from '../utils/theme';
@@ -791,8 +792,14 @@ function generateSimpleExplanation(sajuResult: any, traits: any) {
   };
 }
 
+// 탭 타입 정의
+type ProfileTab = 'basic' | 'personality' | 'relation' | 'fortune';
+
 export default function ProfileScreen() {
   const { profile } = useApp();
+
+  // 탭 상태
+  const [activeTab, setActiveTab] = useState<ProfileTab>('basic');
 
   if (!profile) {
     return (
@@ -872,19 +879,58 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* 헤더 */}
-        <View style={styles.header}>
-          <Text style={styles.title}>내 사주</Text>
-          <Text style={styles.subtitle}>
-            {profile.birthDate.replace(/-/g, '.')}
-            {profile.birthTime && ` ${profile.birthTime}`}
-            {profile.calendar === 'lunar' && ' (음력)'}
-          </Text>
-        </View>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <Text style={styles.title}>내 사주</Text>
+        <Text style={styles.subtitle}>
+          {profile.birthDate.replace(/-/g, '.')}
+          {profile.birthTime && ` ${profile.birthTime}`}
+          {profile.calendar === 'lunar' && ' (음력)'}
+        </Text>
+      </View>
 
-        {/* 4주 */}
-        <Card title="사주 팔자 (四柱八字)" style={styles.card}>
+      {/* 탭 메뉴 */}
+      <View style={styles.profileTabContainer}>
+        <TouchableOpacity
+          style={[styles.profileTab, activeTab === 'basic' && styles.profileTabActive]}
+          onPress={() => setActiveTab('basic')}
+        >
+          <Text style={[styles.profileTabText, activeTab === 'basic' && styles.profileTabTextActive]}>
+            기본정보
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.profileTab, activeTab === 'personality' && styles.profileTabActive]}
+          onPress={() => setActiveTab('personality')}
+        >
+          <Text style={[styles.profileTabText, activeTab === 'personality' && styles.profileTabTextActive]}>
+            성격분석
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.profileTab, activeTab === 'relation' && styles.profileTabActive]}
+          onPress={() => setActiveTab('relation')}
+        >
+          <Text style={[styles.profileTabText, activeTab === 'relation' && styles.profileTabTextActive]}>
+            관계/십신
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.profileTab, activeTab === 'fortune' && styles.profileTabActive]}
+          onPress={() => setActiveTab('fortune')}
+        >
+          <Text style={[styles.profileTabText, activeTab === 'fortune' && styles.profileTabTextActive]}>
+            운세분석
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* ===== 탭 1: 기본 정보 ===== */}
+        {activeTab === 'basic' && (
+          <>
+            {/* 4주 */}
+            <Card title="사주 팔자 (四柱八字)" style={styles.card}>
           <View style={styles.easyExplainBox}>
             <Text style={styles.easyExplainTitle}>卦 사주 팔자란?</Text>
             <Text style={styles.easyExplainText}>
@@ -982,9 +1028,14 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
+          </>
+        )}
 
-        {/* 일간 (Day Master) */}
-        <Card title="일간 - 나의 본성" style={styles.card}>
+        {/* ===== 탭 2: 성격 분석 ===== */}
+        {activeTab === 'personality' && (
+          <>
+            {/* 일간 (Day Master) */}
+            <Card title="일간 - 나의 본성" style={styles.card}>
           <View style={styles.easyExplainBox}>
             <Text style={styles.easyExplainTitle}>日干 일간이란?</Text>
             <Text style={styles.easyExplainText}>
@@ -1103,9 +1154,14 @@ export default function ProfileScreen() {
             <Text style={styles.easyResultText}>{simpleExplanation.yinYangBalance}</Text>
           </View>
         </Card>
+          </>
+        )}
 
-        {/* 십신 */}
-        <Card title="십신 - 나와 세상의 관계" style={styles.card}>
+        {/* ===== 탭 3: 관계/십신 ===== */}
+        {activeTab === 'relation' && (
+          <>
+            {/* 십신 */}
+            <Card title="십신 - 나와 세상의 관계" style={styles.card}>
           <View style={styles.easyExplainBox}>
             <Text style={styles.easyExplainTitle}>十神 십신이란?</Text>
             <Text style={styles.easyExplainText}>
@@ -1271,9 +1327,14 @@ export default function ProfileScreen() {
             )}
           </Card>
         )}
+          </>
+        )}
 
-        {/* 대운/세운 분석 */}
-        <Card title="운의 흐름 (대운/세운)" style={styles.card}>
+        {/* ===== 탭 4: 운세 분석 ===== */}
+        {activeTab === 'fortune' && (
+          <>
+            {/* 대운/세운 분석 */}
+            <Card title="운의 흐름 (대운/세운)" style={styles.card}>
           <View style={styles.easyExplainBox}>
             <Text style={styles.easyExplainTitle}>運 대운/세운이란?</Text>
             <Text style={styles.easyExplainText}>
@@ -1688,6 +1749,8 @@ export default function ProfileScreen() {
             </View>
           </Card>
         )}
+          </>
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -1713,7 +1776,41 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   header: {
-    marginBottom: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+  },
+  // 프로필 탭 스타일
+  profileTabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 4,
+  },
+  profileTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  profileTabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  profileTabText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#78716C',
+  },
+  profileTabTextActive: {
+    color: '#8B5CF6',
+    fontWeight: '700',
   },
   title: {
     fontSize: FONT_SIZES.xxl,

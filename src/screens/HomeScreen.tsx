@@ -481,6 +481,20 @@ export default function HomeScreen() {
                     <Text style={styles.richDailySummary}>
                       {richDailyFortune.summary}
                     </Text>
+
+                    {/* 구체적 상황 예시 */}
+                    {richDailyFortune.situations && richDailyFortune.situations.length > 0 && (
+                      <View style={styles.situationsBox}>
+                        <Text style={styles.situationsTitle}>📋 오늘 이런 일이 있을 수 있어요</Text>
+                        {richDailyFortune.situations.map((situation, index) => (
+                          <View key={index} style={styles.situationItem}>
+                            <Text style={styles.situationDot}>•</Text>
+                            <Text style={styles.situationText}>{situation}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
                     <View style={styles.personalMessageBox}>
                       <Text style={styles.personalMessageLabel}>💬 오늘 당신에게</Text>
                       <Text style={styles.personalMessageText}>
@@ -547,6 +561,14 @@ export default function HomeScreen() {
                       ))}
                     </View>
                   </View>
+
+                  {/* 행운 포인트 */}
+                  {richDailyFortune.luckyPoint && (
+                    <View style={styles.luckyPointCard}>
+                      <Text style={styles.luckyPointTitle}>🍀 행운 포인트</Text>
+                      <Text style={styles.luckyPointText}>{richDailyFortune.luckyPoint}</Text>
+                    </View>
+                  )}
                 </>
               )}
 
@@ -1949,6 +1971,57 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#57534E',
     lineHeight: 20,
+  },
+  // 구체적 상황 예시 스타일
+  situationsBox: {
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  situationsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#5B21B6',
+    marginBottom: 10,
+  },
+  situationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+    gap: 8,
+  },
+  situationDot: {
+    fontSize: 14,
+    color: '#8B5CF6',
+    marginTop: 2,
+  },
+  situationText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 21,
+  },
+  // 행운 포인트 카드 스타일
+  luckyPointCard: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  luckyPointTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#B45309',
+    marginBottom: 8,
+  },
+  luckyPointText: {
+    fontSize: 15,
+    color: '#92400E',
+    lineHeight: 24,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   // 운세 탭 스타일
   fortuneTabContainer: {
