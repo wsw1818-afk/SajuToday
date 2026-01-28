@@ -522,6 +522,57 @@ export default function HomeScreen() {
                     </Text>
                   </View>
 
+                  {/* 지지 관계 & 월령 정보 */}
+                  {(richDailyFortune.branchRelation || richDailyFortune.monthlyInfluence) && (
+                    <View style={styles.branchMonthlyCard}>
+                      {/* 지지 관계 */}
+                      {richDailyFortune.branchRelation && (
+                        <View style={styles.branchRelationBox}>
+                          <View style={styles.branchRelationHeader}>
+                            <Text style={styles.branchRelationIcon}>
+                              {richDailyFortune.branchRelation.type === 'harmony' ? '🤝' :
+                               richDailyFortune.branchRelation.type === 'clash' ? '⚡' :
+                               richDailyFortune.branchRelation.type === 'punishment' ? '⚠️' : '☯️'}
+                            </Text>
+                            <Text style={[
+                              styles.branchRelationTitle,
+                              richDailyFortune.branchRelation.type === 'harmony' && styles.branchHarmonyText,
+                              richDailyFortune.branchRelation.type === 'clash' && styles.branchClashText,
+                              richDailyFortune.branchRelation.type === 'punishment' && styles.branchPunishmentText,
+                            ]}>
+                              {richDailyFortune.branchRelation.effect}
+                            </Text>
+                          </View>
+                          <Text style={styles.branchRelationAdvice}>
+                            {richDailyFortune.branchRelation.advice}
+                          </Text>
+                        </View>
+                      )}
+
+                      {/* 월령 정보 */}
+                      {richDailyFortune.monthlyInfluence && (
+                        <View style={styles.monthlyInfluenceBox}>
+                          <View style={styles.monthlyInfluenceHeader}>
+                            <Text style={styles.monthlyInfluenceIcon}>
+                              {richDailyFortune.monthlyInfluence.strength === 'strong' ? '🔥' :
+                               richDailyFortune.monthlyInfluence.strength === 'weak' ? '🌱' : '⚖️'}
+                            </Text>
+                            <Text style={[
+                              styles.monthlyInfluenceTitle,
+                              richDailyFortune.monthlyInfluence.strength === 'strong' && styles.monthlyStrongText,
+                              richDailyFortune.monthlyInfluence.strength === 'weak' && styles.monthlyWeakText,
+                            ]}>
+                              월령(月令): {richDailyFortune.monthlyInfluence.season}
+                            </Text>
+                          </View>
+                          <Text style={styles.monthlyInfluenceMessage}>
+                            {richDailyFortune.monthlyInfluence.message}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+
                   {/* 일주별 특별 조언 */}
                   {richDailyFortune.iljuBonus && (
                     <View style={styles.richDailyBonusCard}>
@@ -2022,6 +2073,81 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  // 지지관계 & 월령 스타일
+  branchMonthlyCard: {
+    backgroundColor: '#FAFAF9',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E7E5E4',
+  },
+  branchRelationBox: {
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E7E5E4',
+  },
+  branchRelationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  branchRelationIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  branchRelationTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#57534E',
+    flex: 1,
+  },
+  branchHarmonyText: {
+    color: '#059669',
+  },
+  branchClashText: {
+    color: '#DC2626',
+  },
+  branchPunishmentText: {
+    color: '#D97706',
+  },
+  branchRelationAdvice: {
+    fontSize: 13,
+    color: '#78716C',
+    lineHeight: 20,
+    paddingLeft: 26,
+  },
+  monthlyInfluenceBox: {
+    marginTop: 4,
+  },
+  monthlyInfluenceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  monthlyInfluenceIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  monthlyInfluenceTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#57534E',
+    flex: 1,
+  },
+  monthlyStrongText: {
+    color: '#DC2626',
+  },
+  monthlyWeakText: {
+    color: '#3B82F6',
+  },
+  monthlyInfluenceMessage: {
+    fontSize: 13,
+    color: '#78716C',
+    lineHeight: 20,
+    paddingLeft: 26,
   },
   // 운세 탭 스타일
   fortuneTabContainer: {

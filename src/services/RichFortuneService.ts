@@ -38,6 +38,165 @@ const ELEMENT_KOREAN: Record<Element, string> = {
   water: '수(水)',
 };
 
+// 지지를 오행으로 변환
+const BRANCH_TO_ELEMENT: Record<string, Element> = {
+  '인': 'wood', '묘': 'wood',     // 목
+  '사': 'fire', '오': 'fire',     // 화
+  '진': 'earth', '술': 'earth', '축': 'earth', '미': 'earth', // 토
+  '신': 'metal', '유': 'metal',   // 금
+  '해': 'water', '자': 'water',   // 수
+};
+
+// ===== 날짜 기반 시드 함수 (일관된 운세를 위해) =====
+// 같은 날 같은 일주 = 같은 결과
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 32bit 정수로 변환
+  }
+  return Math.abs(hash);
+}
+
+// 시드 기반 난수 생성 (Mulberry32)
+function seededRandom(seed: number): () => number {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// 날짜+일주 기반 시드 생성
+function getDailySeed(ilju: string, todayStem: string, todayBranch: string): number {
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  return hashCode(`${dateStr}-${ilju}-${todayStem}${todayBranch}`);
+}
+
+// ===== 지지 관계 분석 =====
+// 지지 합(合) - 육합
+const BRANCH_HARMONY: Record<string, string> = {
+  '자': '축', '축': '자',
+  '인': '해', '해': '인',
+  '묘': '술', '술': '묘',
+  '진': '유', '유': '진',
+  '사': '신', '신': '사',
+  '오': '미', '미': '오',
+};
+
+// 지지 충(冲) - 육충
+const BRANCH_CLASH: Record<string, string> = {
+  '자': '오', '오': '자',
+  '축': '미', '미': '축',
+  '인': '신', '신': '인',
+  '묘': '유', '유': '묘',
+  '진': '술', '술': '진',
+  '사': '해', '해': '사',
+};
+
+// 지지 형(刑) - 삼형
+const BRANCH_PUNISHMENT: Record<string, string[]> = {
+  '인': ['사', '신'],
+  '사': ['인', '신'],
+  '신': ['인', '사'],
+  '축': ['술', '미'],
+  '술': ['축', '미'],
+  '미': ['축', '술'],
+  '자': ['묘'],
+  '묘': ['자'],
+};
+
+// 지지 관계 분석 함수
+function analyzeBranchRelation(dayBranch: string, todayBranch: string): {
+  type: 'harmony' | 'clash' | 'punishment' | 'neutral';
+  effect: string;
+  advice: string;
+} {
+  // 합(合) 체크
+  if (BRANCH_HARMONY[dayBranch] === todayBranch) {
+    return {
+      type: 'harmony',
+      effect: '육합(六合)의 날 - 조화와 협력이 빛나는 시기',
+      advice: '인연을 맺거나 협력 관계를 강화하기 좋은 날입니다.',
+    };
+  }
+
+  // 충(冲) 체크
+  if (BRANCH_CLASH[dayBranch] === todayBranch) {
+    return {
+      type: 'clash',
+      effect: '육충(六冲)의 날 - 변화와 움직임이 많은 시기',
+      advice: '이사, 여행, 변화가 생길 수 있어요. 충돌을 피하고 유연하게 대처하세요.',
+    };
+  }
+
+  // 형(刑) 체크
+  if (BRANCH_PUNISHMENT[dayBranch]?.includes(todayBranch)) {
+    return {
+      type: 'punishment',
+      effect: '형살(刑煞)의 날 - 갈등이나 마찰에 주의',
+      advice: '말과 행동을 조심하고, 분쟁을 피하세요. 법적 문제도 주의하세요.',
+    };
+  }
+
+  return {
+    type: 'neutral',
+    effect: '평온한 기운의 날',
+    advice: '자연스러운 흐름에 맡기세요.',
+  };
+}
+
+// ===== 월령(月令) 분석 =====
+function getMonthlyInfluence(dayElement: Element): {
+  season: string;
+  strength: 'strong' | 'weak' | 'neutral';
+  message: string;
+} {
+  const month = new Date().getMonth() + 1; // 1-12
+
+  // 계절별 왕상(旺相) 판단 (간략화)
+  // 봄(2-4): 목왕, 여름(5-7): 화왕, 가을(8-10): 금왕, 겨울(11-1): 수왕
+  const seasonData: Record<number, { season: string; strong: Element; weak: Element }> = {
+    1: { season: '한겨울', strong: 'water', weak: 'fire' },
+    2: { season: '이른봄', strong: 'wood', weak: 'metal' },
+    3: { season: '봄', strong: 'wood', weak: 'metal' },
+    4: { season: '늦봄', strong: 'wood', weak: 'metal' },
+    5: { season: '초여름', strong: 'fire', weak: 'water' },
+    6: { season: '여름', strong: 'fire', weak: 'water' },
+    7: { season: '한여름', strong: 'fire', weak: 'water' },
+    8: { season: '초가을', strong: 'metal', weak: 'wood' },
+    9: { season: '가을', strong: 'metal', weak: 'wood' },
+    10: { season: '늦가을', strong: 'metal', weak: 'wood' },
+    11: { season: '초겨울', strong: 'water', weak: 'fire' },
+    12: { season: '겨울', strong: 'water', weak: 'fire' },
+  };
+
+  const data = seasonData[month];
+
+  if (dayElement === data.strong) {
+    return {
+      season: data.season,
+      strength: 'strong',
+      message: `${data.season}, 당신의 기운이 왕성합니다. 적극적으로 움직이세요!`,
+    };
+  } else if (dayElement === data.weak) {
+    return {
+      season: data.season,
+      strength: 'weak',
+      message: `${data.season}, 기운이 약해지는 시기입니다. 무리하지 말고 내실을 다지세요.`,
+    };
+  }
+
+  return {
+    season: data.season,
+    strength: 'neutral',
+    message: `${data.season}, 균형 잡힌 기운입니다. 꾸준히 나아가세요.`,
+  };
+}
+
 // 일주(일간+일지) 가져오기
 export function getIlju(sajuResult: SajuResult | null): string | null {
   if (!sajuResult?.pillars?.day) return null;
@@ -271,6 +430,18 @@ export interface RichDailyFortune {
   todayMeeting: string;
   // 오늘 나에게 하는 말 (1인칭 조언)
   personalMessage: string;
+  // === 신규: 지지 관계 분석 ===
+  branchRelation?: {
+    type: 'harmony' | 'clash' | 'punishment' | 'neutral';
+    effect: string;
+    advice: string;
+  };
+  // === 신규: 월령 영향 ===
+  monthlyInfluence?: {
+    season: string;
+    strength: 'strong' | 'weak' | 'neutral';
+    message: string;
+  };
 }
 
 // 오늘의 풍부한 운세 생성 (확장 버전)
@@ -285,14 +456,25 @@ export function generateRichDailyFortune(
   const dayElement = getDayMasterElement(sajuResult);
   const todayElement = STEM_TO_ELEMENT[todayStem];
   const ilju = getIlju(sajuResult);
+  const dayBranch = sajuResult.pillars?.day?.branch;
 
-  if (!richIlju || !dayElement || !todayElement) return null;
+  if (!richIlju || !dayElement || !todayElement || !ilju || !dayBranch) return null;
+
+  // 날짜 기반 시드 생성 (같은 날 같은 운세)
+  const seed = getDailySeed(ilju, todayStem, todayBranch);
+  const random = seededRandom(seed);
 
   // 쉬운 일일 운세 데이터 가져오기
   const easyRelation = EASY_DAY_RELATIONS[dayElement]?.[todayElement];
 
   // 일주별 추가 보너스 해석
   const iljuBonus = ilju ? ILJU_DAILY_BONUS[ilju] : undefined;
+
+  // === 신규: 지지 관계 분석 (육합/육충/형살) ===
+  const branchRelation = analyzeBranchRelation(dayBranch, todayBranch);
+
+  // === 신규: 월령 영향 분석 ===
+  const monthlyInfluence = getMonthlyInfluence(dayElement);
 
   // 기본값 설정
   let dayRelation = '조화로운 하루';
@@ -334,8 +516,27 @@ export function generateRichDailyFortune(
   // 나의 일주와 오늘의 만남 (문학적 표현 생성)
   const todayMeeting = generateTodayMeeting(richIlju, dayElement, todayElement, todayStem);
 
-  // 오늘 나에게 하는 말 (1인칭 개인화된 메시지)
-  const personalMessage = generatePersonalMessage(richIlju, easyRelation, iljuBonus);
+  // 오늘 나에게 하는 말 (1인칭 개인화된 메시지) - 시드 기반 랜덤
+  const personalMessage = generatePersonalMessage(richIlju, easyRelation, iljuBonus, random);
+
+  // 지지 관계에 따른 상황 추가
+  if (branchRelation.type === 'harmony') {
+    situations = [...situations, '뜻밖의 도움이나 좋은 인연을 만날 수 있어요'];
+    doThis = [...doThis, '협력과 화합을 추구하세요'];
+  } else if (branchRelation.type === 'clash') {
+    situations = [...situations, '예상치 못한 변화나 이동이 있을 수 있어요'];
+    avoidThis = [...avoidThis, '충동적인 결정', '불필요한 다툼'];
+  } else if (branchRelation.type === 'punishment') {
+    situations = [...situations, '오해나 갈등이 생길 수 있는 날이에요'];
+    avoidThis = [...avoidThis, '언쟁이나 논쟁', '법적 문제와 관련된 일'];
+  }
+
+  // 월령에 따른 조언 추가
+  if (monthlyInfluence.strength === 'strong') {
+    doThis = [...doThis, '적극적으로 기회를 잡으세요'];
+  } else if (monthlyInfluence.strength === 'weak') {
+    avoidThis = [...avoidThis, '무리한 일정이나 과욕'];
+  }
 
   return {
     // 일주 기본 정보
@@ -364,6 +565,10 @@ export function generateRichDailyFortune(
     iljuBonus,
     todayMeeting,
     personalMessage,
+
+    // 신규: 지지 관계 및 월령
+    branchRelation,
+    monthlyInfluence,
   };
 }
 
@@ -435,11 +640,12 @@ function generateTodayMeeting(
     `오늘, ${richIlju.metaphor}인 당신에게 ${elementNature[todayElement]}이 찾아옵니다.`;
 }
 
-// 오늘 나에게 하는 말 (개인화된 1인칭 메시지)
+// 오늘 나에게 하는 말 (개인화된 1인칭 메시지) - 시드 기반 랜덤
 function generatePersonalMessage(
   richIlju: RichIljuData,
   easyRelation: EasyDayRelation | undefined,
-  iljuBonus: IljuDailyBonus | undefined
+  iljuBonus: IljuDailyBonus | undefined,
+  random: () => number // 시드 기반 랜덤 함수
 ): string {
   // 일주 특성 기반 기본 메시지
   const baseMessages = [
@@ -448,7 +654,8 @@ function generatePersonalMessage(
     `오늘은 '${richIlju.lifeTheme}'라는 당신의 인생 테마와 맞닿은 날입니다.`,
   ];
 
-  let message = baseMessages[Math.floor(Math.random() * baseMessages.length)];
+  // 시드 기반 랜덤 사용 (같은 날 같은 결과)
+  let message = baseMessages[Math.floor(random() * baseMessages.length)];
 
   // 일주 보너스가 있으면 그것을 우선 사용
   if (iljuBonus) {
