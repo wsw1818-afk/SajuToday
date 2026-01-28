@@ -267,6 +267,10 @@ export interface RichDailyFortune {
     todayStrength: string;
     luckyTip: string;
   };
+  // 나의 일주와 오늘의 만남 (문학적 표현)
+  todayMeeting: string;
+  // 오늘 나에게 하는 말 (1인칭 조언)
+  personalMessage: string;
 }
 
 // 오늘의 풍부한 운세 생성 (확장 버전)
@@ -327,6 +331,12 @@ export function generateRichDailyFortune(
   // 종합 해석 문장 구성
   const interpretation = `${summary}\n\n${detailedInterpretation}`;
 
+  // 나의 일주와 오늘의 만남 (문학적 표현 생성)
+  const todayMeeting = generateTodayMeeting(richIlju, dayElement, todayElement, todayStem);
+
+  // 오늘 나에게 하는 말 (1인칭 개인화된 메시지)
+  const personalMessage = generatePersonalMessage(richIlju, easyRelation, iljuBonus);
+
   return {
     // 일주 기본 정보
     metaphor: richIlju.metaphor,
@@ -352,7 +362,105 @@ export function generateRichDailyFortune(
     avoidThis,
     luckyPoint,
     iljuBonus,
+    todayMeeting,
+    personalMessage,
   };
+}
+
+// 나의 일주와 오늘의 만남 문학적 표현 생성
+function generateTodayMeeting(
+  richIlju: RichIljuData,
+  dayElement: Element,
+  todayElement: Element,
+  todayStem: string
+): string {
+  // 오늘 천간 한글 이름
+  const stemNames: Record<string, string> = {
+    '갑': '갑목(甲木)', '을': '을목(乙木)',
+    '병': '병화(丙火)', '정': '정화(丁火)',
+    '무': '무토(戊土)', '기': '기토(己土)',
+    '경': '경금(庚金)', '신': '신금(辛金)',
+    '임': '임수(壬水)', '계': '계수(癸水)',
+  };
+
+  // 오행 자연 표현
+  const elementNature: Record<Element, string> = {
+    wood: '푸른 나무의 기운',
+    fire: '불꽃의 에너지',
+    earth: '대지의 품',
+    metal: '쇠의 단단함',
+    water: '물의 지혜',
+  };
+
+  // 관계별 만남 표현
+  const relationMeetings: Record<string, Record<string, string>> = {
+    wood: {
+      wood: `오늘, ${richIlju.metaphor}인 당신에게 같은 숲의 나무들이 찾아옵니다. 서로 햇빛을 향해 경쟁하듯, 비슷한 에너지가 부딪히지만 함께 숲을 이룰 수도 있습니다.`,
+      fire: `오늘, ${richIlju.metaphor}인 당신이 불꽃을 만납니다. 나무가 불을 피워 세상을 밝히듯, 당신 안의 재능이 밖으로 터져 나오려 합니다.`,
+      earth: `오늘, ${richIlju.metaphor}인 당신이 비옥한 땅을 만납니다. 나무가 흙에서 영양분을 흡수하듯, 성과와 결실을 거둘 수 있는 날입니다.`,
+      metal: `오늘, ${richIlju.metaphor}인 당신이 날카로운 도끼를 만납니다. 시련처럼 느껴지지만, 다듬어져 더 아름다운 형태가 될 수 있습니다.`,
+      water: `오늘, ${richIlju.metaphor}인 당신에게 생명의 물이 흘러들어옵니다. 지혜와 도움의 손길이 당신을 성장하게 합니다.`,
+    },
+    fire: {
+      wood: `오늘, ${richIlju.metaphor}인 당신에게 땔감이 들어옵니다. 나무가 불을 지피듯, 누군가의 지원과 응원이 당신을 밝게 합니다.`,
+      fire: `오늘, ${richIlju.metaphor}인 당신이 또 다른 불꽃을 만납니다. 열정이 더해져 활활 타오르지만, 과열되지 않도록 조절이 필요합니다.`,
+      earth: `오늘, ${richIlju.metaphor}인 당신이 따뜻한 흙을 만납니다. 불이 흙을 데워 생명을 키우듯, 당신의 열정이 결실로 이어집니다.`,
+      metal: `오늘, ${richIlju.metaphor}인 당신이 금속을 만납니다. 불이 쇠를 녹이듯, 당신의 능력이 재물과 성과로 연결됩니다.`,
+      water: `오늘, ${richIlju.metaphor}인 당신에게 물의 기운이 찾아옵니다. 불과 물의 균형처럼, 휴식과 조절이 필요한 날입니다.`,
+    },
+    earth: {
+      wood: `오늘, ${richIlju.metaphor}인 당신의 땅에 나무 뿌리가 뻗어옵니다. 변화의 바람이 불어오니 유연하게 받아들이세요.`,
+      fire: `오늘, ${richIlju.metaphor}인 당신에게 따뜻한 햇살이 내리쬡니다. 주변의 응원과 지지가 당신을 든든하게 합니다.`,
+      earth: `오늘, ${richIlju.metaphor}인 당신이 넓은 대지를 만납니다. 안정과 평화 속에서 내실을 다지는 날입니다.`,
+      metal: `오늘, ${richIlju.metaphor}인 당신에게서 보석이 캐어집니다. 노력이 결실로 나타나는 때입니다.`,
+      water: `오늘, ${richIlju.metaphor}인 당신에게 물이 흘러들어옵니다. 재물과 기회의 에너지가 당신을 풍요롭게 합니다.`,
+    },
+    metal: {
+      wood: `오늘, ${richIlju.metaphor}인 당신이 나무를 만납니다. 도끼가 나무를 베듯, 당신의 능력이 재물로 연결됩니다.`,
+      fire: `오늘, ${richIlju.metaphor}인 당신이 불을 만납니다. 쇠가 불에 달궈져 더 강해지듯, 시련이 성장의 기회가 됩니다.`,
+      earth: `오늘, ${richIlju.metaphor}인 당신에게 흙의 보호가 찾아옵니다. 안정감과 지지 속에서 성장할 수 있는 날입니다.`,
+      metal: `오늘, ${richIlju.metaphor}인 당신이 또 다른 쇠를 만납니다. 서로 부딪혀 날카로워지거나, 협력하여 강해질 수 있습니다.`,
+      water: `오늘, ${richIlju.metaphor}인 당신에게서 맑은 물이 흘러나옵니다. 아이디어와 표현력이 샘솟는 날입니다.`,
+    },
+    water: {
+      wood: `오늘, ${richIlju.metaphor}인 당신이 키운 나무에서 열매가 열립니다. 투자와 노력이 결실을 맺는 때입니다.`,
+      fire: `오늘, ${richIlju.metaphor}인 당신이 불을 만납니다. 물과 불이 만나 균형을 이루며, 재물 활동이 활발해집니다.`,
+      earth: `오늘, ${richIlju.metaphor}인 당신에게 둑이 쳐집니다. 흐름이 막힐 수 있으니 규칙을 따르고 인내하세요.`,
+      metal: `오늘, ${richIlju.metaphor}인 당신에게 금속의 맑은 기운이 더해집니다. 지혜와 도움이 흘러들어오는 날입니다.`,
+      water: `오늘, ${richIlju.metaphor}인 당신이 넓은 바다를 만납니다. 지혜가 더 깊어지고 통찰력이 빛나는 날입니다.`,
+    },
+  };
+
+  return relationMeetings[dayElement]?.[todayElement] ||
+    `오늘, ${richIlju.metaphor}인 당신에게 ${elementNature[todayElement]}이 찾아옵니다.`;
+}
+
+// 오늘 나에게 하는 말 (개인화된 1인칭 메시지)
+function generatePersonalMessage(
+  richIlju: RichIljuData,
+  easyRelation: EasyDayRelation | undefined,
+  iljuBonus: IljuDailyBonus | undefined
+): string {
+  // 일주 특성 기반 기본 메시지
+  const baseMessages = [
+    `당신의 강점인 '${richIlju.strengthKeywords[0]}'을 오늘 발휘해보세요.`,
+    `'${richIlju.essence}'인 당신답게 오늘을 보내세요.`,
+    `오늘은 '${richIlju.lifeTheme}'라는 당신의 인생 테마와 맞닿은 날입니다.`,
+  ];
+
+  let message = baseMessages[Math.floor(Math.random() * baseMessages.length)];
+
+  // 일주 보너스가 있으면 그것을 우선 사용
+  if (iljuBonus) {
+    message = iljuBonus.todayStrength;
+  }
+
+  // easyRelation이 있으면 조합
+  if (easyRelation) {
+    message += ` ${easyRelation.doThis[0]}는 것이 오늘의 핵심입니다.`;
+  }
+
+  return message;
 }
 
 // 카테고리별 상세 운세 해석

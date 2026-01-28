@@ -519,6 +519,13 @@ export default function HomeScreen() {
                 <Text style={styles.richDailyFortuneTitle}>🌟 오늘의 운세 풀이</Text>
               </View>
 
+              {/* 나의 일주와 오늘의 만남 (문학적 표현) */}
+              <View style={styles.todayMeetingCard}>
+                <Text style={styles.todayMeetingText}>
+                  {richDailyFortune.todayMeeting}
+                </Text>
+              </View>
+
               {/* 메인 카드: 오늘의 핵심 */}
               <View style={styles.richDailyFortuneCard}>
                 {/* 오늘의 테마 제목 */}
@@ -530,6 +537,14 @@ export default function HomeScreen() {
                 <Text style={styles.richDailySummary}>
                   {richDailyFortune.summary}
                 </Text>
+
+                {/* 오늘 나에게 하는 말 */}
+                <View style={styles.personalMessageBox}>
+                  <Text style={styles.personalMessageLabel}>💬 오늘 당신에게</Text>
+                  <Text style={styles.personalMessageText}>
+                    "{richDailyFortune.personalMessage}"
+                  </Text>
+                </View>
 
                 {/* 상세 풀이 */}
                 <View style={styles.richDailyDetailBox}>
@@ -1654,6 +1669,43 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#1C1917',
+  },
+  // 나의 일주와 오늘의 만남 카드 스타일
+  todayMeetingCard: {
+    backgroundColor: 'rgba(139, 92, 246, 0.06)',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.15)',
+  },
+  todayMeetingText: {
+    fontSize: 15,
+    color: '#5B21B6',
+    lineHeight: 26,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  // 오늘 나에게 하는 말 스타일
+  personalMessageBox: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+  },
+  personalMessageLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 8,
+  },
+  personalMessageText: {
+    fontSize: 15,
+    color: '#047857',
+    lineHeight: 24,
+    fontWeight: '500',
   },
   richDailyFortuneCard: {
     backgroundColor: '#FFFFFF',
