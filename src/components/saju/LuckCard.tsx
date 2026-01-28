@@ -37,10 +37,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#78716C',
+    color: '#57534E',
     marginTop: 8,
     marginBottom: 4,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   value: {
     fontSize: 14,

@@ -13,4 +13,16 @@ export {
   ErrorMessage,
   EmptyState,
   InlineLoading,
+  FullScreenError,
 } from './FeedbackUI';
+
+// 스켈레톤 로딩 컴포넌트
+export {
+  Skeleton,
+  FortuneCardSkeleton,
+  LuckCardSkeleton,
+  HomeScreenSkeleton,
+} from './Skeleton';
+
+// 사주 용어 도움말 컴포넌트
+export { TermTooltip, TermGlossary } from './TermTooltip';

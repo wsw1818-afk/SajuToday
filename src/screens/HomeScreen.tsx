@@ -41,8 +41,8 @@ export default function HomeScreen() {
   // 모든 useState를 최상단에 선언 (Hook 규칙 준수)
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date());
-  // 운세 탭 상태: 'summary' | 'detail' | 'time' | 'category'
-  const [fortuneTab, setFortuneTab] = useState<'summary' | 'detail' | 'time' | 'category'>('summary');
+  // 운세 탭 상태: 'summary' | 'detail' | 'category' (3개로 축소)
+  const [fortuneTab, setFortuneTab] = useState<'summary' | 'detail' | 'category'>('summary');
 
   // DatePickerScreen에서 전달된 날짜 처리
   useFocusEffect(
@@ -426,27 +426,27 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Luck Cards - 쉬운 라벨 추가 */}
+          {/* Luck Cards - 점수 숫자 표시 추가 */}
           <View style={styles.luckRow}>
             <LuckCard
               label="종합운"
               emoji={easyScoreMessages?.overall?.emoji || "✨"}
               color={getScoreColor(fortune.scores.overall)}
-              value={getScoreLabel(fortune.scores.overall)}
+              value={`${getScoreLabel(fortune.scores.overall)} (${fortune.scores.overall}점)`}
               score={fortune.scores.overall}
             />
             <LuckCard
               label="애정운"
               emoji={easyScoreMessages?.love?.emoji || "💕"}
               color={getScoreColor(fortune.scores.love)}
-              value={getScoreLabel(fortune.scores.love)}
+              value={`${getScoreLabel(fortune.scores.love)} (${fortune.scores.love}점)`}
               score={fortune.scores.love}
             />
             <LuckCard
               label="금전운"
               emoji={easyScoreMessages?.money?.emoji || "📈"}
               color={getScoreColor(fortune.scores.money)}
-              value={getScoreLabel(fortune.scores.money)}
+              value={`${getScoreLabel(fortune.scores.money)} (${fortune.scores.money}점)`}
               score={fortune.scores.money}
             />
           </View>
@@ -454,7 +454,7 @@ export default function HomeScreen() {
           {/* 오늘의 운세 - 탭 방식 */}
           {richDailyFortune && easyScoreMessages && (
             <View style={styles.richDailyFortuneSection}>
-              {/* 탭 메뉴 */}
+              {/* 탭 메뉴 (3개로 축소 - 터치 영역 개선) */}
               <View style={styles.fortuneTabContainer}>
                 <TouchableOpacity
                   style={[styles.fortuneTab, fortuneTab === 'summary' && styles.fortuneTabActive]}
@@ -470,14 +470,6 @@ export default function HomeScreen() {
                 >
                   <Text style={[styles.fortuneTabText, fortuneTab === 'detail' && styles.fortuneTabTextActive]}>
                     상세 풀이
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.fortuneTab, fortuneTab === 'time' && styles.fortuneTabActive]}
-                  onPress={() => setFortuneTab('time')}
-                >
-                  <Text style={[styles.fortuneTabText, fortuneTab === 'time' && styles.fortuneTabTextActive]}>
-                    시간/행운
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -536,6 +528,35 @@ export default function HomeScreen() {
                       ))}
                     </View>
                   </View>
+
+                  {/* 행운 정보 (시간/행운 탭에서 통합) */}
+                  {comprehensiveFortune && (
+                    <View style={styles.luckyInfoSummary}>
+                      <View style={styles.luckyInfoItem}>
+                        <Text style={styles.luckyInfoLabel}>🎨 색상</Text>
+                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.color || '초록색'}</Text>
+                      </View>
+                      <View style={styles.luckyInfoDivider} />
+                      <View style={styles.luckyInfoItem}>
+                        <Text style={styles.luckyInfoLabel}>🔢 숫자</Text>
+                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.number || '3, 8'}</Text>
+                      </View>
+                      <View style={styles.luckyInfoDivider} />
+                      <View style={styles.luckyInfoItem}>
+                        <Text style={styles.luckyInfoLabel}>🧭 방향</Text>
+                        <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.direction || '동쪽'}</Text>
+                      </View>
+                      {richDailyFortune.luckyTime && (
+                        <>
+                          <View style={styles.luckyInfoDivider} />
+                          <View style={styles.luckyInfoItem}>
+                            <Text style={styles.luckyInfoLabel}>⏰ 시간</Text>
+                            <Text style={styles.luckyInfoValue}>{richDailyFortune.luckyTime}</Text>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  )}
                 </>
               )}
 
@@ -677,76 +698,46 @@ export default function HomeScreen() {
                       <Text style={styles.luckyPointText}>{richDailyFortune.luckyPoint}</Text>
                     </View>
                   )}
-                </>
-              )}
 
-              {/* 탭 내용: 시간/행운 */}
-              {fortuneTab === 'time' && comprehensiveFortune && (
-                <>
-                  {/* 시간대별 조언 */}
-                  <View style={styles.timeAdviceCard}>
-                    <Text style={styles.timeAdviceTitle}>⏰ 시간대별 조언</Text>
-                    <View style={styles.timeAdviceRow}>
-                      <View style={styles.timeAdviceItem}>
-                        <View style={[styles.timeAdviceIcon, { backgroundColor: '#FEF3C7' }]}>
-                          <Text style={styles.timeAdviceEmoji}>☀️</Text>
+                  {/* 시간대별 조언 (시간/행운 탭에서 통합) */}
+                  {comprehensiveFortune && (
+                    <View style={styles.timeAdviceCard}>
+                      <Text style={styles.timeAdviceTitle}>⏰ 시간대별 조언</Text>
+                      <View style={styles.timeAdviceRow}>
+                        <View style={styles.timeAdviceItem}>
+                          <View style={[styles.timeAdviceIcon, { backgroundColor: '#FEF3C7' }]}>
+                            <Text style={styles.timeAdviceEmoji}>☀️</Text>
+                          </View>
+                          <Text style={styles.timeAdviceLabel}>오전</Text>
                         </View>
-                        <Text style={styles.timeAdviceLabel}>오전</Text>
+                        <Text style={styles.timeAdviceText}>
+                          {comprehensiveFortune.comprehensiveAdvice?.morning || '차분하게 하루를 시작하세요.'}
+                        </Text>
                       </View>
-                      <Text style={styles.timeAdviceText}>
-                        {comprehensiveFortune.comprehensiveAdvice?.morning || '차분하게 하루를 시작하세요.'}
-                      </Text>
-                    </View>
-                    <View style={styles.timeAdviceRow}>
-                      <View style={styles.timeAdviceItem}>
-                        <View style={[styles.timeAdviceIcon, { backgroundColor: '#DBEAFE' }]}>
-                          <Text style={styles.timeAdviceEmoji}>🧭</Text>
+                      <View style={styles.timeAdviceRow}>
+                        <View style={styles.timeAdviceItem}>
+                          <View style={[styles.timeAdviceIcon, { backgroundColor: '#DBEAFE' }]}>
+                            <Text style={styles.timeAdviceEmoji}>🧭</Text>
+                          </View>
+                          <Text style={styles.timeAdviceLabel}>오후</Text>
                         </View>
-                        <Text style={styles.timeAdviceLabel}>오후</Text>
+                        <Text style={styles.timeAdviceText}>
+                          {comprehensiveFortune.comprehensiveAdvice?.afternoon || '적극적인 활동이 좋습니다.'}
+                        </Text>
                       </View>
-                      <Text style={styles.timeAdviceText}>
-                        {comprehensiveFortune.comprehensiveAdvice?.afternoon || '적극적인 활동이 좋습니다.'}
-                      </Text>
-                    </View>
-                    <View style={styles.timeAdviceRow}>
-                      <View style={styles.timeAdviceItem}>
-                        <View style={[styles.timeAdviceIcon, { backgroundColor: '#E0E7FF' }]}>
-                          <Text style={styles.timeAdviceEmoji}>🌙</Text>
+                      <View style={styles.timeAdviceRow}>
+                        <View style={styles.timeAdviceItem}>
+                          <View style={[styles.timeAdviceIcon, { backgroundColor: '#E0E7FF' }]}>
+                            <Text style={styles.timeAdviceEmoji}>🌙</Text>
+                          </View>
+                          <Text style={styles.timeAdviceLabel}>저녁</Text>
                         </View>
-                        <Text style={styles.timeAdviceLabel}>저녁</Text>
+                        <Text style={styles.timeAdviceText}>
+                          {comprehensiveFortune.comprehensiveAdvice?.evening || '휴식과 재충전의 시간을 가지세요.'}
+                        </Text>
                       </View>
-                      <Text style={styles.timeAdviceText}>
-                        {comprehensiveFortune.comprehensiveAdvice?.evening || '휴식과 재충전의 시간을 가지세요.'}
-                      </Text>
                     </View>
-                  </View>
-
-                  {/* 행운 정보 요약 */}
-                  <View style={styles.luckyInfoSummary}>
-                    <View style={styles.luckyInfoItem}>
-                      <Text style={styles.luckyInfoLabel}>🎨 색상</Text>
-                      <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.color || '초록색'}</Text>
-                    </View>
-                    <View style={styles.luckyInfoDivider} />
-                    <View style={styles.luckyInfoItem}>
-                      <Text style={styles.luckyInfoLabel}>🔢 숫자</Text>
-                      <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.number || '3, 8'}</Text>
-                    </View>
-                    <View style={styles.luckyInfoDivider} />
-                    <View style={styles.luckyInfoItem}>
-                      <Text style={styles.luckyInfoLabel}>🧭 방향</Text>
-                      <Text style={styles.luckyInfoValue}>{comprehensiveFortune.luckyInfo?.direction || '동쪽'}</Text>
-                    </View>
-                    {richDailyFortune.luckyTime && (
-                      <>
-                        <View style={styles.luckyInfoDivider} />
-                        <View style={styles.luckyInfoItem}>
-                          <Text style={styles.luckyInfoLabel}>⏰ 시간</Text>
-                          <Text style={styles.luckyInfoValue}>{richDailyFortune.luckyTime}</Text>
-                        </View>
-                      </>
-                    )}
-                  </View>
+                  )}
                 </>
               )}
 
@@ -759,7 +750,7 @@ export default function HomeScreen() {
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.love.emoji}</Text>
                       <Text style={styles.categoryName}>애정</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.love.color }]}>
-                        {getScoreLabel(fortune.scores.love)}
+                        {getScoreLabel(fortune.scores.love)} ({fortune.scores.love}점)
                       </Text>
                     </View>
                     <Text style={styles.categoryMessage}>{easyScoreMessages.love.message}</Text>
@@ -770,7 +761,7 @@ export default function HomeScreen() {
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.money.emoji}</Text>
                       <Text style={styles.categoryName}>금전</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.money.color }]}>
-                        {getScoreLabel(fortune.scores.money)}
+                        {getScoreLabel(fortune.scores.money)} ({fortune.scores.money}점)
                       </Text>
                     </View>
                     <Text style={styles.categoryMessage}>{easyScoreMessages.money.message}</Text>
@@ -781,7 +772,7 @@ export default function HomeScreen() {
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.work.emoji}</Text>
                       <Text style={styles.categoryName}>업무</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.work.color }]}>
-                        {getScoreLabel(fortune.scores.work)}
+                        {getScoreLabel(fortune.scores.work)} ({fortune.scores.work}점)
                       </Text>
                     </View>
                     <Text style={styles.categoryMessage}>{easyScoreMessages.work.message}</Text>
@@ -792,7 +783,7 @@ export default function HomeScreen() {
                       <Text style={styles.categoryEmoji}>{easyScoreMessages.health.emoji}</Text>
                       <Text style={styles.categoryName}>건강</Text>
                       <Text style={[styles.categoryScore, { color: easyScoreMessages.health.color }]}>
-                        {getScoreLabel(fortune.scores.health)}
+                        {getScoreLabel(fortune.scores.health)} ({fortune.scores.health}점)
                       </Text>
                     </View>
                     <Text style={styles.categoryMessage}>{easyScoreMessages.health.message}</Text>
@@ -970,7 +961,7 @@ const styles = StyleSheet.create({
   },
   todayLabel: {
     fontSize: 12,
-    color: '#78716C',
+    color: '#57534E',
     marginTop: 4,
     fontWeight: '500',
   },
@@ -1054,7 +1045,7 @@ const styles = StyleSheet.create({
   },
   fortuneDetailAdvice: {
     fontSize: 13,
-    color: '#78716C',
+    color: '#57534E',
     lineHeight: 20,
   },
   fortuneDetailAdviceBox: {
@@ -1157,7 +1148,7 @@ const styles = StyleSheet.create({
   },
   yongsinLabel: {
     fontSize: 12,
-    color: '#78716C',
+    color: '#57534E',
     fontWeight: '500',
     marginBottom: 4,
   },
@@ -1173,7 +1164,7 @@ const styles = StyleSheet.create({
   },
   yongsinHint: {
     fontSize: 12,
-    color: '#A8A29E',
+    color: '#78716C',
     textAlign: 'center',
     marginTop: 12,
   },
@@ -1390,7 +1381,7 @@ const styles = StyleSheet.create({
   },
   timeAdviceLabel: {
     fontSize: 11,
-    color: '#78716C',
+    color: '#57534E',
     fontWeight: '500',
   },
   timeAdviceText: {
@@ -1539,7 +1530,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     fontWeight: '600',
-    color: '#78716C',
+    color: '#57534E',
   },
   datePickerGrid: {
     flexDirection: 'row',
@@ -1631,7 +1622,7 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     fontSize: 20,
-    color: '#78716C',
+    color: '#57534E',
   },
   calendarEmoji: {
     fontSize: 16,
@@ -1820,7 +1811,7 @@ const styles = StyleSheet.create({
   },
   richDailyFortuneLuckyItem: {
     fontSize: 13,
-    color: '#78716C',
+    color: '#57534E',
     fontWeight: '500',
   },
   // === 풍부한 운세 해석 추가 스타일 ===
@@ -2092,7 +2083,7 @@ const styles = StyleSheet.create({
   richDailyLuckyText: {
     flex: 1,
     fontSize: 14,
-    color: '#78716C',
+    color: '#57534E',
     lineHeight: 22,
   },
   // 일주별 보너스 카드 - 가로 배치
@@ -2253,7 +2244,7 @@ const styles = StyleSheet.create({
   },
   branchRelationAdvice: {
     fontSize: 13,
-    color: '#78716C',
+    color: '#57534E',
     lineHeight: 20,
     paddingLeft: 26,
   },
@@ -2283,7 +2274,7 @@ const styles = StyleSheet.create({
   },
   monthlyInfluenceMessage: {
     fontSize: 13,
-    color: '#78716C',
+    color: '#57534E',
     lineHeight: 20,
     paddingLeft: 26,
   },
@@ -2312,7 +2303,7 @@ const styles = StyleSheet.create({
   fortuneTabText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#78716C',
+    color: '#57534E',
   },
   fortuneTabTextActive: {
     color: '#8B5CF6',

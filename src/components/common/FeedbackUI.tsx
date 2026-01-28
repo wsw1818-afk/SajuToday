@@ -263,6 +263,39 @@ export function InlineLoading({ message = '로딩 중' }: InlineLoadingProps) {
 }
 
 // ============================================
+// 전체 화면 에러 상태 컴포넌트
+// ============================================
+interface FullScreenErrorProps {
+  title?: string;
+  message?: string;
+  onRetry?: () => void;
+  retryLabel?: string;
+}
+
+export function FullScreenError({
+  title = '운세를 불러올 수 없어요',
+  message = '네트워크 연결을 확인하고 다시 시도해주세요.',
+  onRetry,
+  retryLabel = '다시 시도',
+}: FullScreenErrorProps) {
+  return (
+    <View style={styles.fullScreenErrorContainer}>
+      <View style={styles.fullScreenErrorContent}>
+        <Text style={styles.fullScreenErrorEmoji}>😔</Text>
+        <Text style={styles.fullScreenErrorTitle}>{title}</Text>
+        <Text style={styles.fullScreenErrorMessage}>{message}</Text>
+        {onRetry && (
+          <TouchableOpacity style={styles.fullScreenRetryButton} onPress={onRetry}>
+            <Text style={styles.fullScreenRetryIcon}>🔄</Text>
+            <Text style={styles.fullScreenRetryText}>{retryLabel}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ============================================
 // 스타일
 // ============================================
 const styles = StyleSheet.create({
@@ -465,5 +498,63 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
     marginLeft: SPACING.sm,
+  },
+
+  // 전체 화면 에러 상태
+  fullScreenErrorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
+    backgroundColor: '#FDFBF7',
+  },
+  fullScreenErrorContent: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xl,
+    paddingVertical: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    maxWidth: 320,
+    width: '100%',
+  },
+  fullScreenErrorEmoji: {
+    fontSize: 64,
+    marginBottom: SPACING.lg,
+  },
+  fullScreenErrorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1C1917',
+    textAlign: 'center',
+    marginBottom: SPACING.sm,
+  },
+  fullScreenErrorMessage: {
+    fontSize: 15,
+    color: '#57534E',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: SPACING.xl,
+  },
+  fullScreenRetryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.lg,
+    gap: 8,
+  },
+  fullScreenRetryIcon: {
+    fontSize: 18,
+  },
+  fullScreenRetryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
