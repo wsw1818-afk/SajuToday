@@ -1,11 +1,9 @@
 /**
  * 운세 공유 서비스
- * 운세 카드 이미지 생성 및 공유 기능
+ * 텍스트 형태로 운세 공유 기능
  */
 
 import { Share, Alert } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import { captureRef } from 'react-native-view-shot';
 
 export interface ShareableContent {
   title: string;
@@ -111,78 +109,6 @@ export function createLuckyItemsMessage(
       `🧭 행운의 방향: ${direction}`,
     type: 'lucky',
   };
-}
-
-/**
- * View를 이미지로 캡처
- */
-export async function captureViewAsImage(viewRef: React.RefObject<any>): Promise<string | null> {
-  try {
-    if (!viewRef.current) return null;
-
-    const uri = await captureRef(viewRef, {
-      format: 'png',
-      quality: 1,
-    });
-
-    return uri;
-  } catch (error) {
-    console.error('Capture failed:', error);
-    return null;
-  }
-}
-
-/**
- * 이미지 저장
- */
-export async function saveImageToGallery(uri: string): Promise<boolean> {
-  try {
-    // expo-media-library가 필요하지만, 간단하게 파일 시스템에 저장
-    const fileName = `fortune_${Date.now()}.png`;
-    const destPath = `${FileSystem.documentDirectory}${fileName}`;
-
-    await FileSystem.copyAsync({
-      from: uri,
-      to: destPath,
-    });
-
-    Alert.alert('저장 완료', '이미지가 저장되었습니다.');
-    return true;
-  } catch (error) {
-    console.error('Save failed:', error);
-    Alert.alert('저장 실패', '이미지 저장에 실패했습니다.');
-    return false;
-  }
-}
-
-/**
- * 이미지로 공유 (이미지 URI가 있는 경우)
- */
-export async function shareWithImage(
-  imageUri: string,
-  message: string
-): Promise<boolean> {
-  try {
-    // React Native의 기본 Share는 이미지 직접 공유를 지원하지 않음
-    // expo-sharing 사용 권장
-    const result = await Share.share({
-      message,
-    });
-
-    return result.action === Share.sharedAction;
-  } catch (error) {
-    console.error('Share with image failed:', error);
-    return false;
-  }
-}
-
-/**
- * 클립보드에 복사
- */
-export function copyToClipboard(text: string): void {
-  // Clipboard API 사용
-  // @react-native-clipboard/clipboard 패키지 필요
-  Alert.alert('복사됨', '클립보드에 복사되었습니다.');
 }
 
 /**
