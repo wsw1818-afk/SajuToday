@@ -573,6 +573,36 @@ export default function HomeScreen() {
                     </View>
                   )}
 
+                  {/* 60갑자 일주 상세 해석 */}
+                  {richDailyFortune.ilju60Interpretation && (
+                    <View style={styles.ilju60Card}>
+                      <View style={styles.ilju60Header}>
+                        <Text style={styles.ilju60Hanja}>{richDailyFortune.ilju60Interpretation.hanja}</Text>
+                        <Text style={styles.ilju60Title}>
+                          {sajuResult?.pillars.day.stem}{sajuResult?.pillars.day.branch} 일주의 오늘
+                        </Text>
+                      </View>
+                      <View style={styles.ilju60PoeticBox}>
+                        <Text style={styles.ilju60PoeticImage}>
+                          "{richDailyFortune.ilju60Interpretation.poeticImage}"
+                        </Text>
+                        <Text style={styles.ilju60Nature}>
+                          {richDailyFortune.ilju60Interpretation.natureDescription}
+                        </Text>
+                      </View>
+                      <View style={styles.ilju60TraitsContainer}>
+                        {richDailyFortune.ilju60Interpretation.coreTraits.map((trait, index) => (
+                          <View key={index} style={styles.ilju60TraitBadge}>
+                            <Text style={styles.ilju60TraitText}>{trait}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <Text style={styles.ilju60SeasonNote}>
+                        📅 {richDailyFortune.ilju60Interpretation.seasonalNote}
+                      </Text>
+                    </View>
+                  )}
+
                   {/* 일주별 특별 조언 */}
                   {richDailyFortune.iljuBonus && (
                     <View style={styles.richDailyBonusCard}>
@@ -1886,6 +1916,74 @@ const styles = StyleSheet.create({
   richDailyAvoidText: {
     fontSize: 13,
     color: '#B91C1C',
+    lineHeight: 20,
+  },
+  // 60갑자 일주 상세 해석 카드
+  ilju60Card: {
+    backgroundColor: 'rgba(59, 130, 246, 0.06)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  ilju60Header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  ilju60Hanja: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1D4ED8',
+    marginRight: 10,
+  },
+  ilju60Title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E40AF',
+  },
+  ilju60PoeticBox: {
+    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  ilju60PoeticImage: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E3A8A',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  ilju60Nature: {
+    fontSize: 14,
+    color: '#3B82F6',
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  ilju60TraitsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  ilju60TraitBadge: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  ilju60TraitText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#1D4ED8',
+  },
+  ilju60SeasonNote: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontStyle: 'italic',
     lineHeight: 20,
   },
   // 일주별 보너스 카드

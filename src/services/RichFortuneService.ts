@@ -18,6 +18,8 @@ import {
   EasyDayRelation,
   ILJU_DAILY_BONUS,
   IljuDailyBonus,
+  ILJU_60_INTERPRETATIONS,
+  Ilju60Interpretation,
 } from '../data/easyDailyInterpretations';
 
 // 천간을 오행으로 변환
@@ -442,6 +444,8 @@ export interface RichDailyFortune {
     strength: 'strong' | 'weak' | 'neutral';
     message: string;
   };
+  // === 신규: 60갑자 상세 해석 ===
+  ilju60Interpretation?: Ilju60Interpretation;
 }
 
 // 오늘의 풍부한 운세 생성 (확장 버전)
@@ -469,6 +473,9 @@ export function generateRichDailyFortune(
 
   // 일주별 추가 보너스 해석
   const iljuBonus = ilju ? ILJU_DAILY_BONUS[ilju] : undefined;
+
+  // === 신규: 60갑자 상세 해석 ===
+  const ilju60Interpretation = ilju ? ILJU_60_INTERPRETATIONS[ilju] : undefined;
 
   // === 신규: 지지 관계 분석 (육합/육충/형살) ===
   const branchRelation = analyzeBranchRelation(dayBranch, todayBranch);
@@ -498,6 +505,28 @@ export function generateRichDailyFortune(
     luckyPoint = easyRelation.luckyPoint;
     keywords = easyRelation.keywords;
     advice = easyRelation.doThis[0]; // 첫 번째 권장사항을 조언으로
+  }
+
+  // 60갑자 상세 해석이 있으면 추가 정보 반영
+  if (ilju60Interpretation) {
+    // 오행+60갑자 통합 상세 해석
+    const combinedDetail = `${ilju60Interpretation.poeticImage}인 당신에게 ${easyRelation?.title || '오늘'}이 찾아왔습니다.\n\n${ilju60Interpretation.dailyInfluence}\n\n${easyRelation?.detailed || detailedInterpretation}`;
+    detailedInterpretation = combinedDetail;
+
+    // 60갑자별 좋은 활동 추가
+    const randomGoodActivity = ilju60Interpretation.goodActivities[Math.floor(random() * ilju60Interpretation.goodActivities.length)];
+    if (!doThis.includes(randomGoodActivity)) {
+      doThis = [randomGoodActivity, ...doThis];
+    }
+
+    // 60갑자별 피해야 할 상황 추가
+    const randomAvoidSituation = ilju60Interpretation.avoidSituations[Math.floor(random() * ilju60Interpretation.avoidSituations.length)];
+    if (!avoidThis.includes(randomAvoidSituation)) {
+      avoidThis = [randomAvoidSituation, ...avoidThis];
+    }
+
+    // 키워드에 핵심 성격 추가
+    keywords = [...new Set([...ilju60Interpretation.coreTraits.slice(0, 2), ...keywords])].slice(0, 5);
   }
 
   // 행운의 시간 계산 (오행에 따라)
@@ -569,6 +598,8 @@ export function generateRichDailyFortune(
     // 신규: 지지 관계 및 월령
     branchRelation,
     monthlyInfluence,
+    // 신규: 60갑자 상세 해석
+    ilju60Interpretation,
   };
 }
 
