@@ -511,29 +511,105 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* 오늘의 운세 - 문학적 해석 */}
+          {/* 오늘의 운세 - 풍부한 해석 (확장 버전) */}
           {richDailyFortune && (
             <View style={styles.richDailyFortuneSection}>
+              {/* 헤더: 오늘의 테마 */}
               <View style={styles.richDailyFortuneHeader}>
                 <Text style={styles.richDailyFortuneTitle}>🌟 오늘의 운세 풀이</Text>
               </View>
+
+              {/* 메인 카드: 오늘의 핵심 */}
               <View style={styles.richDailyFortuneCard}>
-                <Text style={styles.richDailyFortuneRelation}>
-                  <Text style={styles.richDailyFortuneLabel}>오늘과의 인연: </Text>
-                  {richDailyFortune.dayRelation}
+                {/* 오늘의 테마 제목 */}
+                <View style={styles.richDailyThemeHeader}>
+                  <Text style={styles.richDailyThemeTitle}>{richDailyFortune.dayRelation}</Text>
+                </View>
+
+                {/* 한 줄 요약 */}
+                <Text style={styles.richDailySummary}>
+                  {richDailyFortune.summary}
                 </Text>
-                <Text style={styles.richDailyFortuneInterpretation}>
-                  {richDailyFortune.interpretation}
-                </Text>
-                <View style={styles.richDailyFortuneAdviceBox}>
-                  <Text style={styles.richDailyFortuneAdviceLabel}>💫 오늘의 핵심 조언</Text>
-                  <Text style={styles.richDailyFortuneAdvice}>{richDailyFortune.advice}</Text>
+
+                {/* 상세 풀이 */}
+                <View style={styles.richDailyDetailBox}>
+                  <Text style={styles.richDailyDetailText}>
+                    {richDailyFortune.detailedInterpretation}
+                  </Text>
+                </View>
+
+                {/* 키워드 */}
+                <View style={styles.richDailyKeywords}>
+                  {richDailyFortune.keywords.map((keyword, index) => (
+                    <View key={index} style={styles.richDailyKeywordBadge}>
+                      <Text style={styles.richDailyKeywordText}>#{keyword}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 이런 상황이 생길 수 있어요 */}
+              <View style={styles.richDailySituationCard}>
+                <Text style={styles.richDailySectionTitle}>📍 이런 상황이 생길 수 있어요</Text>
+                {richDailyFortune.situations.slice(0, 4).map((situation, index) => (
+                  <View key={index} style={styles.richDailySituationItem}>
+                    <Text style={styles.richDailySituationDot}>•</Text>
+                    <Text style={styles.richDailySituationText}>{situation}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* 오늘 이렇게 하세요 / 피하세요 */}
+              <View style={styles.richDailyDoAvoidContainer}>
+                {/* 이렇게 하세요 */}
+                <View style={styles.richDailyDoCard}>
+                  <Text style={styles.richDailyDoTitle}>✅ 이렇게 하세요</Text>
+                  {richDailyFortune.doThis.slice(0, 3).map((item, index) => (
+                    <View key={index} style={styles.richDailyDoItem}>
+                      <Text style={styles.richDailyDoText}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* 이건 피하세요 */}
+                <View style={styles.richDailyAvoidCard}>
+                  <Text style={styles.richDailyAvoidTitle}>⚠️ 이건 피하세요</Text>
+                  {richDailyFortune.avoidThis.slice(0, 3).map((item, index) => (
+                    <View key={index} style={styles.richDailyAvoidItem}>
+                      <Text style={styles.richDailyAvoidText}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* 일주별 추가 조언 (있는 경우) */}
+              {richDailyFortune.iljuBonus && (
+                <View style={styles.richDailyBonusCard}>
+                  <Text style={styles.richDailyBonusTitle}>💎 {sajuResult?.pillars.day.stem}{sajuResult?.pillars.day.branch} 일주를 위한 특별 조언</Text>
+                  <View style={styles.richDailyBonusItem}>
+                    <Text style={styles.richDailyBonusLabel}>오늘의 강점</Text>
+                    <Text style={styles.richDailyBonusText}>{richDailyFortune.iljuBonus.todayStrength}</Text>
+                  </View>
+                  <View style={styles.richDailyBonusItem}>
+                    <Text style={styles.richDailyBonusLabelWarning}>주의할 점</Text>
+                    <Text style={styles.richDailyBonusText}>{richDailyFortune.iljuBonus.todayWarning}</Text>
+                  </View>
+                  <View style={styles.richDailyBonusTip}>
+                    <Text style={styles.richDailyBonusTipText}>🍀 {richDailyFortune.iljuBonus.luckyTip}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* 행운 포인트 & 시간 */}
+              <View style={styles.richDailyLuckyCard}>
+                <View style={styles.richDailyLuckyRow}>
+                  <Text style={styles.richDailyLuckyIcon}>🎨</Text>
+                  <Text style={styles.richDailyLuckyText}>{richDailyFortune.luckyPoint}</Text>
                 </View>
                 {richDailyFortune.luckyTime && (
-                  <View style={styles.richDailyFortuneLucky}>
-                    <Text style={styles.richDailyFortuneLuckyItem}>
-                      ⏰ 행운의 시간: {richDailyFortune.luckyTime}
-                    </Text>
+                  <View style={styles.richDailyLuckyRow}>
+                    <Text style={styles.richDailyLuckyIcon}>⏰</Text>
+                    <Text style={styles.richDailyLuckyText}>행운의 시간: {richDailyFortune.luckyTime}</Text>
                   </View>
                 )}
               </View>
@@ -1633,5 +1709,209 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#78716C',
     fontWeight: '500',
+  },
+  // === 풍부한 운세 해석 추가 스타일 ===
+  richDailyThemeHeader: {
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+    alignItems: 'center',
+  },
+  richDailyThemeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  richDailySummary: {
+    fontSize: 16,
+    color: '#44403C',
+    lineHeight: 26,
+    textAlign: 'center',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  richDailyDetailBox: {
+    backgroundColor: 'rgba(250, 250, 249, 0.8)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#F59E0B',
+  },
+  richDailyDetailText: {
+    fontSize: 15,
+    color: '#3D3D3D',
+    lineHeight: 26,
+  },
+  richDailyKeywords: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+    justifyContent: 'center',
+  },
+  richDailyKeywordBadge: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  richDailyKeywordText: {
+    fontSize: 13,
+    color: '#B45309',
+    fontWeight: '600',
+  },
+  // 상황 카드
+  richDailySituationCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(139, 92, 246, 0.15)',
+  },
+  richDailySectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#5B21B6',
+    marginBottom: 12,
+  },
+  richDailySituationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    gap: 8,
+  },
+  richDailySituationDot: {
+    fontSize: 16,
+    color: '#8B5CF6',
+    marginTop: 2,
+  },
+  richDailySituationText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 22,
+  },
+  // 이렇게 하세요 / 피하세요
+  richDailyDoAvoidContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  richDailyDoCard: {
+    flex: 1,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  richDailyDoTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#059669',
+    marginBottom: 10,
+  },
+  richDailyDoItem: {
+    marginBottom: 6,
+  },
+  richDailyDoText: {
+    fontSize: 13,
+    color: '#047857',
+    lineHeight: 20,
+  },
+  richDailyAvoidCard: {
+    flex: 1,
+    backgroundColor: 'rgba(239, 68, 68, 0.06)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  richDailyAvoidTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#DC2626',
+    marginBottom: 10,
+  },
+  richDailyAvoidItem: {
+    marginBottom: 6,
+  },
+  richDailyAvoidText: {
+    fontSize: 13,
+    color: '#B91C1C',
+    lineHeight: 20,
+  },
+  // 일주별 보너스 카드
+  richDailyBonusCard: {
+    backgroundColor: 'rgba(147, 51, 234, 0.06)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(147, 51, 234, 0.2)',
+  },
+  richDailyBonusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#7C3AED',
+    marginBottom: 12,
+  },
+  richDailyBonusItem: {
+    marginBottom: 10,
+  },
+  richDailyBonusLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  richDailyBonusLabelWarning: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 4,
+  },
+  richDailyBonusText: {
+    fontSize: 14,
+    color: '#44403C',
+    lineHeight: 22,
+  },
+  richDailyBonusTip: {
+    backgroundColor: 'rgba(147, 51, 234, 0.08)',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 8,
+  },
+  richDailyBonusTipText: {
+    fontSize: 14,
+    color: '#5B21B6',
+    lineHeight: 22,
+    fontWeight: '500',
+  },
+  // 행운 포인트 카드
+  richDailyLuckyCard: {
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 12,
+  },
+  richDailyLuckyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  richDailyLuckyIcon: {
+    fontSize: 18,
+  },
+  richDailyLuckyText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#78716C',
+    lineHeight: 22,
   },
 });

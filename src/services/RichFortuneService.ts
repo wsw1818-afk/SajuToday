@@ -13,6 +13,12 @@ import {
   DAY_YEAR_RELATIONS,
   DayMasterYearRelation,
 } from '../data/richInterpretations';
+import {
+  EASY_DAY_RELATIONS,
+  EasyDayRelation,
+  ILJU_DAILY_BONUS,
+  IljuDailyBonus,
+} from '../data/easyDailyInterpretations';
 
 // 천간을 오행으로 변환
 const STEM_TO_ELEMENT: Record<string, Element> = {
@@ -215,7 +221,7 @@ function generateYearAdvice(
   return '기회를 잘 살펴보고 신중하게 결정하세요.';
 }
 
-// 오늘의 풍부한 운세 해석
+// 오늘의 풍부한 운세 해석 (확장된 버전)
 export interface RichDailyFortune {
   // 문학적 비유 (일주 기반)
   metaphor: string;
@@ -233,17 +239,37 @@ export interface RichDailyFortune {
   todayAdvice: string;
   // 오늘의 키워드
   keywords: string[];
-  // 오늘과 일간의 관계
+  // 오늘과 일간의 관계 (쉬운 제목)
   dayRelation: string;
-  // 상세 해석
+  // 상세 해석 (풍부한 버전)
   interpretation: string;
   // 핵심 조언
   advice: string;
   // 행운의 시간
   luckyTime: string;
+
+  // === 새로 추가된 풍부한 해석 ===
+  // 한 줄 요약
+  summary: string;
+  // 상세 풀이 (3-4문장)
+  detailedInterpretation: string;
+  // 구체적인 상황 예시
+  situations: string[];
+  // 오늘 이렇게 하세요
+  doThis: string[];
+  // 오늘 이건 피하세요
+  avoidThis: string[];
+  // 행운 포인트
+  luckyPoint: string;
+  // 일주별 추가 조언 (있는 경우)
+  iljuBonus?: {
+    todayWarning: string;
+    todayStrength: string;
+    luckyTip: string;
+  };
 }
 
-// 오늘의 풍부한 운세 생성
+// 오늘의 풍부한 운세 생성 (확장 버전)
 export function generateRichDailyFortune(
   sajuResult: SajuResult | null,
   todayStem: string,
@@ -254,27 +280,38 @@ export function generateRichDailyFortune(
   const richIlju = getRichIljuInterpretation(sajuResult);
   const dayElement = getDayMasterElement(sajuResult);
   const todayElement = STEM_TO_ELEMENT[todayStem];
+  const ilju = getIlju(sajuResult);
 
   if (!richIlju || !dayElement || !todayElement) return null;
 
-  // 일간과 오늘 천간의 관계로 해석 생성
-  const dayTodayRelation = DAY_YEAR_RELATIONS[dayElement]?.[todayElement];
+  // 쉬운 일일 운세 데이터 가져오기
+  const easyRelation = EASY_DAY_RELATIONS[dayElement]?.[todayElement];
 
-  let dayRelation = '';
-  let interpretation = '';
-  let advice = '';
-  let keywords: string[] = [];
+  // 일주별 추가 보너스 해석
+  const iljuBonus = ilju ? ILJU_DAILY_BONUS[ilju] : undefined;
 
-  if (dayTodayRelation) {
-    dayRelation = dayTodayRelation.relation;
-    interpretation = `오늘은 ${dayTodayRelation.relation}의 기운이 흐릅니다. ${dayTodayRelation.meaning} ${dayTodayRelation.fortune}`;
-    advice = dayTodayRelation.advice;
-    keywords = dayTodayRelation.keywords;
-  } else {
-    dayRelation = '조화로운 하루';
-    interpretation = `오늘의 기운과 조화를 이루며 나아가세요. 자연스러운 흐름에 몸을 맡기되, 자신의 페이스를 유지하며 진행하세요.`;
-    advice = '자신의 페이스를 유지하며 진행하세요.';
-    keywords = richIlju.strengthKeywords.slice(0, 3);
+  // 기본값 설정
+  let dayRelation = '조화로운 하루';
+  let summary = '평온하고 안정적인 하루입니다.';
+  let detailedInterpretation = '오늘의 기운과 조화를 이루며 나아가세요. 자연스러운 흐름에 몸을 맡기되, 자신의 페이스를 유지하며 진행하세요.';
+  let situations: string[] = ['특별한 일 없이 평화로운 하루'];
+  let doThis: string[] = ['자신의 페이스 유지하기', '여유 있게 하루 보내기'];
+  let avoidThis: string[] = ['무리한 계획', '조급해하기'];
+  let luckyPoint = '편안한 마음이 행운을 가져옵니다';
+  let keywords: string[] = richIlju.strengthKeywords.slice(0, 3);
+  let advice = '자신의 페이스를 유지하며 진행하세요.';
+
+  // 쉬운 해석 데이터가 있으면 적용
+  if (easyRelation) {
+    dayRelation = easyRelation.title;
+    summary = easyRelation.summary;
+    detailedInterpretation = easyRelation.detailed;
+    situations = easyRelation.situations;
+    doThis = easyRelation.doThis;
+    avoidThis = easyRelation.avoidThis;
+    luckyPoint = easyRelation.luckyPoint;
+    keywords = easyRelation.keywords;
+    advice = easyRelation.doThis[0]; // 첫 번째 권장사항을 조언으로
   }
 
   // 행운의 시간 계산 (오행에 따라)
@@ -287,12 +324,18 @@ export function generateRichDailyFortune(
   };
   const luckyTime = luckyTimeMap[todayElement] || '';
 
+  // 종합 해석 문장 구성
+  const interpretation = `${summary}\n\n${detailedInterpretation}`;
+
   return {
+    // 일주 기본 정보
     metaphor: richIlju.metaphor,
     image: richIlju.image,
     essence: richIlju.essence,
     needs: richIlju.needs,
     lifeTheme: richIlju.lifeTheme,
+
+    // 오늘의 운세 (기존 호환)
     todayInterpretation: interpretation,
     todayAdvice: advice,
     keywords,
@@ -300,6 +343,15 @@ export function generateRichDailyFortune(
     interpretation,
     advice,
     luckyTime,
+
+    // 새로운 풍부한 해석
+    summary,
+    detailedInterpretation,
+    situations,
+    doThis,
+    avoidThis,
+    luckyPoint,
+    iljuBonus,
   };
 }
 
