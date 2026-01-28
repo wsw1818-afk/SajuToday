@@ -1,1 +1,1 @@
-🐛 푸시 알림 네이티브 모듈 오류 수정: graceful fallback 처리로 dev client 없이도 앱 실행 가능
+🐛 푸시 알림 네이티브 모듈 오류 수정: expo-notifications 제거, stub 서비스로 대체
