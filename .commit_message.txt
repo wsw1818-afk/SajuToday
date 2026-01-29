@@ -1,1 +1,1 @@
-✨ 보안/성능/테스트 개선: API 키 .env 분리, SecureStorageService 암호화, KasiService 오프라인 캐시, ErrorLogService, 커스텀 훅 분리, Jest 테스트 30개 추가
+✨ UX 개선: 오늘운세 요약 탭에 실천 조언 섹션 추가 (이렇게 하세요/피하세요/행운포인트)

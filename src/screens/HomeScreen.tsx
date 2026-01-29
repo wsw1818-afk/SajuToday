@@ -720,6 +720,45 @@ export default function HomeScreen() {
                         "{richDailyFortune.personalMessage}"
                       </Text>
                     </View>
+
+                    {/* 오늘의 실천 조언 섹션 */}
+                    <View style={styles.actionAdviceContainer}>
+                      {/* 이렇게 하세요 */}
+                      {richDailyFortune.doThis && richDailyFortune.doThis.length > 0 && (
+                        <View style={[styles.doThisBox, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.08)' }]}>
+                          <Text style={[styles.actionAdviceTitle, { color: isDark ? '#34D399' : '#059669' }]}>✅ 오늘 이렇게 하세요</Text>
+                          {richDailyFortune.doThis.slice(0, 3).map((item, index) => (
+                            <View key={index} style={styles.actionAdviceItem}>
+                              <Text style={[styles.actionAdviceDot, { color: isDark ? '#34D399' : '#10B981' }]}>•</Text>
+                              <Text style={[styles.actionAdviceText, { color: isDark ? '#A7F3D0' : '#047857' }]}>{item}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {/* 이건 피하세요 */}
+                      {richDailyFortune.avoidThis && richDailyFortune.avoidThis.length > 0 && (
+                        <View style={[styles.avoidThisBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(239, 68, 68, 0.08)' }]}>
+                          <Text style={[styles.actionAdviceTitle, { color: isDark ? '#F87171' : '#DC2626' }]}>⚠️ 오늘 이건 피하세요</Text>
+                          {richDailyFortune.avoidThis.slice(0, 3).map((item, index) => (
+                            <View key={index} style={styles.actionAdviceItem}>
+                              <Text style={[styles.actionAdviceDot, { color: isDark ? '#F87171' : '#EF4444' }]}>•</Text>
+                              <Text style={[styles.actionAdviceText, { color: isDark ? '#FCA5A5' : '#B91C1C' }]}>{item}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+                    </View>
+
+                    {/* 행운 포인트 */}
+                    {richDailyFortune.luckyPoint && (
+                      <View style={[styles.luckyPointBox, { backgroundColor: isDark ? 'rgba(251, 191, 36, 0.12)' : 'rgba(251, 191, 36, 0.1)' }]}>
+                        <Text style={[styles.luckyPointText, { color: isDark ? '#FCD34D' : '#B45309' }]}>
+                          🍀 {richDailyFortune.luckyPoint}
+                        </Text>
+                      </View>
+                    )}
+
                     <View style={styles.richDailyKeywords}>
                       {richDailyFortune.keywords.map((keyword, index) => (
                         <View key={index} style={[styles.richDailyKeywordBadge, { backgroundColor: isDark ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.1)' }]}>
@@ -2529,5 +2568,54 @@ const styles = StyleSheet.create({
   fortuneTabTextActive: {
     color: '#8B5CF6',
     fontWeight: '700',
+  },
+  // 오늘의 실천 조언 스타일
+  actionAdviceContainer: {
+    marginTop: 16,
+    gap: 12,
+  },
+  doThisBox: {
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#10B981',
+  },
+  avoidThisBox: {
+    padding: 14,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#EF4444',
+  },
+  actionAdviceTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  actionAdviceItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  actionAdviceDot: {
+    fontSize: 14,
+    marginRight: 8,
+    lineHeight: 20,
+  },
+  actionAdviceText: {
+    fontSize: 14,
+    lineHeight: 20,
+    flex: 1,
+  },
+  luckyPointBox: {
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  luckyPointText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
