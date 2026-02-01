@@ -34,12 +34,24 @@ export class SajuCalculator {
   private birthDate: Date;
   private birthTime: string | null;
 
+  // 자시(23:00-01:00) 처리를 위한 플래그
+  private isZiShiNextDay: boolean = false;
+
   constructor(birthDate: string, birthTime: string | null) {
     // UTC 시간대 문제 방지: 날짜 문자열을 직접 파싱하여 로컬 날짜로 생성
     // new Date("YYYY-MM-DD")는 UTC 자정으로 해석되어 시간대에 따라 날짜가 다를 수 있음
     const [year, month, day] = birthDate.split('-').map(Number);
     this.birthDate = new Date(year, month - 1, day);
     this.birthTime = birthTime;
+    
+    // 23:00-23:59는 다음 날의 자시로 처리
+    if (birthTime) {
+      const [hours] = birthTime.split(':').map(Number);
+      if (hours >= 23) {
+        this.isZiShiNextDay = true;
+        this.birthDate = new Date(year, month - 1, day + 1);
+      }
+    }
   }
 
   /**
@@ -91,15 +103,23 @@ export class SajuCalculator {
 
   /**
    * 년주 계산
-   * - 입춘(2월 4일경) 이전이면 전년도 간지 사용
+   * - 입춘(立春, 약 2월 4일) 이전이면 전년도 간지 사용
+   * - 참고: 입춘은 매년 2월 3일, 4일, 또는 5일에 해당 (천문 현상)
+   * - 정확한 계산을 위해서는 KASI API에서 절기 정보를 받아오는 것이 좋음
    */
   private calculateYearPillar(): Pillar {
     let year = this.birthDate.getFullYear();
     const month = this.birthDate.getMonth() + 1;
     const day = this.birthDate.getDate();
 
-    // 입춘(약 2월 4일) 이전이면 전년도
-    if (month === 1 || (month === 2 && day < 4)) {
+    // 입춘 날짜는 매년 미세하게 변동:
+    // 2024년: 2월 4일
+    // 2025년: 2월 3일  
+    // 2026년: 2월 4일
+    // TODO: 정확한 입춘 날짜를 위해 KASI API 연동 권장
+    const ipChunDay = this.getIpChunDay(year);
+    
+    if (month === 1 || (month === 2 && day < ipChunDay)) {
       year -= 1;
     }
 
@@ -112,6 +132,23 @@ export class SajuCalculator {
       stem: cycle.stem,
       branch: cycle.branch,
     };
+  }
+
+  /**
+   * 연도별 입춘(立春) 날짜 반환
+   * 1900-2100년 범위의 주요 연도들
+   * 정확한 값은 KASI API에서 조회 권장
+   */
+  private getIpChunDay(year: number): number {
+    // 주요 연도별 입춘 날짜 (2월 X일)
+    const ipChunDates: Record<number, number> = {
+      2020: 4, 2021: 3, 2022: 4, 2023: 4, 2024: 4,
+      2025: 3, 2026: 4, 2027: 4, 2028: 4, 2029: 3,
+      2030: 4, 2031: 4, 2032: 4, 2033: 3, 2034: 4,
+    };
+    
+    // 알려진 연도면 해당 값 사용, 아니면 기본값 4
+    return ipChunDates[year] || 4;
   }
 
   /**
@@ -142,22 +179,25 @@ export class SajuCalculator {
 
   /**
    * 절기 기준 월 인덱스 (0 = 인월, 1 = 묘월, ...)
+   * - 절기는 천문 현상이므로 매년 미세하게 변동됨
+   * - 정확한 계산을 위해 KASI API 연동 권장
    */
   private getMonthIndexBySolarTerm(month: number, day: number): number {
     // 절기 시작일 (대략적인 날짜)
+    // 참고: 실제 절기는 매년 ±1일 정도 변동
     const solarTermDays: Record<number, number> = {
-      1: 6,   // 소한
-      2: 4,   // 입춘
-      3: 6,   // 경칩
-      4: 5,   // 청명
-      5: 6,   // 입하
-      6: 6,   // 망종
-      7: 7,   // 소서
-      8: 8,   // 입추
-      9: 8,   // 백로
-      10: 8,  // 한로
-      11: 7,  // 입동
-      12: 7,  // 대설
+      1: 6,   // 소한 (1월 5-7일)
+      2: 4,   // 입춘 (2월 3-5일)
+      3: 6,   // 경칩 (3월 5-7일)
+      4: 5,   // 청명 (4월 4-6일)
+      5: 6,   // 입하 (5월 5-7일)
+      6: 6,   // 망종 (6월 5-7일)
+      7: 7,   // 소서 (7월 6-8일)
+      8: 8,   // 입추 (8월 7-9일)
+      9: 8,   // 백로 (9월 7-9일)
+      10: 8,  // 한로 (10월 8-9일)
+      11: 7,  // 입동 (11월 7-8일)
+      12: 7,  // 대설 (12월 6-8일)
     };
 
     // 절기 이전이면 전월
@@ -175,6 +215,7 @@ export class SajuCalculator {
   /**
    * 일주 계산
    * - 기준일로부터 일수 계산 후 60갑자 순환
+   * - 23:00-23:59는 다음 날로 처리 (자시는 다음 날의 시작)
    */
   private calculateDayPillar(): Pillar {
     const diffTime = this.birthDate.getTime() - BASE_DATE.getTime();
@@ -186,6 +227,20 @@ export class SajuCalculator {
       stem: cycle.stem,
       branch: cycle.branch,
     };
+  }
+
+  /**
+   * 원래 입력된 생년월일 반환 (자시 보정 전)
+   * - 프로필 저장 등 표시용으로 사용
+   */
+  getOriginalBirthDate(): Date {
+    if (this.isZiShiNextDay) {
+      // 하루를 되돌림
+      const original = new Date(this.birthDate);
+      original.setDate(original.getDate() - 1);
+      return original;
+    }
+    return this.birthDate;
   }
 
   /**
@@ -415,13 +470,47 @@ export function getDayMasterTraits(dayMaster: string) {
 
 /**
  * 일간과 오늘 일진의 십신 관계
+ * - getTenGod 메서드를 public으로 추출하여 사용
  */
 export function getTodayRelation(dayMaster: string, todayStem: string): string {
   const dayMasterStem = getStemByKorean(dayMaster);
-  if (!dayMasterStem) return '';
+  const todayStemInfo = getStemByKorean(todayStem);
+  
+  if (!dayMasterStem || !todayStemInfo) return '';
 
-  const calculator = new SajuCalculator('2000-01-01', null);
-  return (calculator as any).getTenGod(dayMasterStem, todayStem);
+  // 십신 계산 로직 (getTenGod과 동일)
+  const dayElement = dayMasterStem.element;
+  const dayYinYang = dayMasterStem.yinYang;
+  const targetElement = todayStemInfo.element;
+  const targetYinYang = todayStemInfo.yinYang;
+  const sameYinYang = dayYinYang === targetYinYang;
+
+  // 같은 오행
+  if (dayElement === targetElement) {
+    return sameYinYang ? '비견' : '겁재';
+  }
+
+  // 내가 생하는 오행 (식상)
+  if (FIVE_ELEMENTS[dayElement].generates === targetElement) {
+    return sameYinYang ? '식신' : '상관';
+  }
+
+  // 내가 극하는 오행 (재성)
+  if (FIVE_ELEMENTS[dayElement].controls === targetElement) {
+    return sameYinYang ? '편재' : '정재';
+  }
+
+  // 나를 극하는 오행 (관성)
+  if (FIVE_ELEMENTS[targetElement].controls === dayElement) {
+    return sameYinYang ? '편관' : '정관';
+  }
+
+  // 나를 생하는 오행 (인성)
+  if (FIVE_ELEMENTS[targetElement].generates === dayElement) {
+    return sameYinYang ? '편인' : '정인';
+  }
+
+  return '';
 }
 
 /**

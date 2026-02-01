@@ -4,6 +4,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { TodayInfo, Pillar } from '../types';
 import { getTodayGanji } from './SajuCalculator';
 import { SOLAR_TERMS } from '../data/saju';
+import { ErrorLogService } from './ErrorLogService';
 
 // KASI API 기본 URL
 const KASI_BASE_URL = 'http://apis.data.go.kr/B090041/openapi/service';
@@ -76,9 +77,9 @@ export class KasiService {
       isOnline = state.isConnected ?? false;
 
       if (!wasOnline && isOnline) {
-        console.log('네트워크 연결됨 - 캐시 갱신 가능');
+        // 네트워크 연결됨 - 캐시 갱신 가능
       } else if (wasOnline && !isOnline) {
-        console.log('네트워크 연결 끊김 - 오프라인 모드');
+        // 네트워크 연결 끊김 - 오프라인 모드
       }
     });
   }
@@ -117,8 +118,8 @@ export class KasiService {
         ttl,
       };
       await AsyncStorage.setItem(key, JSON.stringify(cacheData));
-    } catch (e) {
-      console.log('캐시 저장 실패:', e);
+    } catch {
+      // 캐시 저장 실패
     }
   }
 
@@ -139,8 +140,8 @@ export class KasiService {
       }
 
       return cacheData.data;
-    } catch (e) {
-      console.log('캐시 조회 실패:', e);
+    } catch {
+      // 캐시 조회 실패
       return null;
     }
   }
@@ -190,10 +191,8 @@ export class KasiService {
       // 오프라인: 만료된 캐시라도 반환
       const expiredCache = await this.getCache<LunarInfo>(cacheKey, true);
       if (expiredCache) {
-        console.log('오프라인 모드: 만료된 캐시 사용');
         return expiredCache;
       }
-      console.log('오프라인 모드: 캐시 없음');
       return null;
     }
 
@@ -213,6 +212,16 @@ export class KasiService {
 
       const xml = response.data;
 
+      // XML 응답 유효성 검사
+      if (!this.validateXmlResponse(xml, ['lunYear', 'lunMonth', 'lunDay'])) {
+        await ErrorLogService.logApiError(
+          'Invalid XML response format',
+          'solarToLunar',
+          { solarDate, responsePreview: xml.substring(0, 200) }
+        );
+        throw new Error('KASI_API_INVALID_RESPONSE');
+      }
+
       const lunYear = this.extractXmlValue(xml, 'lunYear');
       const lunMonth = this.extractXmlValue(xml, 'lunMonth');
       const lunDay = this.extractXmlValue(xml, 'lunDay');
@@ -222,7 +231,12 @@ export class KasiService {
       const lunIljin = this.extractXmlValue(xml, 'lunIljin');
 
       if (!lunYear || !lunMonth || !lunDay) {
-        return null;
+        await ErrorLogService.logApiError(
+          'Required fields missing in XML',
+          'solarToLunar',
+          { solarDate }
+        );
+        throw new Error('KASI_API_MISSING_FIELDS');
       }
 
       const result: LunarInfo = {
@@ -244,7 +258,7 @@ export class KasiService {
       // API 실패 시 만료된 캐시라도 반환
       const fallbackCache = await this.getCache<LunarInfo>(cacheKey, true);
       if (fallbackCache) {
-        console.log('API 실패: 만료된 캐시 폴백 사용');
+        
         return fallbackCache;
       }
       return null;
@@ -284,7 +298,6 @@ export class KasiService {
     if (!online) {
       const expiredCache = await this.getCache<string>(cacheKey, true);
       if (expiredCache) {
-        console.log('오프라인 모드: 만료된 캐시 사용');
         return expiredCache;
       }
       return null;
@@ -349,7 +362,6 @@ export class KasiService {
     if (!online) {
       const expiredCache = await this.getCache<SolarTermInfo[]>(cacheKey, true);
       if (expiredCache) {
-        console.log('오프라인 모드: 만료된 절기 캐시 사용');
         return expiredCache;
       }
       // 로컬 데이터로 폴백
@@ -424,7 +436,6 @@ export class KasiService {
     if (!online) {
       const expiredCache = await this.getCache<HolidayInfo[]>(cacheKey, true);
       if (expiredCache) {
-        console.log('오프라인 모드: 만료된 공휴일 캐시 사용');
         return expiredCache;
       }
       return [];
@@ -497,7 +508,6 @@ export class KasiService {
     if (!online) {
       const expiredCache = await this.getCache<GanjiResult>(cacheKey, true);
       if (expiredCache) {
-        console.log('오프라인 모드: 만료된 간지 캐시 사용');
         return expiredCache;
       }
       return null;
@@ -564,10 +574,9 @@ export class KasiService {
           stem: ganjiInfo.dayGanji[0],
           branch: ganjiInfo.dayGanji[1],
         };
-        console.log(`오늘 간지 (KASI API): ${ganjiInfo.dayGanji}`);
       }
-    } catch (e) {
-      console.log('KASI 간지 조회 실패, 로컬 계산 사용:', `${ganji.stem}${ganji.branch}`);
+    } catch {
+      // KASI 간지 조회 실패, 로컬 계산 사용
     }
 
     // 절기 확인 (KASI API)
@@ -594,8 +603,8 @@ export class KasiService {
       const holidays = await this.getHolidays(year, month);
       const todayHolidays = holidays.filter(h => h.date === dateStr);
       todayHolidays.forEach(h => specialDays.push(h.name));
-    } catch (e) {
-      console.log('Holiday fetch error:', e);
+    } catch {
+      // Holiday fetch error
     }
 
     return {
@@ -607,6 +616,30 @@ export class KasiService {
   }
 
   // XML/JSON 헬퍼 함수들 (API가 JSON 또는 XML을 반환할 수 있음)
+  
+  /**
+   * API 응답 유효성 검사
+   * - HTML 에러 페이지인지 확인
+   * - 필수 XML 필드 존재 여부 확인
+   */
+  private static validateXmlResponse(xml: string, requiredFields: string[]): boolean {
+    // HTML 에러 페이지인지 확인
+    if (typeof xml !== 'string') return false;
+    if (xml.includes('<!DOCTYPE html') || xml.includes('<html') || xml.includes('<HTML')) {
+      return false;
+    }
+    // JSON 형식인 경우는 허용 (extractXmlValue가 처리)
+    if (xml.trim().startsWith('{') || xml.trim().startsWith('[')) {
+      return true;
+    }
+    // 필수 필드 확인
+    return requiredFields.every(field => {
+      const regex = new RegExp(`<${field}>([^<]*)</${field}>`, 'i');
+      const match = xml.match(regex);
+      return match && match[1].trim().length > 0;
+    });
+  }
+
   private static extractXmlValue(data: any, tag: string): string | null {
     // JSON 객체인 경우
     if (typeof data === 'object' && data !== null) {

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
-import { COLORS, FONT_SIZES, SPACING, SHADOWS } from '../utils/theme';
+import { COLORS, FONT_SIZES, SPACING, SHADOWS, BORDER_RADIUS } from '../utils/theme';
 import {
   getPersonalLuckyInfo,
   getDailyLuckyInfo,
@@ -31,7 +31,7 @@ type TabType = 'daily' | 'personal' | 'talisman' | 'time';
 
 export default function LuckyItemsScreen() {
   const navigation = useNavigation();
-  const { userProfile } = useApp();
+  const { profile, sajuResult } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
 
   // 오늘의 일진
@@ -39,20 +39,20 @@ export default function LuckyItemsScreen() {
 
   // 개인 행운 정보
   const personalLucky = useMemo<PersonalLuckyInfo | null>(() => {
-    if (!userProfile?.saju?.fourPillars?.day?.gan) return null;
-    return getPersonalLuckyInfo(userProfile.saju.fourPillars.day.gan);
-  }, [userProfile]);
+    if (!sajuResult?.pillars?.day?.stem) return null;
+    return getPersonalLuckyInfo(sajuResult.pillars.day.stem);
+  }, [sajuResult]);
 
   // 오늘의 행운 정보
   const dailyLucky = useMemo<DailyLuckyInfo>(() => {
-    return getDailyLuckyInfo(todayGanji.gan, todayGanji.ji);
+    return getDailyLuckyInfo(todayGanji.stem, todayGanji.branch);
   }, [todayGanji]);
 
   // 오늘의 행운 숫자
   const luckyNumbers = useMemo(() => {
-    const dayGan = userProfile?.saju?.fourPillars?.day?.gan || todayGanji.gan;
+    const dayGan = sajuResult?.pillars?.day?.stem || todayGanji.stem;
     return getTodayLuckyNumbers(dayGan, 6);
-  }, [userProfile, todayGanji]);
+  }, [sajuResult, todayGanji]);
 
   // 시간대별 행운
   const timeSlots = useMemo(() => getTimeSlotLucky(), []);
@@ -423,30 +423,42 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     backgroundColor: COLORS.white,
-    paddingVertical: SPACING.xs,
-    borderBottomWidth: 1,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 2,
     borderBottomColor: COLORS.border,
+    gap: 8,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: SPACING.sm,
+    paddingVertical: 12,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tabEmoji: {
     fontSize: 20,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   tabLabel: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.sm,
+    color: '#6B7280',
+    fontWeight: '600',
   },
   activeTabLabel: {
-    color: COLORS.primary,
-    fontWeight: '600',
+    color: COLORS.white,
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,
@@ -459,7 +471,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    ...SHADOWS.small,
+    ...SHADOWS.sm,
   },
   cardTitle: {
     fontSize: FONT_SIZES.md,
@@ -683,7 +695,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: SPACING.md,
     marginBottom: SPACING.md,
-    ...SHADOWS.small,
+    ...SHADOWS.sm,
   },
   talismanHeader: {
     flexDirection: 'row',
@@ -762,7 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
-    ...SHADOWS.small,
+    ...SHADOWS.sm,
   },
   timeSlotLeft: {
     alignItems: 'center',

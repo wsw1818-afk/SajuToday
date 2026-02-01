@@ -50,6 +50,35 @@ export default function MenuScreen() {
 
       {/* 메뉴 아이템 */}
       <View style={styles.menuItems}>
+        {/* 궁합 보기 */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => handleNavigate('Compatibility')}
+        >
+          <View style={[styles.menuItemIcon, { backgroundColor: '#EC489915' }]}>
+            <Text style={[styles.menuIconText, { color: '#EC4899' }]}>💕</Text>
+          </View>
+          <View style={styles.menuItemContent}>
+            <Text style={styles.menuItemLabel}>사주 궁합</Text>
+            <Text style={styles.menuItemDesc}>두 사람의 궁합을 분석해보세요</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* 월간 캘린더 */}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => handleNavigate('Calendar')}
+        >
+          <View style={[styles.menuItemIcon, { backgroundColor: '#6366F115' }]}>
+            <Text style={[styles.menuIconText, { color: '#6366F1' }]}>📅</Text>
+          </View>
+          <View style={styles.menuItemContent}>
+            <Text style={styles.menuItemLabel}>월간 운세</Text>
+            <Text style={styles.menuItemDesc}>한 달의 운세를 한눈에 확인하세요</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* 저장된 사람 */}
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => handleNavigate('SavedPeople')}

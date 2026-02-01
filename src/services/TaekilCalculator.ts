@@ -3,10 +3,11 @@
  * 결혼, 이사, 개업 등 좋은 날을 찾아주는 서비스
  */
 
-// 천간
-const HEAVENLY_STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-// 지지
-const EARTHLY_BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+import { HEAVENLY_STEMS, EARTHLY_BRANCHES } from '../data/saju';
+
+// 천간/지지 한글 배열 (index 접근용)
+const STEMS = HEAVENLY_STEMS.map(s => s.korean);
+const BRANCHES = EARTHLY_BRANCHES.map(b => b.korean);
 
 // 12신살 (매일 돌아가는 신살)
 const TWELVE_SPIRITS = ['건', '제', '만', '평', '정', '집', '파', '위', '성', '수', '개', '폐'];
@@ -54,9 +55,9 @@ function getDayGanJi(date: Date): { gan: string; ji: string; ganJi: string } {
   const jiIndex = (diffDays + 11) % 12;
 
   return {
-    gan: HEAVENLY_STEMS[ganIndex],
-    ji: EARTHLY_BRANCHES[jiIndex],
-    ganJi: `${HEAVENLY_STEMS[ganIndex]}${EARTHLY_BRANCHES[jiIndex]}`
+    gan: STEMS[ganIndex],
+    ji: BRANCHES[jiIndex],
+    ganJi: `${STEMS[ganIndex]}${BRANCHES[jiIndex]}`
   };
 }
 
@@ -100,7 +101,7 @@ function getTwentyEightMansion(date: Date): { mansion: string; meaning: string }
     '기': '결혼, 이사 길', '두': '개업, 계약 길', '우': '결혼, 건축 길',
     '여': '결혼, 여행 길', '허': '장례, 제사 길', '위': '건축, 수리 길',
     '실': '결혼, 이사 길', '벽': '여행, 이동 길', '규': '건축, 개업 길',
-    '루': '결혼, 장례 길', '위': '여행, 이동 길', '묘': '건축, 수리 흉',
+    '루': '결혼, 장례 길', '묘': '건축, 수리 흉',
     '필': '개업, 사업 길', '자': '결혼, 계약 흉', '삼': '건축, 여행 길',
     '정': '결혼, 개업 길', '귀': '장례, 제사 길', '류': '결혼, 이사 길',
     '성': '여행, 계약 길', '장': '결혼, 개업 길', '익': '건축, 수리 길',

@@ -3,6 +3,8 @@
  * 사용자의 구체적인 질문에 사주 기반으로 답변합니다.
  */
 
+import { getYearGanji } from '../utils/ganjiCalculator';
+
 // 오행 매핑
 const STEM_ELEMENT: Record<string, string> = {
   '갑': '목', '을': '목', '병': '화', '정': '화', '무': '토',
@@ -33,14 +35,7 @@ const GENERATES: Record<string, string> = {
   '목': '화', '화': '토', '토': '금', '금': '수', '수': '목',
 };
 
-// 현재 연도 간지 계산
-function getYearGanji(year: number): { stem: string; branch: string } {
-  const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-  const BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
-  const stemIndex = (year - 4) % 10;
-  const branchIndex = (year - 4) % 12;
-  return { stem: STEMS[stemIndex], branch: BRANCHES[branchIndex] };
-}
+
 
 // ============================================
 // 질문 카테고리 정의

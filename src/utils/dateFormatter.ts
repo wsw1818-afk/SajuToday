@@ -40,15 +40,28 @@ export function formatDateISO(date: Date): string {
 
 /**
  * ISO 날짜 문자열에서 음력 날짜 문자열 생성
- * @example formatLunarFromISO("2024-01-15") // "음력 1월 15일"
+ * 주의: 이 함수는 실제 음력 변환을 수행하지 않으며, 
+       KASI API를 통해 변환된 결과를 표시하는 용도로 사용해야 함
+ * @example formatLunarFromISO("2024-01-15") // "음력 변환 필요"
  */
 export function formatLunarFromISO(isoDate: string): string {
   const parts = isoDate.split('-');
   if (parts.length !== 3) return '음력 정보 없음';
 
-  const month = parseInt(parts[1], 10);
-  const day = parseInt(parts[2], 10);
-  return `음력 ${month}월 ${day}일`;
+  // TODO: KASI API를 통해 실제 음력 변환 수행
+  // 현재는 표시만 하고 실제 변환은 하지 않음
+  return `음력 정보 (변환 필요)`;
+}
+
+/**
+ * 양력 날짜를 음력으로 변환 (KASI API 연동 필요)
+ * @param solarDate "YYYY-MM-DD" 형식의 양력 날짜
+ * @returns "음력 X월 X일" 형식의 문자열 (또는 null)
+ */
+export async function formatLunarFromSolar(solarDate: string): Promise<string | null> {
+  // KasiService.solarToLunar를 통해 실제 변환 수행
+  // 이 함수는 비동기이므로 호출하는 곳에서 await 사용 필요
+  return null; // TODO: KASI API 연동
 }
 
 /**

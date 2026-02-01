@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 풍부한 운세 해석 서비스
  * 문학적 비유와 상세한 맞춤 해석을 제공합니다.
  */
@@ -20,7 +20,11 @@ import {
   IljuDailyBonus,
   ILJU_60_INTERPRETATIONS,
   Ilju60Interpretation,
-} from '../data/easyDailyInterpretations';
+  SITUATION_POOL,
+  LUCKY_POINT_POOL,
+  KEYWORD_POOL,
+  ComprehensiveFortuneData,
+} from '../data/fortuneMessages';
 
 // 천간을 오행으로 변환
 const STEM_TO_ELEMENT: Record<string, Element> = {
@@ -76,6 +80,45 @@ function getDailySeed(ilju: string, todayStem: string, todayBranch: string): num
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
   return hashCode(`${dateStr}-${ilju}-${todayStem}${todayBranch}`);
+}
+
+// 시드 기반 셔플 함수
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  const random = seededRandom(seed);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// 날짜 기반 시드로 상황 메시지 선택 (매일 다른 조합)
+function selectDailyMessages(random: () => number, seed: number) {
+  // 긍정적 상황 1-2개
+  const positiveCount = Math.floor(random() * 2) + 1;
+  const positives = shuffleWithSeed(SITUATION_POOL.positive, seed)
+    .slice(0, positiveCount);
+
+  // 중립 상황 1개
+  const neutral = shuffleWithSeed(SITUATION_POOL.neutral, seed)[0];
+
+  // 주의 상황 0-1개 (50% 확률)
+  const caution = random() > 0.5
+    ? shuffleWithSeed(SITUATION_POOL.caution, seed)[0]
+    : null;
+
+  // 행운 포인트 1개
+  const luckyPoint = shuffleWithSeed(LUCKY_POINT_POOL, seed)[0];
+
+  // 키워드 3개 (각 카테고리에서 1개씩)
+  const keywords = [
+    shuffleWithSeed(KEYWORD_POOL.emotion, seed)[0],
+    shuffleWithSeed(KEYWORD_POOL.action, seed)[0],
+    shuffleWithSeed(KEYWORD_POOL.value, seed)[0],
+  ];
+
+  return { positives, neutral, caution, luckyPoint, keywords };
 }
 
 // ===== 지지 관계 분석 =====
@@ -446,6 +489,8 @@ export interface RichDailyFortune {
   };
   // === 신규: 60갑자 상세 해석 ===
   ilju60Interpretation?: Ilju60Interpretation;
+  // === 신규: 종합 운세 데이터 ===
+  comprehensiveFortune?: ComprehensiveFortuneData;
 }
 
 // 오늘의 풍부한 운세 생성 (확장 버전)
@@ -483,27 +528,39 @@ export function generateRichDailyFortune(
   // === 신규: 월령 영향 분석 ===
   const monthlyInfluence = getMonthlyInfluence(dayElement);
 
-  // 기본값 설정
+  // === 신규: 랜덤 메시지 풀에서 매일 다른 조합 선택 ===
+  const dailyMessages = selectDailyMessages(random, seed);
+
+  // 기본값 설정 (랜덤 메시지 풀 활용)
   let dayRelation = '조화로운 하루';
   let summary = '평온하고 안정적인 하루입니다.';
   let detailedInterpretation = '오늘의 기운과 조화를 이루며 나아가세요. 자연스러운 흐름에 몸을 맡기되, 자신의 페이스를 유지하며 진행하세요.';
-  let situations: string[] = ['특별한 일 없이 평화로운 하루'];
-  let doThis: string[] = ['자신의 페이스 유지하기', '여유 있게 하루 보내기'];
+  // 상황 메시지: 긍정적 1-2개 + 중립 1개 + 주의 0-1개
+  let situations: string[] = [...dailyMessages.positives, dailyMessages.neutral];
+  if (dailyMessages.caution) {
+    situations.push(dailyMessages.caution);
+  }
+  let doThis: string[] = ['자신의 페이스 유지하기', '여유 있게 하루 별내기'];
   let avoidThis: string[] = ['무리한 계획', '조급해하기'];
-  let luckyPoint = '편안한 마음이 행운을 가져옵니다';
-  let keywords: string[] = richIlju.strengthKeywords.slice(0, 3);
+  // 행운 포인트: 랜덤 풀에서 선택
+  let luckyPoint = dailyMessages.luckyPoint;
+  // 키워드: 랜덤 풀 3개 + 일주 특성 2개
+  let keywords: string[] = [...dailyMessages.keywords, ...richIlju.strengthKeywords.slice(0, 2)];
   let advice = '자신의 페이스를 유지하며 진행하세요.';
 
-  // 쉬운 해석 데이터가 있으면 적용
+  // 쉬운 해석 데이터가 있으면 적용 (랜덤 메시지 풀과 병합)
   if (easyRelation) {
     dayRelation = easyRelation.title;
     summary = easyRelation.summary;
     detailedInterpretation = easyRelation.detailed;
-    situations = easyRelation.situations;
+    // situations는 랜덤 풀에서 가져온 것과 병합
+    situations = [...easyRelation.situations, ...situations].slice(0, 5);
     doThis = easyRelation.doThis;
     avoidThis = easyRelation.avoidThis;
-    luckyPoint = easyRelation.luckyPoint;
-    keywords = easyRelation.keywords;
+    // luckyPoint는 50% 확률로 랜덤 풀에서 선택
+    luckyPoint = random() > 0.5 ? easyRelation.luckyPoint : dailyMessages.luckyPoint;
+    // keywords는 랜덤 풀과 병합
+    keywords = [...easyRelation.keywords, ...dailyMessages.keywords].slice(0, 5);
     advice = easyRelation.doThis[0]; // 첫 번째 권장사항을 조언으로
   }
 

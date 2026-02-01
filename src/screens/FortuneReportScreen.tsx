@@ -27,6 +27,12 @@ import {
 import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS } from '../utils/theme';
 import { useApp } from '../contexts/AppContext';
 import { SajuCalculator } from '../services/SajuCalculator';
+import {
+  ganjiToElement,
+  elementDistributionToPercentage,
+  ELEMENT_COLORS,
+  ElementKorean,
+} from '../utils/elementConverter';
 import { getDreams, DreamStats, getDreamStats } from '../services/DreamDiary';
 import { getBookmarkStats, BookmarkStats } from '../services/Bookmark';
 import { getGroupStats, GroupStats } from '../services/FamilyGroup';
@@ -80,55 +86,31 @@ export default function FortuneReportScreen() {
     }, [])
   );
 
-  // 오행 분포 계산
+  // 오행 분포 계산 (elementConverter 사용)
   const elementDistribution = useMemo(() => {
     if (!sajuResult) return null;
 
-    const elements = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
-    const elementMap: Record<string, string> = {
-      '갑': '목', '을': '목',
-      '병': '화', '정': '화',
-      '무': '토', '기': '토',
-      '경': '금', '신': '금',
-      '임': '수', '계': '수',
-      '인': '목', '묘': '목',
-      '사': '화', '오': '화',
-      '진': '토', '술': '토', '축': '토', '미': '토',
-      '신': '금', '유': '금',
-      '해': '수', '자': '수',
-    };
+    const { pillars } = sajuResult;
+    const elements: Record<ElementKorean, number> = { '목': 0, '화': 0, '토': 0, '금': 0, '수': 0 };
 
     // 천간 분석
-    [sajuResult.year.천간, sajuResult.month.천간, sajuResult.day.천간, sajuResult.hour.천간].forEach(char => {
-      if (elementMap[char]) {
-        elements[elementMap[char] as keyof typeof elements]++;
-      }
-    });
+    const stems = [pillars.year.stem, pillars.month.stem, pillars.day.stem];
+    if (pillars.hour) stems.push(pillars.hour.stem);
 
     // 지지 분석
-    [sajuResult.year.지지, sajuResult.month.지지, sajuResult.day.지지, sajuResult.hour.지지].forEach(char => {
-      if (elementMap[char]) {
-        elements[elementMap[char] as keyof typeof elements]++;
-      }
+    const branches = [pillars.year.branch, pillars.month.branch, pillars.day.branch];
+    if (pillars.hour) branches.push(pillars.hour.branch);
+
+    // ganjiToElement로 변환
+    [...stems, ...branches].forEach(char => {
+      const element = ganjiToElement(char);
+      if (element) elements[element]++;
     });
 
-    const total = Object.values(elements).reduce((a, b) => a + b, 0);
-    return Object.entries(elements).map(([element, count]) => ({
-      element,
-      count,
-      percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-    }));
+    return elementDistributionToPercentage(elements);
   }, [sajuResult]);
 
-  const ELEMENT_COLORS: Record<string, string> = {
-    목: '#22C55E',
-    화: '#EF4444',
-    토: '#F59E0B',
-    금: '#94A3B8',
-    수: '#3B82F6',
-  };
-
-  const renderElementBar = (element: string, percentage: number) => (
+  const renderElementBar = (element: ElementKorean, percentage: number) => (
     <View key={element} style={styles.elementRow}>
       <View style={styles.elementLabel}>
         <View style={[styles.elementDot, { backgroundColor: ELEMENT_COLORS[element] }]} />

@@ -1,55 +1,55 @@
 /**
  * 월운(月運)과 일운(日運) 계산기
- * 대운/세운보다 더 세밀한 운세를 제공합니다.
+ * 대운/세울보다 더 세밀한 운세를 제공합니다.
  */
 
-// 천간과 지지
-const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-const BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
-const BRANCH_ANIMALS = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
+import { FIVE_ELEMENTS, SIX_COMBINES, SIX_CLASHES, STEM_COMBINES, STEM_CLASHES, HEAVENLY_STEMS, EARTHLY_BRANCHES } from '../data/saju';
+import { stemToElement, branchToElement, koreanToElement, elementToKorean, ElementKorean } from '../utils/elementConverter';
 
-// 오행 매핑
-const STEM_ELEMENT: Record<string, string> = {
-  '갑': '목', '을': '목', '병': '화', '정': '화', '무': '토',
-  '기': '토', '경': '금', '신': '금', '임': '수', '계': '수',
-};
+// 천간과 지지 (saju.ts 마스터 데이터에서 추출)
+const STEMS = HEAVENLY_STEMS.map(s => s.korean);
+const BRANCHES = EARTHLY_BRANCHES.map(b => b.korean);
+const BRANCH_ANIMALS = EARTHLY_BRANCHES.map(b => b.animal);
 
-const BRANCH_ELEMENT: Record<string, string> = {
-  '자': '수', '축': '토', '인': '목', '묘': '목', '진': '토', '사': '화',
-  '오': '화', '미': '토', '신': '금', '유': '금', '술': '토', '해': '수',
+// 오행 상생상극 헬퍼 함수 (FIVE_ELEMENTS 사용)
+// 한글 오행('목', '화', etc)을 받아서 상생/상극 오행(한글)을 반환
+const getGenerates = (element: string | null): string | null => {
+  if (!element) return null;
+  const enElement = koreanToElement(element as ElementKorean);
+  if (!enElement) return null;
+  const generatesEn = FIVE_ELEMENTS[enElement]?.generates;
+  return generatesEn ? elementToKorean(generatesEn) : null;
 };
-
-// 오행 상생상극
-const GENERATES: Record<string, string> = {
-  '목': '화', '화': '토', '토': '금', '금': '수', '수': '목',
-};
-const OVERCOMES: Record<string, string> = {
-  '목': '토', '화': '금', '토': '수', '금': '목', '수': '화',
-};
-
-// 천간 충
-const STEM_CLASH: Record<string, string> = {
-  '갑': '경', '을': '신', '병': '임', '정': '계', '무': '갑',
-  '기': '을', '경': '갑', '신': '을', '임': '병', '계': '정',
+const getOvercomes = (element: string | null): string | null => {
+  if (!element) return null;
+  const enElement = koreanToElement(element as ElementKorean);
+  if (!enElement) return null;
+  const controlsEn = FIVE_ELEMENTS[enElement]?.controls;
+  return controlsEn ? elementToKorean(controlsEn) : null;
 };
 
-// 지지 충
-const BRANCH_CLASH: Record<string, string> = {
-  '자': '오', '축': '미', '인': '신', '묘': '유', '진': '술', '사': '해',
-  '오': '자', '미': '축', '신': '인', '유': '묘', '술': '진', '해': '사',
-};
+// 천간 합/충 확인 함수 (STEM_COMBINES, STEM_CLASHES 사용)
+function findCombineBranch(branch: string): string | undefined {
+  const combine = SIX_COMBINES.find(c => c.pair.includes(branch));
+  return combine?.pair.find(b => b !== branch);
+}
 
-// 지지 합
-const BRANCH_HARMONY: Record<string, string> = {
-  '자': '축', '축': '자', '인': '해', '묘': '술', '진': '유', '사': '신',
-  '오': '미', '미': '오', '신': '사', '유': '진', '술': '묘', '해': '인',
-};
+function findClashBranch(branch: string): string | undefined {
+  const clash = SIX_CLASHES.find(c => c.pair.includes(branch));
+  return clash?.pair.find(b => b !== branch);
+}
 
-// 천간 합
-const STEM_HARMONY: Record<string, string> = {
-  '갑': '기', '을': '경', '병': '신', '정': '임', '무': '계',
-  '기': '갑', '경': '을', '신': '병', '임': '정', '계': '무',
-};
+// 천간 합 찾기 함수
+function findStemCombine(stem: string): string | undefined {
+  const combine = STEM_COMBINES.find(c => c.pair.includes(stem));
+  return combine?.pair.find(s => s !== stem);
+}
+
+// 천간 충 찾기 함수
+function findStemClash(stem: string): string | undefined {
+  const clash = STEM_CLASHES.find(c => c.pair.includes(stem));
+  return clash?.pair.find(s => s !== stem);
+}
 
 /**
  * 특정 날짜의 일진(천간지지) 계산
@@ -108,9 +108,9 @@ function analyzeRelation(
   branchRelation: string;
   description: string;
 } {
-  const dayMasterElement = STEM_ELEMENT[dayMaster];
-  const targetStemElement = STEM_ELEMENT[targetStem];
-  const targetBranchElement = BRANCH_ELEMENT[targetBranch];
+  const dayMasterElement = stemToElement(dayMaster);
+  const targetStemElement = stemToElement(targetStem);
+  const targetBranchElement = branchToElement(targetBranch);
 
   let score = 60; // 기본 점수
   let stemRelation = '';
@@ -118,43 +118,44 @@ function analyzeRelation(
   const descriptions: string[] = [];
 
   // 천간 관계 분석
-  if (STEM_HARMONY[dayMaster] === targetStem) {
+  if (findStemCombine(dayMaster) === targetStem) {
     score += 15;
     stemRelation = '천간합';
     descriptions.push('하늘의 기운이 화합합니다');
-  } else if (STEM_CLASH[dayMaster] === targetStem) {
+  } else if (findStemClash(dayMaster) === targetStem) {
     score -= 15;
     stemRelation = '천간충';
     descriptions.push('하늘의 기운이 충돌합니다');
-  } else if (GENERATES[dayMasterElement] === targetStemElement) {
+  } else if (getGenerates(dayMasterElement) === targetStemElement && targetStemElement) {
     score += 5;
     stemRelation = '설기';
     descriptions.push('에너지가 소모될 수 있습니다');
-  } else if (GENERATES[targetStemElement] === dayMasterElement) {
+  } else if (getGenerates(targetStemElement) === dayMasterElement && dayMasterElement) {
     score += 10;
     stemRelation = '생조';
     descriptions.push('힘을 받는 날입니다');
-  } else if (OVERCOMES[dayMasterElement] === targetStemElement) {
+  } else if (getOvercomes(dayMasterElement) === targetStemElement && targetStemElement) {
     score += 5;
     stemRelation = '극출';
     descriptions.push('적극적으로 행동하기 좋습니다');
-  } else if (OVERCOMES[targetStemElement] === dayMasterElement) {
+  } else if (getOvercomes(targetStemElement) === dayMasterElement && dayMasterElement) {
     score -= 10;
     stemRelation = '극입';
     descriptions.push('외부 압박이 있을 수 있습니다');
   }
 
   // 지지 관계 분석 (년지/일지 기준은 제외, 일진만 분석)
-  if (BRANCH_HARMONY[targetBranch]) {
+  const combineBranch = findCombineBranch(targetBranch);
+  if (combineBranch) {
     score += 5;
     branchRelation = '지지합 가능';
   }
 
   // 오행 조화
-  if (GENERATES[targetBranchElement] === dayMasterElement) {
+  if (getGenerates(targetBranchElement) === dayMasterElement && dayMasterElement) {
     score += 8;
     descriptions.push('땅의 기운이 도움을 줍니다');
-  } else if (OVERCOMES[targetBranchElement] === dayMasterElement) {
+  } else if (getOvercomes(targetBranchElement) === dayMasterElement && dayMasterElement) {
     score -= 8;
     descriptions.push('땅의 기운이 방해합니다');
   }
@@ -207,8 +208,8 @@ export function calculateMonthlyFortune(
   else category = '흉';
 
   // 월운 해석
-  const dayMasterElement = STEM_ELEMENT[dayMaster];
-  const monthElement = STEM_ELEMENT[ganji.stem];
+  const dayMasterElement = stemToElement(dayMaster);
+  const monthElement = stemToElement(ganji.stem);
 
   let overview = '';
   let career = '';
@@ -324,8 +325,8 @@ export function calculateDailyFortune(
   else if (relation.score >= 35) category = '주의';
   else category = '흉';
 
-  const dayElement = STEM_ELEMENT[ganji.stem];
-  const dayMasterElement = STEM_ELEMENT[dayMaster];
+  const dayElement = stemToElement(ganji.stem);
+  const dayMasterElement = stemToElement(dayMaster);
 
   // 시간대별 운세
   let morning = '';
@@ -360,7 +361,9 @@ export function calculateDailyFortune(
   };
 
   // 용신 오행 (간단히 생조하는 오행)
-  const yongsinElement = Object.keys(GENERATES).find(k => GENERATES[k] === dayMasterElement) || '토';
+  const dayMasterElementEn = dayMasterElement ? koreanToElement(dayMasterElement as ElementKorean) : null;
+  const yongsinElementEn = Object.keys(FIVE_ELEMENTS).find(k => FIVE_ELEMENTS[k as keyof typeof FIVE_ELEMENTS].generates === dayMasterElementEn) || 'earth';
+  const yongsinElement = elementToKorean(yongsinElementEn as import('../types').Element);
   const lucky = luckyInfo[yongsinElement];
 
   // 오버뷰

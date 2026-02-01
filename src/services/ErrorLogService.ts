@@ -105,24 +105,6 @@ export class ErrorLogService {
       },
     };
 
-    // 콘솔에도 출력 (개발 중)
-    if (__DEV__) {
-      const emoji = {
-        critical: '🔴',
-        error: '🟠',
-        warning: '🟡',
-        info: '🔵',
-      }[severity];
-
-      console.log(`${emoji} [${category.toUpperCase()}] ${errorMessage}`);
-      if (errorStack) {
-        console.log(errorStack);
-      }
-      if (context) {
-        console.log('Context:', context);
-      }
-    }
-
     // 로컬에 저장
     await this.saveLog(entry);
 

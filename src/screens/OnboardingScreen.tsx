@@ -21,12 +21,34 @@ import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import KasiService from '../services/KasiService';
 
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+function generateUUID(): string {
+  // crypto.getRandomValues를 사용한 안전한 UUID 생성
+  const getRandomValues = (typeof crypto !== 'undefined' && crypto.getRandomValues)
+    ? (arr: Uint8Array) => crypto.getRandomValues(arr)
+    : (arr: Uint8Array) => {
+        // 폴백: Math.random() (암호학적으로 안전하지 않음)
+        for (let i = 0; i < arr.length; i++) {
+          arr[i] = Math.floor(Math.random() * 256);
+        }
+        return arr;
+      };
+  
+  const bytes = new Uint8Array(16);
+  getRandomValues(bytes);
+  
+  // UUID v4 형식으로 변환
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // 버전 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // 변형 10
+  
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0'));
+  
+  return [
+    hex.slice(0, 4).join(''),
+    hex.slice(4, 6).join(''),
+    hex.slice(6, 8).join(''),
+    hex.slice(8, 10).join(''),
+    hex.slice(10, 16).join(''),
+  ].join('-');
 }
 
 // 드롭다운 피커 컴포넌트
@@ -121,6 +143,7 @@ export default function OnboardingScreen() {
   const [unknownTime, setUnknownTime] = useState(true);
   const [gender, setGender] = useState<Gender>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [solarBirthDate, setSolarBirthDate] = useState<string>(''); // 양력 변환된 날짜 저장
 
   // 년도 옵션 생성 (1920 ~ 현재년도)
   const yearOptions = useMemo(() => {
@@ -153,7 +176,7 @@ export default function OnboardingScreen() {
     }));
   }, [birthYear, birthMonth]);
 
-  // 생년월일 텍스트 생성
+  // 생년월일 텍스트 생성 (표시용 - 선택한 달력 기준)
   const birthDateText = useMemo(() => {
     if (birthYear && birthMonth && birthDay) {
       const month = String(birthMonth).padStart(2, '0');
@@ -226,7 +249,7 @@ export default function OnboardingScreen() {
       const timeStr = unknownTime || !birthTimeText ? null : birthTimeText;
 
       // 음력인 경우 KASI API로 양력 변환
-      let solarBirthDate = birthDateText;
+      let finalSolarBirthDate = birthDateText;
       if (calendar === 'lunar' && birthYear && birthMonth && birthDay) {
         try {
           const solarDate = await KasiService.lunarToSolar(
@@ -236,23 +259,28 @@ export default function OnboardingScreen() {
             isLeapMonth
           );
           if (solarDate) {
-            solarBirthDate = solarDate;
-            console.log(`음력 ${birthDateText} → 양력 ${solarDate} 변환 완료 (KASI API)`);
+            finalSolarBirthDate = solarDate;
+            setSolarBirthDate(solarDate); // 상태 저장
+
           } else {
-            console.log('KASI API 변환 실패, 입력된 날짜 그대로 사용');
+
           }
         } catch (e) {
-          console.log('KASI API 호출 실패, 입력된 날짜 그대로 사용:', e);
+
         }
+      } else {
+        // 양력이면 그대로 저장
+        setSolarBirthDate(birthDateText);
       }
 
       // 프로필 생성
+      // 중요: 사주 계산은 항상 양력 기준으로 하며, birthDate에는 양력 날짜를 저장
       const profile: UserProfile = {
         id: generateUUID(),
         name: name.trim() || '사용자',
-        birthDate: birthDateText, // 원래 입력한 날짜 (음력이면 음력으로)
+        birthDate: finalSolarBirthDate, // 항상 양력으로 저장 (버그 픽스)
         birthTime: timeStr,
-        calendar,
+        calendar, // 원래 선택한 달력 정보는 별도로 유지
         isLeapMonth: calendar === 'lunar' ? isLeapMonth : false,
         gender,
         timezone: 'Asia/Seoul',
@@ -261,7 +289,7 @@ export default function OnboardingScreen() {
       };
 
       // 사주 계산 (양력 기준으로 계산)
-      const result = calculateSaju(solarBirthDate, timeStr);
+      const result = calculateSaju(finalSolarBirthDate, timeStr);
 
       // 저장
       await setProfile(profile);

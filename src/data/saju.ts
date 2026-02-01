@@ -165,6 +165,30 @@ export const SIX_CLASHES: CombineClash[] = [
   { pair: ['사', '해'], meaning: '사해충' },
 ];
 
+// 삼형 (三刑)
+export const THREE_PUNISHMENTS: string[][] = [
+  ['인', '사', '신'], // 무례형
+  ['축', '술', '미'], // 방극형
+  ['자', '묘'],       // 자묘형
+];
+
+// 천간합 (五合)
+export const STEM_COMBINES: Array<{pair: string[]; element: string; meaning: string}> = [
+  { pair: ['갑', '기'], element: 'earth', meaning: '갑기합토' },
+  { pair: ['을', '경'], element: 'metal', meaning: '을경합금' },
+  { pair: ['병', '신'], element: 'water', meaning: '병신합수' },
+  { pair: ['정', '임'], element: 'wood', meaning: '정임합목' },
+  { pair: ['무', '계'], element: 'fire', meaning: '무계합화' },
+];
+
+// 천간충 (四沖)
+export const STEM_CLASHES: Array<{pair: string[]; meaning: string}> = [
+  { pair: ['갑', '경'], meaning: '갑경충' },
+  { pair: ['을', '신'], meaning: '을신충' },
+  { pair: ['병', '임'], meaning: '병임충' },
+  { pair: ['정', '계'], meaning: '정계충' },
+];
+
 // 지장간 (地藏干)
 export const HIDDEN_STEMS: Record<string, { main: string; middle: string | null; residue: string | null }> = {
   '자': { main: '계', middle: null, residue: null },

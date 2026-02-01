@@ -333,10 +333,13 @@ export type RootStackParamList = {
   FamilyGroup: undefined;
   Bookmark: undefined;
   FortuneReport: undefined;
+  // 사용자 참여 기능 화면
+  Compatibility: undefined;
+  Calendar: undefined;
 };
 
 export type MainTabParamList = {
-  Home: undefined;
+  Home: { selectedDate?: string } | undefined;
   Profile: undefined;
   Fortune: undefined;
   History: undefined;

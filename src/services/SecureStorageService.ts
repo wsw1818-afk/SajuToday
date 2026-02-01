@@ -145,7 +145,6 @@ export class SecureStorageService {
       // 암호화하여 저장
       await this.setSecureItem(secureKey, legacyData);
 
-      console.log(`Migrated ${legacyKey} to secure storage`);
       return true;
     } catch (error) {
       console.error('Migration error:', error);

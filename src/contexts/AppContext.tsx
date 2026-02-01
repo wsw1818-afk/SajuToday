@@ -87,8 +87,9 @@ export function AppProvider({ children }: AppProviderProps) {
       // 오늘 정보 로드
       await refreshTodayInfo();
 
-      // 오늘 운세 로드
-      const today = new Date().toISOString().split('T')[0];
+      // 오늘 운세 로드 (로컬 날짜 기준으로 수정 - UTC 버그 픽스)
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const savedFortune = await StorageService.getFortune(today);
       if (savedFortune) setTodayFortuneState(savedFortune);
     } catch (error) {
@@ -114,7 +115,9 @@ export function AppProvider({ children }: AppProviderProps) {
   };
 
   const setTodayFortune = async (fortune: Fortune) => {
-    const today = new Date().toISOString().split('T')[0];
+    // 로컬 날짜 기준으로 수정 (UTC 버그 픽스)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     await StorageService.saveFortune(today, fortune);
     setTodayFortuneState(fortune);
   };

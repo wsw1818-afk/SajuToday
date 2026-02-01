@@ -9,10 +9,10 @@ import { useApp } from '../contexts/AppContext';
 import { COLORS, FONT_SIZES } from '../utils/theme';
 
 import OnboardingScreen from '../screens/OnboardingScreen';
-import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import MyScreen from '../screens/MyScreen';
 import FortuneDetailScreen from '../screens/FortuneDetailScreen';
 import FortuneMenuScreen from '../screens/FortuneMenuScreen';
 import FortuneTypeScreen from '../screens/FortuneTypeScreen';
@@ -25,6 +25,9 @@ import SinsalScreen from '../screens/SinsalScreen';
 import FortuneQnAScreen from '../screens/FortuneQnAScreen';
 import FortuneCalendarScreen from '../screens/FortuneCalendarScreen';
 import LuckyItemsScreen from '../screens/LuckyItemsScreen';
+// 운세 전용 화면
+import DailyFortuneScreen from '../screens/DailyFortuneScreen';
+import SajuScreen from '../screens/SajuScreen';
 // 새로운 화면들
 import DaeunScreen from '../screens/DaeunScreen';
 import TaekilScreen from '../screens/TaekilScreen';
@@ -33,6 +36,13 @@ import DreamDiaryScreen from '../screens/DreamDiaryScreen';
 import FamilyGroupScreen from '../screens/FamilyGroupScreen';
 import BookmarkScreen from '../screens/BookmarkScreen';
 import FortuneReportScreen from '../screens/FortuneReportScreen';
+import AdvancedAnalysisScreen from '../screens/AdvancedAnalysisScreen';
+import VerificationScreen from '../screens/VerificationScreen';
+import UnknownTimeScreen from '../screens/UnknownTimeScreen';
+import WidgetPreviewScreen from '../screens/WidgetPreviewScreen';
+// 사용자 유입/리텐션 기능 화면
+import CompatibilityScreen from '../screens/CompatibilityScreen';
+import CalendarScreen from '../screens/CalendarScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,11 +50,11 @@ const Tab = createBottomTabNavigator();
 // 탭 아이콘 컴포넌트
 function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
-    Home: '☯',
-    Profile: '命',
-    Fortune: '🔮',
-    History: '卜',
-    Settings: '設',
+    Daily: '📅',
+    Saju: '☯',
+    FortuneMenu: '🔮',
+    Compatibility: '💕',
+    My: '👤',
   };
 
   return (
@@ -77,29 +87,29 @@ function MainTabs() {
       })}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ tabBarLabel: '오늘운세' }}
+        name="Daily"
+        component={DailyFortuneScreen}
+        options={{ tabBarLabel: '오늘' }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ tabBarLabel: '내사주' }}
+        name="Saju"
+        component={SajuScreen}
+        options={{ tabBarLabel: '사주' }}
       />
       <Tab.Screen
-        name="Fortune"
+        name="FortuneMenu"
         component={FortuneMenuScreen}
-        options={{ tabBarLabel: '운세종류' }}
+        options={{ tabBarLabel: '운세' }}
       />
       <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{ tabBarLabel: '히스토리' }}
+        name="Compatibility"
+        component={CompatibilityScreen}
+        options={{ tabBarLabel: '궁합' }}
       />
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ tabBarLabel: '설정' }}
+        name="My"
+        component={MyScreen}
+        options={{ tabBarLabel: 'MY' }}
       />
     </Tab.Navigator>
   );
@@ -160,6 +170,15 @@ export default function Navigation() {
             <Stack.Screen name="FamilyGroup" component={FamilyGroupScreen} />
             <Stack.Screen name="Bookmark" component={BookmarkScreen} />
             <Stack.Screen name="FortuneReport" component={FortuneReportScreen} />
+            <Stack.Screen name="AdvancedAnalysis" component={AdvancedAnalysisScreen} />
+            <Stack.Screen name="Verification" component={VerificationScreen} />
+            <Stack.Screen name="UnknownTime" component={UnknownTimeScreen} />
+            <Stack.Screen name="WidgetPreview" component={WidgetPreviewScreen} />
+            {/* MY 탭에서 접근하는 화면들 */}
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="History" component={HistoryScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Calendar" component={CalendarScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -414,6 +414,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#44403C',
     lineHeight: 22,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   dosDontsContainer: {
     flexDirection: 'row',
@@ -476,6 +478,8 @@ const styles = StyleSheet.create({
     color: '#44403C',
     lineHeight: 22,
     paddingLeft: 22,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   detailKeywords: {
     flexDirection: 'row',
@@ -550,6 +554,8 @@ const styles = StyleSheet.create({
     color: '#44403C',
     lineHeight: 20,
     textAlign: 'center',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   // 지지 관계 카드
   branchCard: {
@@ -588,12 +594,16 @@ const styles = StyleSheet.create({
     color: '#44403C',
     lineHeight: 20,
     marginBottom: 6,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   branchEffect: {
     fontSize: 13,
     color: '#78716C',
     lineHeight: 20,
     fontStyle: 'italic',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   // 쉬운 설명 박스
   simpleExplanationBox: {
@@ -609,6 +619,8 @@ const styles = StyleSheet.create({
     color: '#92400E',
     lineHeight: 20,
     fontWeight: '500',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   // 카드 섹션 타이틀
   cardSectionTitle: {

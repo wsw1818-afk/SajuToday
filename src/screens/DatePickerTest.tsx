@@ -19,7 +19,6 @@ export default function DatePickerTest() {
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (msg: string) => {
-    console.log(msg);
     setLogs(prev => [...prev.slice(-10), `${new Date().toLocaleTimeString()}: ${msg}`]);
   };
 

@@ -3,12 +3,16 @@
  * 각 운세는 출처가 명확한 전통 자료를 기반으로 합니다.
  */
 
+import { HEAVENLY_STEMS, EARTHLY_BRANCHES } from '../data/saju';
+import { stemToElement, ElementKorean } from '../utils/elementConverter';
+import { getYearGanji } from '../utils/ganjiCalculator';
+
 // ============================================
 // 공통: 용신 기반 행운 정보 (하도낙서 河圖洛書 기반)
 // ============================================
 
 // 오행별 행운 숫자 (하도낙서 기반)
-const ELEMENT_LUCKY_NUMBERS: Record<string, string> = {
+const ELEMENT_LUCKY_NUMBERS: Record<ElementKorean, string> = {
   '목': '3, 8',
   '화': '2, 7',
   '토': '5, 10',
@@ -17,7 +21,7 @@ const ELEMENT_LUCKY_NUMBERS: Record<string, string> = {
 };
 
 // 오행별 행운 색상
-const ELEMENT_LUCKY_COLORS: Record<string, string> = {
+const ELEMENT_LUCKY_COLORS: Record<ElementKorean, string> = {
   '목': '초록색',
   '화': '빨간색',
   '토': '노란색',
@@ -26,18 +30,12 @@ const ELEMENT_LUCKY_COLORS: Record<string, string> = {
 };
 
 // 오행별 행운 방향
-const ELEMENT_LUCKY_DIRECTIONS: Record<string, string> = {
+const ELEMENT_LUCKY_DIRECTIONS: Record<ElementKorean, string> = {
   '목': '동쪽',
   '화': '남쪽',
   '토': '중앙',
   '금': '서쪽',
   '수': '북쪽',
-};
-
-// 천간에서 오행 추출
-const STEM_TO_ELEMENT: Record<string, string> = {
-  '갑': '목', '을': '목', '병': '화', '정': '화', '무': '토',
-  '기': '토', '경': '금', '신': '금', '임': '수', '계': '수',
 };
 
 // 오행 상생 관계
@@ -55,13 +53,13 @@ export function getYongsinBasedLuckyInfo(dayMaster: string): {
   color: string;
   direction: string;
 } {
-  const dayMasterElement = STEM_TO_ELEMENT[dayMaster] || '목';
+  const dayMasterElement = stemToElement(dayMaster) || '목';
 
   // 간소화된 용신 결정: 일간 오행을 생해주는 오행이 용신 (생조 방식)
   // 실제로는 사주 전체 분석이 필요하지만, 여기서는 일관성을 위해 생조 방식 사용
   const generatesMe = Object.keys(FIVE_ELEMENTS_GENERATES).find(
     k => FIVE_ELEMENTS_GENERATES[k] === dayMasterElement
-  ) || '수';
+  ) as ElementKorean || '수';
 
   return {
     yongsinElement: generatesMe,
@@ -75,36 +73,12 @@ export function getYongsinBasedLuckyInfo(dayMaster: string): {
 // 신년운세 (명리학 대운/세운론 기반)
 // ============================================
 
-// 60갑자 천간지지 순환 (년도 계산용)
-const HEAVENLY_STEMS_CYCLE = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-const EARTHLY_BRANCHES_CYCLE = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
-const BRANCH_ANIMALS = ['쥐', '소', '호랑이', '토끼', '용', '뱀', '말', '양', '원숭이', '닭', '개', '돼지'];
-const BRANCH_HANJA = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-const STEM_HANJA = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 
-// 현재 연도의 천간지지 계산
-function getYearGanji(year: number): { stem: string; branch: string; stemHanja: string; branchHanja: string; animal: string } {
-  const stemIndex = (year - 4) % 10;
-  const branchIndex = (year - 4) % 12;
-  return {
-    stem: HEAVENLY_STEMS_CYCLE[stemIndex],
-    branch: EARTHLY_BRANCHES_CYCLE[branchIndex],
-    stemHanja: STEM_HANJA[stemIndex],
-    branchHanja: BRANCH_HANJA[branchIndex],
-    animal: BRANCH_ANIMALS[branchIndex],
-  };
-}
-
-// 천간 오행
-const STEM_ELEMENTS: Record<string, string> = {
-  '갑': '목', '을': '목', '병': '화', '정': '화', '무': '토',
-  '기': '토', '경': '금', '신': '금', '임': '수', '계': '수',
-};
 
 // 십신 관계 계산
 function getTenGodRelation(myStem: string, yearStem: string): string {
-  const myElement = STEM_ELEMENTS[myStem];
-  const yearElement = STEM_ELEMENTS[yearStem];
+  const myElement = stemToElement(myStem) || '목';
+  const yearElement = stemToElement(yearStem) || '목';
 
   const generates: Record<string, string> = { '목': '화', '화': '토', '토': '금', '금': '수', '수': '목' };
   const controls: Record<string, string> = { '목': '토', '토': '수', '수': '화', '화': '금', '금': '목' };
@@ -3934,7 +3908,7 @@ export function generateAnimalFortune(birthDate: string, dayMaster: string = '�
 
   // 년간(천간)으로부터 띠 색상 및 오행 결정
   const yearGanji = getYearGanji(year);
-  const yearElement = STEM_ELEMENTS[yearGanji.stem] || '목';
+  const yearElement = stemToElement(yearGanji.stem) || '목';
   const zodiacColor = STEM_ZODIAC_COLORS[yearGanji.stem] || '';
   const fullZodiacName = `${zodiacColor}${animal.name.replace('띠', '')}띠`;  // 예: 푸른쥐띠
   const yearHanja = `${yearGanji.stemHanja}${yearGanji.branchHanja}`;  // 예: 甲子
@@ -3945,7 +3919,7 @@ export function generateAnimalFortune(birthDate: string, dayMaster: string = '�
     animalInfo: {
       name: fullZodiacName,  // 푸른쥐띠 형식으로 변경
       emoji: animal.emoji,
-      element: `${STEM_ELEMENTS[yearGanji.stem]}(${yearGanji.stemHanja})`,  // 년간 오행 표시
+      element: `${stemToElement(yearGanji.stem) || '목'}(${yearGanji.stemHanja})`,  // 년간 오행 표시
       personality: animal.personality,
       yearHanja: yearHanja,  // 甲子 등 한자 정보 추가
       originalName: animal.name,  // 원래 띠 이름 보존

@@ -265,10 +265,9 @@ export default function SettingsScreen() {
             );
             if (solarDate) {
               solarBirthDate = solarDate;
-              console.log(`음력 ${birthDateText} → 양력 ${solarDate} 변환 완료 (KASI API)`);
             }
           } catch (e) {
-            console.log('KASI API 호출 실패, 입력된 날짜 그대로 사용:', e);
+            // KASI API 호출 실패 시 입력된 날짜 그대로 사용
           }
         }
 

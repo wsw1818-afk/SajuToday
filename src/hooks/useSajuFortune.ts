@@ -1,9 +1,13 @@
 /**
- * 사주 운세 계산 커스텀 훅
- * HomeScreen의 useMemo 로직을 분리하여 재사용성과 가독성 향상
+ * 사주 운세 계산 커스텀 훅 (최적화 버전)
+ * 
+ * 개선사항:
+ * 1. 날짜 문자열 기반 메모이제이션 (timestamp 대신)
+ * 2. 에러 바욍더리 추가
+ * 3. 계산 결과 캐싱
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 import { SajuCalculator } from '../services/SajuCalculator';
 import { generateFortune } from '../services/FortuneGenerator';
 import { generateComprehensiveFortune } from '../services/FortuneTypes';
@@ -13,16 +17,7 @@ import {
   generateCategoryFortune,
 } from '../services/RichFortuneService';
 import { getScoreMessage } from '../data/simpleInterpretations';
-import { UserProfile } from '../types';
-
-interface TodayInfo {
-  date?: string;
-  ganji?: {
-    stem: string;
-    branch: string;
-  };
-  solarTerm?: string;
-}
+import { UserProfile, TodayInfo, SajuResult, Fortune } from '../types';
 
 interface UseSajuFortuneProps {
   profile: UserProfile | null;
@@ -30,22 +25,54 @@ interface UseSajuFortuneProps {
   selectedDate: Date;
 }
 
-export function useSajuFortune({ profile, todayInfo, selectedDate }: UseSajuFortuneProps) {
-  // 선택한 날짜의 타임스탬프 (메모이제이션 의존성용)
-  const selectedDateTimestamp = selectedDate.getTime();
+interface FortuneCache {
+  dateKey: string;
+  result: Fortune | null;
+}
 
-  // 사주를 실시간으로 재계산
-  const sajuResult = useMemo(() => {
-    if (!profile) return null;
-    const calculator = new SajuCalculator(profile.birthDate, profile.birthTime);
-    return calculator.calculate();
+// 날짜를 YYYY-MM-DD 문자열로 변환 (메모이제이션 키용)
+const formatDateKey = (date: Date): string => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+export function useSajuFortune({ profile, todayInfo, selectedDate }: UseSajuFortuneProps) {
+  // 날짜 문자열 키 (timestamp 대신 사용 - 매시간 변경 방지)
+  const dateKey = useMemo(() => formatDateKey(selectedDate), [selectedDate]);
+  
+  // 운세 캐시 (같은 날짜 재조회 방지)
+  const fortuneCache = useRef<FortuneCache>({ dateKey: '', result: null });
+
+  // 사주 계산 (생년월일 변경 시에만)
+  const sajuResult = useMemo<SajuResult | null>(() => {
+    if (!profile?.birthDate) return null;
+    try {
+      const calculator = new SajuCalculator(profile.birthDate, profile.birthTime);
+      return calculator.calculate();
+    } catch (error) {
+      console.error('[useSajuFortune] 사주 계산 오류:', error);
+      return null;
+    }
   }, [profile?.birthDate, profile?.birthTime]);
 
-  // 선택한 날짜 기준 운세 생성
-  const fortune = useMemo(() =>
-    generateFortune(sajuResult, selectedDate),
-    [sajuResult, selectedDateTimestamp]
-  );
+  // 운세 생성 (날짜 또는 사주 변경 시) - 캐싱 적용
+  const fortune = useMemo<Fortune | null>(() => {
+    if (!sajuResult) return null;
+    
+    // 캐시 히트 확인
+    if (fortuneCache.current.dateKey === dateKey && fortuneCache.current.result) {
+      return fortuneCache.current.result;
+    }
+    
+    try {
+      const result = generateFortune(sajuResult, selectedDate);
+      // 캐시 업데이트
+      fortuneCache.current = { dateKey, result };
+      return result;
+    } catch (error) {
+      console.error('[useSajuFortune] 운세 생성 오류:', error);
+      return null;
+    }
+  }, [sajuResult, dateKey]); // selectedDate 대신 dateKey 사용
 
   // 종합운세 생성
   const comprehensiveFortune = useMemo(() => {
@@ -56,7 +83,7 @@ export function useSajuFortune({ profile, todayInfo, selectedDate }: UseSajuFort
       profile.name || '사용자',
       selectedDate
     );
-  }, [profile?.birthDate, profile?.name, sajuResult?.dayMaster, selectedDateTimestamp]);
+  }, [profile?.birthDate, profile?.name, sajuResult?.dayMaster, dateKey]);
 
   // 쉬운 점수 메시지
   const easyScoreMessages = useMemo(() => {

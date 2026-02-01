@@ -1,7 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 import { UserProfile, SajuResult, Settings, Fortune, FortuneHistory, SavedPerson } from '../types';
 import { SecureStorageService } from './SecureStorageService';
+
+// 웹이 아닌 경우에만 SQLite 동적 import
+let SQLite: typeof import('expo-sqlite') | null = null;
+if (Platform.OS !== 'web') {
+  SQLite = require('expo-sqlite');
+}
 
 // AsyncStorage 키 (일반 데이터용)
 const STORAGE_KEYS = {
@@ -28,16 +34,47 @@ const DEFAULT_SETTINGS: Settings = {
   notificationTime: '08:00',
 };
 
+// 웹용 히스토리 AsyncStorage 키
+const WEB_FORTUNE_HISTORY_KEY = '@fortune_history_web';
+
 /**
  * 스토리지 서비스
  */
 export class StorageService {
-  private static db: SQLite.SQLiteDatabase | null = null;
+  private static db: any = null; // SQLite.SQLiteDatabase | null
+  private static isWeb = Platform.OS === 'web';
+
+  // 동시성 제어를 위한 Promise 체인
+  private static personSaveQueue: Promise<void> = Promise.resolve();
 
   /**
-   * SQLite 데이터베이스 초기화
+   * 큐 기반 저장 (Race Condition 방지)
+   * 순차적으로 저장 작업을 실행하여 데이터 일관성 보장
+   */
+  private static async queueSavePerson(person: SavedPerson): Promise<void> {
+    this.personSaveQueue = this.personSaveQueue.then(async () => {
+      const people = await this.getSavedPeople();
+      const existingIndex = people.findIndex(p => p.id === person.id);
+
+      if (existingIndex >= 0) {
+        people[existingIndex] = { ...people[existingIndex], ...person };
+      } else {
+        people.push(person);
+      }
+
+      await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
+    });
+
+    return this.personSaveQueue;
+  }
+
+  /**
+   * SQLite 데이터베이스 초기화 (네이티브 전용)
    */
   static async initDatabase(): Promise<void> {
+    // 웹에서는 SQLite 사용 안 함
+    if (this.isWeb || !SQLite) return;
+
     if (this.db) return;
 
     this.db = await SQLite.openDatabaseAsync('sajutoday.db');
@@ -60,6 +97,24 @@ export class StorageService {
    * 30일 초과 히스토리 삭제
    */
   static async cleanOldHistory(): Promise<void> {
+    // 웹에서는 AsyncStorage 사용
+    if (this.isWeb) {
+      try {
+        const data = await AsyncStorage.getItem(WEB_FORTUNE_HISTORY_KEY);
+        if (data) {
+          const history = JSON.parse(data) as FortuneHistory[];
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
+          const filtered = history.filter(h => h.date >= dateStr);
+          await AsyncStorage.setItem(WEB_FORTUNE_HISTORY_KEY, JSON.stringify(filtered));
+        }
+      } catch (error) {
+        console.error('웹 히스토리 정리 실패:', error);
+      }
+      return;
+    }
+
     if (!this.db) return;
 
     const thirtyDaysAgo = new Date();
@@ -95,7 +150,6 @@ export class StorageService {
         await SecureStorageService.setSecureObject(SECURE_KEYS.PROFILE, profile);
         // 레거시 데이터 삭제 (선택적)
         await AsyncStorage.removeItem(STORAGE_KEYS.PROFILE);
-        console.log('프로필 데이터를 보안 저장소로 마이그레이션 완료');
         return profile;
       }
 
@@ -138,7 +192,6 @@ export class StorageService {
         const result = JSON.parse(legacyData) as SajuResult;
         await SecureStorageService.setSecureObject(SECURE_KEYS.SAJU_RESULT, result);
         await AsyncStorage.removeItem(STORAGE_KEYS.SAJU_RESULT);
-        console.log('사주 결과를 보안 저장소로 마이그레이션 완료');
         return result;
       }
 
@@ -173,7 +226,6 @@ export class StorageService {
         const settings = JSON.parse(legacyData) as Settings;
         await SecureStorageService.setSecureObject(SECURE_KEYS.SETTINGS, settings);
         await AsyncStorage.removeItem(STORAGE_KEYS.SETTINGS);
-        console.log('설정을 보안 저장소로 마이그레이션 완료');
         return { ...DEFAULT_SETTINGS, ...settings };
       }
 
@@ -205,12 +257,37 @@ export class StorageService {
     }
   }
 
-  // ===== 운세 히스토리 관련 (SQLite) =====
+  // ===== 운세 히스토리 관련 (SQLite / 웹용 AsyncStorage) =====
 
   /**
    * 운세 저장
    */
   static async saveFortune(date: string, fortune: Fortune): Promise<void> {
+    // 웹에서는 AsyncStorage 사용
+    if (this.isWeb) {
+      try {
+        const history = await this.getFortuneHistory();
+        const existingIndex = history.findIndex(h => h.date === date);
+        const newEntry: FortuneHistory = {
+          id: existingIndex >= 0 ? history[existingIndex].id : Date.now(),
+          date,
+          fortune,
+          createdAt: new Date().toISOString(),
+        };
+        if (existingIndex >= 0) {
+          history[existingIndex] = newEntry;
+        } else {
+          history.unshift(newEntry);
+        }
+        // 최근 30개만 유지
+        const trimmed = history.slice(0, 30);
+        await AsyncStorage.setItem(WEB_FORTUNE_HISTORY_KEY, JSON.stringify(trimmed));
+      } catch (error) {
+        console.error('웹 운세 저장 실패:', error);
+      }
+      return;
+    }
+
     if (!this.db) await this.initDatabase();
     if (!this.db) return;
 
@@ -229,13 +306,24 @@ export class StorageService {
    * 특정 날짜 운세 조회
    */
   static async getFortune(date: string): Promise<Fortune | null> {
+    // 웹에서는 AsyncStorage 사용
+    if (this.isWeb) {
+      try {
+        const history = await this.getFortuneHistory();
+        const entry = history.find(h => h.date === date);
+        return entry ? entry.fortune : null;
+      } catch {
+        return null;
+      }
+    }
+
     if (!this.db) await this.initDatabase();
     if (!this.db) return null;
 
-    const result = await this.db.getFirstAsync<{ fortune_json: string }>(
+    const result = await this.db.getFirstAsync(
       'SELECT fortune_json FROM fortune_history WHERE date = ?',
       date
-    );
+    ) as { fortune_json: string } | null;
 
     return result ? JSON.parse(result.fortune_json) : null;
   }
@@ -244,17 +332,29 @@ export class StorageService {
    * 전체 운세 히스토리 조회 (최근 30일)
    */
   static async getFortuneHistory(): Promise<FortuneHistory[]> {
+    // 웹에서는 AsyncStorage 사용
+    if (this.isWeb) {
+      try {
+        const data = await AsyncStorage.getItem(WEB_FORTUNE_HISTORY_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch {
+        return [];
+      }
+    }
+
     if (!this.db) await this.initDatabase();
     if (!this.db) return [];
 
-    const results = await this.db.getAllAsync<{
+    const results = await this.db.getAllAsync(
+      'SELECT * FROM fortune_history ORDER BY date DESC LIMIT 30'
+    ) as Array<{
       id: number;
       date: string;
       fortune_json: string;
       created_at: string;
-    }>('SELECT * FROM fortune_history ORDER BY date DESC LIMIT 30');
+    }>;
 
-    return results.map(row => ({
+    return results.map((row: { id: number; date: string; fortune_json: string; created_at: string }) => ({
       id: row.id,
       date: row.date,
       fortune: JSON.parse(row.fortune_json),
@@ -266,14 +366,20 @@ export class StorageService {
    * 운세가 있는 날짜 목록 조회
    */
   static async getFortunesDates(): Promise<string[]> {
+    // 웹에서는 AsyncStorage 사용
+    if (this.isWeb) {
+      const history = await this.getFortuneHistory();
+      return history.map(h => h.date);
+    }
+
     if (!this.db) await this.initDatabase();
     if (!this.db) return [];
 
-    const results = await this.db.getAllAsync<{ date: string }>(
+    const results = await this.db.getAllAsync(
       'SELECT date FROM fortune_history ORDER BY date DESC'
-    );
+    ) as Array<{ date: string }>;
 
-    return results.map(row => row.date);
+    return results.map((row: { date: string }) => row.date);
   }
 
   // ===== 저장된 사람 관리 (암호화 저장) =====
@@ -294,7 +400,6 @@ export class StorageService {
         if (people.length > 0) {
           await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
           await AsyncStorage.removeItem(STORAGE_KEYS.SAVED_PEOPLE);
-          console.log('저장된 사람 목록을 보안 저장소로 마이그레이션 완료');
         }
         return people;
       }
@@ -311,26 +416,13 @@ export class StorageService {
    */
   static async savePerson(person: SavedPerson): Promise<void> {
     try {
-      const people = await this.getSavedPeople();
-      const existingIndex = people.findIndex(p => p.id === person.id);
-
-      if (existingIndex >= 0) {
-        // 기존 정보 업데이트
-        people[existingIndex] = {
-          ...person,
-          updatedAt: new Date().toISOString(),
-        };
-      } else {
-        // 새로 추가
-        people.push({
-          ...person,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      }
-
-      await SecureStorageService.setSecureObject(SECURE_KEYS.SAVED_PEOPLE, people);
-      console.log('사람 저장 성공:', person.name);
+      // Race Condition 방지를 위한 Queue 기반 저장
+      const personWithTimestamps = {
+        ...person,
+        updatedAt: new Date().toISOString(),
+        createdAt: person.createdAt || new Date().toISOString(),
+      };
+      await this.queueSavePerson(personWithTimestamps);
     } catch (error) {
       console.error('사람 저장 실패:', error);
       throw error;
@@ -394,8 +486,10 @@ export class StorageService {
       STORAGE_KEYS.SAVED_PEOPLE,
     ]);
 
-    // SQLite 초기화
-    if (this.db) {
+    // SQLite 초기화 (네이티브) 또는 웹용 히스토리 초기화
+    if (this.isWeb) {
+      await AsyncStorage.removeItem(WEB_FORTUNE_HISTORY_KEY);
+    } else if (this.db) {
       await this.db.runAsync('DELETE FROM fortune_history');
     }
   }
@@ -412,7 +506,6 @@ export class StorageService {
       await this.getSajuResult();
       await this.getSettings();
       await this.getSavedPeople();
-      console.log('보안 저장소 마이그레이션 체크 완료');
     } catch (error) {
       console.error('보안 저장소 마이그레이션 실패:', error);
     }

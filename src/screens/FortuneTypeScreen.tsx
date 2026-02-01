@@ -25,6 +25,8 @@ import {
   analyzeFiveSpirits,
 } from '../services/FortuneTypes';
 import { SajuCalculator } from '../services/SajuCalculator';
+import { stemToElement, elementToKorean } from '../utils/elementConverter';
+import { Element } from '../types';
 
 // 현재 연도 정보 계산 (FortuneMenuScreen과 동일)
 const HEAVENLY_STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
@@ -137,21 +139,14 @@ export default function FortuneTypeScreen() {
       case 'dream':
         return generateDreamFortune(dayMaster);
       case 'fiveSpirits': {
-        // 일간 오행 변환
-        const stemToElement: Record<string, string> = {
-          '갑': '목', '을': '목', '병': '화', '정': '화', '무': '토',
-          '기': '토', '경': '금', '신': '금', '임': '수', '계': '수',
-        };
-        const dayMasterElement = stemToElement[dayMaster] || '목';
+        // 일간 오행 변환 (elementConverter 사용)
+        const dayMasterElement = stemToElement(dayMaster) || '목';
 
-        // 사주 오행 분포 변환 (영어 → 한글)
-        const elementMap: Record<string, string> = {
-          'wood': '목', 'fire': '화', 'earth': '토', 'metal': '금', 'water': '수',
-        };
+        // 사주 오행 분포 변환 (영어 → 한글, elementConverter 사용)
         const koreanElements: Record<string, number> = {};
         if (sajuResult?.elements) {
           Object.entries(sajuResult.elements).forEach(([key, value]) => {
-            koreanElements[elementMap[key] || key] = value as number;
+            koreanElements[elementToKorean(key as Element)] = value as number;
           });
         } else {
           // 기본값 설정

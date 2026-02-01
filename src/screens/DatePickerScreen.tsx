@@ -89,9 +89,10 @@ export default function DatePickerScreen() {
 
   // 확인 버튼
   const handleConfirm = () => {
-    // HomeScreen으로 선택한 날짜 전달
+    // returnScreen 파라미터에 따라 적절한 화면으로 이동
+    const returnScreen = route.params?.returnScreen || 'Daily';
     navigation.navigate('MainTabs', {
-      screen: 'Home',
+      screen: returnScreen,
       params: { selectedDate: selectedDate.toISOString() },
     });
   };
