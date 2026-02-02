@@ -37,14 +37,14 @@ const SECTION_IDS = {
 
 // 섹션 메뉴 정의
 const SECTION_MENU = [
-  { id: SECTION_IDS.CONCEPT, label: '📚 개념', shortLabel: '개념' },
-  { id: SECTION_IDS.PILLAR, label: '🏛️ 사주팔자', shortLabel: '사주' },
-  { id: SECTION_IDS.DAYMASTER, label: '🌟 일간', shortLabel: '일간' },
-  { id: SECTION_IDS.STRENGTH, label: '📊 강약', shortLabel: '강약' },
-  { id: SECTION_IDS.ELEMENTS, label: '🔥 오행', shortLabel: '오행' },
-  { id: SECTION_IDS.YONGSIN, label: '🎯 용신', shortLabel: '용신' },
-  { id: SECTION_IDS.TENGOD, label: '🎭 십신', shortLabel: '십신' },
-  { id: SECTION_IDS.DAEUN, label: '📈 대운', shortLabel: '대운' },
+  { id: SECTION_IDS.CONCEPT, emoji: '📚', label: '개념' },
+  { id: SECTION_IDS.PILLAR, emoji: '🏛️', label: '사주' },
+  { id: SECTION_IDS.DAYMASTER, emoji: '🌟', label: '일간' },
+  { id: SECTION_IDS.STRENGTH, emoji: '📊', label: '강약' },
+  { id: SECTION_IDS.ELEMENTS, emoji: '🔥', label: '오행' },
+  { id: SECTION_IDS.YONGSIN, emoji: '🎯', label: '용신' },
+  { id: SECTION_IDS.TENGOD, emoji: '🎭', label: '십신' },
+  { id: SECTION_IDS.DAEUN, emoji: '📈', label: '대운' },
 ];
 
 // 접이식 섹션 컴포넌트
@@ -496,7 +496,7 @@ export default function SajuScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* 상단 고정 네비게이션 */}
+      {/* 상단 고정 네비게이션 (운세 탭과 동일한 스타일) */}
       <View style={styles.navContainer}>
         <ScrollView
           horizontal
@@ -514,10 +514,16 @@ export default function SajuScreen() {
               activeOpacity={0.7}
             >
               <Text style={[
+                styles.navEmoji,
+                activeSection === item.id && styles.navEmojiActive,
+              ]}>
+                {item.emoji}
+              </Text>
+              <Text style={[
                 styles.navItemText,
                 activeSection === item.id && styles.navItemTextActive,
               ]}>
-                {item.shortLabel}
+                {item.label}
               </Text>
             </TouchableOpacity>
           ))}
@@ -1500,12 +1506,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  // 상단 네비게이션 (개선된 스타일)
+  // 상단 네비게이션 (운세 탭과 동일한 스타일)
   navContainer: {
     backgroundColor: COLORS.white,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.border,
-    paddingVertical: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -1513,14 +1520,16 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   navContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     gap: 8,
   },
   navItem: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    marginHorizontal: 2,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: '#F3F4F6',
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -1534,9 +1543,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  navEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  navEmojiActive: {
+    // 활성 상태에서도 같은 크기 유지
+  },
   navItemText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.md,
+    color: '#6B7280',
     fontWeight: '600',
   },
   navItemTextActive: {
