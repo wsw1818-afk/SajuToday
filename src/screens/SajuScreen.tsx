@@ -1500,30 +1500,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  // 상단 네비게이션
+  // 상단 네비게이션 (개선된 스타일)
   navContainer: {
     backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    paddingVertical: 8,
-    elevation: 2,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.border,
+    paddingVertical: 10,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
   },
   navContent: {
     paddingHorizontal: 12,
+    gap: 8,
   },
   navItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginHorizontal: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    marginHorizontal: 2,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   navItemActive: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   navItemText: {
     fontSize: FONT_SIZES.sm,
@@ -1532,6 +1541,7 @@ const styles = StyleSheet.create({
   },
   navItemTextActive: {
     color: COLORS.white,
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,
