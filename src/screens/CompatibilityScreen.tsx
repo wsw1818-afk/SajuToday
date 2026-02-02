@@ -14,6 +14,8 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +31,108 @@ const { width } = Dimensions.get('window');
 // 생년월일 입력 형식 (YYYY-MM-DD)
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
+// 시진(時辰) 옵션 - 2시간 단위
+const TIME_SLOTS = [
+  { label: '🌙 자시 (23:00~01:00)', value: '00:00', emoji: '🌙' },
+  { label: '🐂 축시 (01:00~03:00)', value: '02:00', emoji: '🐂' },
+  { label: '🐅 인시 (03:00~05:00)', value: '04:00', emoji: '🐅' },
+  { label: '🐇 묘시 (05:00~07:00)', value: '06:00', emoji: '🐇' },
+  { label: '🐲 진시 (07:00~09:00)', value: '08:00', emoji: '🐲' },
+  { label: '🐍 사시 (09:00~11:00)', value: '10:00', emoji: '🐍' },
+  { label: '🐴 오시 (11:00~13:00)', value: '12:00', emoji: '🐴' },
+  { label: '🐑 미시 (13:00~15:00)', value: '14:00', emoji: '🐑' },
+  { label: '🐵 신시 (15:00~17:00)', value: '16:00', emoji: '🐵' },
+  { label: '🐔 유시 (17:00~19:00)', value: '18:00', emoji: '🐔' },
+  { label: '🐕 술시 (19:00~21:00)', value: '20:00', emoji: '🐕' },
+  { label: '🐷 해시 (21:00~23:00)', value: '22:00', emoji: '🐷' },
+  { label: '❓ 모름 (정오 기준)', value: '12:00', emoji: '❓' },
+];
+
+// 드롭다운 피커 컴포넌트
+interface DropdownPickerProps {
+  visible: boolean;
+  onClose: () => void;
+  options: { label: string; value: string | number }[];
+  selectedValue: string | number | null;
+  onSelect: (value: string | number) => void;
+  title: string;
+  isDark: boolean;
+}
+
+function DropdownPicker({ visible, onClose, options, selectedValue, onSelect, title, isDark }: DropdownPickerProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={dropdownStyles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <View style={[
+          dropdownStyles.modalContent,
+          { backgroundColor: isDark ? '#27272A' : '#FFFFFF' }
+        ]}>
+          <View style={[
+            dropdownStyles.modalHeader,
+            { borderBottomColor: isDark ? '#3F3F46' : '#E5E7EB' }
+          ]}>
+            <Text style={[dropdownStyles.modalTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+              {title}
+            </Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={[dropdownStyles.modalCloseButton, { color: isDark ? '#A1A1AA' : '#6B7280' }]}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={options}
+            keyExtractor={(item) => String(item.value)}
+            style={dropdownStyles.optionList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  dropdownStyles.optionItem,
+                  selectedValue === item.value && {
+                    backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(139, 92, 246, 0.1)'
+                  },
+                ]}
+                onPress={() => {
+                  onSelect(item.value);
+                  onClose();
+                }}
+              >
+                <Text style={[
+                  dropdownStyles.optionText,
+                  { color: isDark ? '#D4D4D8' : '#44403C' },
+                  selectedValue === item.value && { color: isDark ? '#A5B4FC' : '#7C3AED', fontWeight: '600' },
+                ]}>
+                  {item.label}
+                </Text>
+                {selectedValue === item.value && (
+                  <Text style={[dropdownStyles.optionCheck, { color: isDark ? '#A5B4FC' : '#7C3AED' }]}>✓</Text>
+                )}
+              </TouchableOpacity>
+            )}
+            getItemLayout={(data, index) => ({
+              length: 48,
+              offset: 48 * index,
+              index,
+            })}
+            initialScrollIndex={
+              selectedValue
+                ? Math.max(0, options.findIndex(o => o.value === selectedValue) - 3)
+                : 0
+            }
+          />
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
 export default function CompatibilityScreen() {
   const navigation = useNavigation<any>();
   const { isDark, colors } = useTheme();
@@ -43,9 +147,63 @@ export default function CompatibilityScreen() {
 
   // 상대방 정보
   const [partnerName, setPartnerName] = useState('');
-  const [partnerBirthDate, setPartnerBirthDate] = useState('');
+  // 드롭다운 상태
+  const [partnerBirthYear, setPartnerBirthYear] = useState<number | null>(null);
+  const [partnerBirthMonth, setPartnerBirthMonth] = useState<number | null>(null);
+  const [partnerBirthDay, setPartnerBirthDay] = useState<number | null>(null);
   const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
+  // 피커 표시 상태
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [partnerSaju, setPartnerSaju] = useState<SajuResult | null>(null);
+
+  // 년도 옵션 생성 (1920 ~ 현재년도)
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear; y >= 1920; y--) {
+      years.push({ label: `${y}년`, value: y });
+    }
+    return years;
+  }, []);
+
+  // 월 옵션 생성 (1 ~ 12)
+  const monthOptions = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      label: `${i + 1}월`,
+      value: i + 1,
+    }));
+  }, []);
+
+  // 일 옵션 생성 (선택한 년/월에 따라 동적)
+  const dayOptions = useMemo(() => {
+    let maxDays = 31;
+    if (partnerBirthYear && partnerBirthMonth) {
+      maxDays = new Date(partnerBirthYear, partnerBirthMonth, 0).getDate();
+    }
+    return Array.from({ length: maxDays }, (_, i) => ({
+      label: `${i + 1}일`,
+      value: i + 1,
+    }));
+  }, [partnerBirthYear, partnerBirthMonth]);
+
+  // 생년월일 텍스트 생성 (YYYY-MM-DD)
+  const partnerBirthDate = useMemo(() => {
+    if (partnerBirthYear && partnerBirthMonth && partnerBirthDay) {
+      const month = String(partnerBirthMonth).padStart(2, '0');
+      const day = String(partnerBirthDay).padStart(2, '0');
+      return `${partnerBirthYear}-${month}-${day}`;
+    }
+    return '';
+  }, [partnerBirthYear, partnerBirthMonth, partnerBirthDay]);
+
+  // 선택된 시진 라벨 가져오기
+  const selectedTimeLabel = useMemo(() => {
+    const slot = TIME_SLOTS.find(s => s.value === partnerBirthTime);
+    return slot ? slot.label : '시간 선택';
+  }, [partnerBirthTime]);
 
   // 궁합 결과
   const [result, setResult] = useState<CompatibilityResult | null>(null);
@@ -365,48 +523,133 @@ export default function CompatibilityScreen() {
           />
 
           <Text style={[styles.inputLabel, { color: isDark ? '#A1A1AA' : '#78716C' }]}>생년월일</Text>
-          <TextInput
-            style={[
-              styles.textInput,
-              {
-                backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                color: isDark ? '#E4E4E7' : '#1C1917',
-                borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
-              }
-            ]}
-            placeholder="YYYY-MM-DD (예: 1990-05-15)"
-            placeholderTextColor={isDark ? '#71717A' : '#A8A29E'}
-            value={partnerBirthDate}
-            onChangeText={setPartnerBirthDate}
-            keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
-          />
+          <View style={styles.datePickerRow}>
+            {/* 년도 선택 */}
+            <TouchableOpacity
+              style={[
+                styles.datePickerButton,
+                {
+                  backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                }
+              ]}
+              onPress={() => setShowYearPicker(true)}
+            >
+              <Text style={[
+                styles.datePickerButtonText,
+                { color: partnerBirthYear ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+              ]}>
+                {partnerBirthYear ? `${partnerBirthYear}년` : '년도'}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+
+            {/* 월 선택 */}
+            <TouchableOpacity
+              style={[
+                styles.datePickerButton,
+                {
+                  backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                }
+              ]}
+              onPress={() => setShowMonthPicker(true)}
+            >
+              <Text style={[
+                styles.datePickerButtonText,
+                { color: partnerBirthMonth ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+              ]}>
+                {partnerBirthMonth ? `${partnerBirthMonth}월` : '월'}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+
+            {/* 일 선택 */}
+            <TouchableOpacity
+              style={[
+                styles.datePickerButton,
+                {
+                  backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                }
+              ]}
+              onPress={() => setShowDayPicker(true)}
+            >
+              <Text style={[
+                styles.datePickerButtonText,
+                { color: partnerBirthDay ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+              ]}>
+                {partnerBirthDay ? `${partnerBirthDay}일` : '일'}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={[styles.inputLabel, { color: isDark ? '#A1A1AA' : '#78716C' }]}>태어난 시간 (선택)</Text>
-          <TextInput
+          <TouchableOpacity
             style={[
-              styles.textInput,
+              styles.timePickerButton,
               {
                 backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                color: isDark ? '#E4E4E7' : '#1C1917',
                 borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
               }
             ]}
-            placeholder="HH:MM (예: 14:30, 모르면 12:00)"
-            placeholderTextColor={isDark ? '#71717A' : '#A8A29E'}
-            value={partnerBirthTime}
-            onChangeText={setPartnerBirthTime}
-          />
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={[styles.timePickerButtonText, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+              {selectedTimeLabel}
+            </Text>
+            <Text style={styles.dropdownArrow}>▼</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* 드롭다운 피커들 */}
+        <DropdownPicker
+          visible={showYearPicker}
+          onClose={() => setShowYearPicker(false)}
+          options={yearOptions}
+          selectedValue={partnerBirthYear}
+          onSelect={(value) => setPartnerBirthYear(value as number)}
+          title="년도 선택"
+          isDark={isDark}
+        />
+        <DropdownPicker
+          visible={showMonthPicker}
+          onClose={() => setShowMonthPicker(false)}
+          options={monthOptions}
+          selectedValue={partnerBirthMonth}
+          onSelect={(value) => setPartnerBirthMonth(value as number)}
+          title="월 선택"
+          isDark={isDark}
+        />
+        <DropdownPicker
+          visible={showDayPicker}
+          onClose={() => setShowDayPicker(false)}
+          options={dayOptions}
+          selectedValue={partnerBirthDay}
+          onSelect={(value) => setPartnerBirthDay(value as number)}
+          title="일 선택"
+          isDark={isDark}
+        />
+        <DropdownPicker
+          visible={showTimePicker}
+          onClose={() => setShowTimePicker(false)}
+          options={TIME_SLOTS}
+          selectedValue={partnerBirthTime}
+          onSelect={(value) => setPartnerBirthTime(value as string)}
+          title="시진 선택"
+          isDark={isDark}
+        />
 
         {/* 분석 버튼 */}
         <TouchableOpacity
           style={[
             styles.analyzeButton,
             { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' },
-            (!profile || !partnerName.trim() || !partnerBirthDate) && styles.analyzeButtonDisabled
+            (!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay) && styles.analyzeButtonDisabled
           ]}
           onPress={analyzeCompatibility}
-          disabled={!profile || !partnerName.trim() || !partnerBirthDate}
+          disabled={!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay}
         >
           <Text style={styles.analyzeButtonText}>💕 궁합 분석하기</Text>
         </TouchableOpacity>
@@ -710,6 +953,90 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  // 날짜 선택 스타일
+  datePickerRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  datePickerButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
+  datePickerButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dropdownArrow: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    marginLeft: 4,
+  },
+  timePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+  },
+  timePickerButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+});
+
+// 드롭다운 피커 스타일
+const dropdownStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: width * 0.85,
+    maxHeight: 400,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
+  modalCloseButton: {
+    fontSize: 18,
+    fontWeight: '300',
+  },
+  optionList: {
+    maxHeight: 336,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  optionText: {
+    fontSize: 15,
+  },
+  optionCheck: {
     fontSize: 16,
     fontWeight: 'bold',
   },
