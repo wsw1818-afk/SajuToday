@@ -24,7 +24,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useApp } from '../contexts/AppContext';
 import { SajuCalculator } from '../services/SajuCalculator';
 import { calculateCompatibility, CompatibilityResult, DetailedCompatibility } from '../services/CompatibilityService';
-import { SajuResult } from '../types';
+import { SajuResult, CalendarType } from '../types';
+import KasiService from '../services/KasiService';
 
 const { width } = Dimensions.get('window');
 
@@ -152,12 +153,16 @@ export default function CompatibilityScreen() {
   const [partnerBirthMonth, setPartnerBirthMonth] = useState<number | null>(null);
   const [partnerBirthDay, setPartnerBirthDay] = useState<number | null>(null);
   const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
+  // 양력/음력 선택
+  const [partnerCalendar, setPartnerCalendar] = useState<CalendarType>('solar');
+  const [partnerIsLeapMonth, setPartnerIsLeapMonth] = useState(false);
   // 피커 표시 상태
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showDayPicker, setShowDayPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [partnerSaju, setPartnerSaju] = useState<SajuResult | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   // 년도 옵션 생성 (1920 ~ 현재년도)
   const yearOptions = useMemo(() => {
@@ -209,31 +214,8 @@ export default function CompatibilityScreen() {
   const [result, setResult] = useState<CompatibilityResult | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  // 상대방 사주 계산
-  const calculatePartnerSaju = useCallback(() => {
-    if (!DATE_REGEX.test(partnerBirthDate)) {
-      Alert.alert('입력 오류', '생년월일을 YYYY-MM-DD 형식으로 입력해주세요.\n예: 1990-05-15');
-      return null;
-    }
-
-    try {
-      // 날짜 형식 검증 (YYYY-MM-DD)
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(partnerBirthDate)) {
-        Alert.alert('입력 오류', '올바른 날짜를 입력해주세요. (YYYY-MM-DD)');
-        return null;
-      }
-
-      const calculator = new SajuCalculator(partnerBirthDate, partnerBirthTime);
-      return calculator.calculate();
-    } catch (error) {
-      Alert.alert('계산 오류', '사주 계산 중 오류가 발생했습니다.');
-      return null;
-    }
-  }, [partnerBirthDate, partnerBirthTime]);
-
-  // 궁합 분석 실행
-  const analyzeCompatibility = useCallback(() => {
+  // 궁합 분석 실행 (음력 변환 포함)
+  const analyzeCompatibility = useCallback(async () => {
     if (!mySaju) {
       Alert.alert('프로필 필요', '먼저 내 프로필을 등록해주세요.');
       return;
@@ -244,14 +226,52 @@ export default function CompatibilityScreen() {
       return;
     }
 
-    const partnerResult = calculatePartnerSaju();
-    if (!partnerResult) return;
+    if (!partnerBirthYear || !partnerBirthMonth || !partnerBirthDay) {
+      Alert.alert('입력 필요', '상대방 생년월일을 선택해주세요.');
+      return;
+    }
 
-    setPartnerSaju(partnerResult);
-    const compatibilityResult = calculateCompatibility(mySaju, partnerResult);
-    setResult(compatibilityResult);
-    setShowResult(true);
-  }, [mySaju, partnerName, calculatePartnerSaju]);
+    setIsCalculating(true);
+
+    try {
+      let finalBirthDate = partnerBirthDate;
+
+      // 음력인 경우 KASI API로 양력 변환
+      if (partnerCalendar === 'lunar') {
+        try {
+          const solarDate = await KasiService.lunarToSolar(
+            partnerBirthYear,
+            partnerBirthMonth,
+            partnerBirthDay,
+            partnerIsLeapMonth
+          );
+          if (solarDate) {
+            finalBirthDate = solarDate;
+          } else {
+            Alert.alert('변환 오류', '음력을 양력으로 변환하는데 실패했습니다.');
+            setIsCalculating(false);
+            return;
+          }
+        } catch (e) {
+          Alert.alert('변환 오류', '음력 변환 중 오류가 발생했습니다.');
+          setIsCalculating(false);
+          return;
+        }
+      }
+
+      const calculator = new SajuCalculator(finalBirthDate, partnerBirthTime);
+      const partnerResult = calculator.calculate();
+
+      setPartnerSaju(partnerResult);
+      const compatibilityResult = calculateCompatibility(mySaju, partnerResult);
+      setResult(compatibilityResult);
+      setShowResult(true);
+    } catch (error) {
+      Alert.alert('계산 오류', '사주 계산 중 오류가 발생했습니다.');
+    } finally {
+      setIsCalculating(false);
+    }
+  }, [mySaju, partnerName, partnerBirthDate, partnerBirthTime, partnerBirthYear, partnerBirthMonth, partnerBirthDay, partnerCalendar, partnerIsLeapMonth]);
 
   // 점수에 따른 색상
   const getScoreColor = (score: number): string => {
@@ -523,6 +543,59 @@ export default function CompatibilityScreen() {
           />
 
           <Text style={[styles.inputLabel, { color: isDark ? '#A1A1AA' : '#78716C' }]}>생년월일</Text>
+
+          {/* 양력/음력 선택 */}
+          <View style={styles.calendarToggleRow}>
+            <TouchableOpacity
+              style={[
+                styles.calendarToggleButton,
+                partnerCalendar === 'solar' && styles.calendarToggleButtonActive,
+                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4' }
+              ]}
+              onPress={() => setPartnerCalendar('solar')}
+            >
+              <Text style={[
+                styles.calendarToggleText,
+                partnerCalendar === 'solar' && styles.calendarToggleTextActive,
+                { color: partnerCalendar === 'solar' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#78716C') }
+              ]}>
+                ☀️ 양력
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.calendarToggleButton,
+                partnerCalendar === 'lunar' && styles.calendarToggleButtonActive,
+                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4' }
+              ]}
+              onPress={() => setPartnerCalendar('lunar')}
+            >
+              <Text style={[
+                styles.calendarToggleText,
+                partnerCalendar === 'lunar' && styles.calendarToggleTextActive,
+                { color: partnerCalendar === 'lunar' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#78716C') }
+              ]}>
+                🌙 음력
+              </Text>
+            </TouchableOpacity>
+            {partnerCalendar === 'lunar' && (
+              <TouchableOpacity
+                style={[
+                  styles.leapMonthButton,
+                  partnerIsLeapMonth && styles.leapMonthButtonActive,
+                ]}
+                onPress={() => setPartnerIsLeapMonth(!partnerIsLeapMonth)}
+              >
+                <Text style={[
+                  styles.leapMonthText,
+                  partnerIsLeapMonth && styles.leapMonthTextActive,
+                ]}>
+                  {partnerIsLeapMonth ? '✓ ' : ''}윤달
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           <View style={styles.datePickerRow}>
             {/* 년도 선택 */}
             <TouchableOpacity
@@ -646,12 +719,14 @@ export default function CompatibilityScreen() {
           style={[
             styles.analyzeButton,
             { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' },
-            (!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay) && styles.analyzeButtonDisabled
+            (!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay || isCalculating) && styles.analyzeButtonDisabled
           ]}
           onPress={analyzeCompatibility}
-          disabled={!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay}
+          disabled={!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay || isCalculating}
         >
-          <Text style={styles.analyzeButtonText}>💕 궁합 분석하기</Text>
+          <Text style={styles.analyzeButtonText}>
+            {isCalculating ? '⏳ 분석 중...' : '💕 궁합 분석하기'}
+          </Text>
         </TouchableOpacity>
 
         {/* 안내 */}
@@ -742,6 +817,49 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
+  },
+  // 양력/음력 토글 스타일
+  calendarToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  calendarToggleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+  },
+  calendarToggleButtonActive: {
+    backgroundColor: '#6366F1',
+    borderColor: '#6366F1',
+  },
+  calendarToggleText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  calendarToggleTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  leapMonthButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  leapMonthButtonActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  leapMonthText: {
+    fontSize: 13,
+    color: '#6366F1',
+    fontWeight: '500',
+  },
+  leapMonthTextActive: {
+    fontWeight: '600',
   },
   analyzeButton: {
     padding: 18,
