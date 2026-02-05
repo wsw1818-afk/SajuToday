@@ -6,12 +6,17 @@ import { getTodayGanji } from './SajuCalculator';
 import { SOLAR_TERMS } from '../data/saju';
 import { ErrorLogService } from './ErrorLogService';
 
-// KASI API 기본 URL
+// KASI API URL 설정
+// 프록시 서버를 통해 API 호출 (API 키 보안)
+const PROXY_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://sajutoday-api.vercel.app';
+const KASI_PROXY_URL = `${PROXY_BASE_URL}/api/kasi`;
+
+// 직접 호출용 (프록시 미지원 기능)
 const KASI_BASE_URL = 'http://apis.data.go.kr/B090041/openapi/service';
-const LUNAR_API_URL = `${KASI_BASE_URL}/LrsrCldInfoService`;
 const SPECIAL_DAY_API_URL = `${KASI_BASE_URL}/SpcdeInfoService`;
 
-// API 키 (환경변수에서 가져옴 - .env 파일)
+// 직접 호출용 API 키 (절기, 공휴일 등 - 프록시에서 미지원 시 사용)
+// 주의: 프록시를 통해 호출하는 것이 권장됨
 const API_KEY = process.env.EXPO_PUBLIC_KASI_API_KEY || '';
 
 // 캐시 키 접두사
@@ -196,39 +201,41 @@ export class KasiService {
       return null;
     }
 
-    // 3. API 호출
+    // 3. API 호출 (프록시 서버 사용)
     const [year, month, day] = solarDate.split('-');
 
     try {
-      const response = await axios.get(`${LUNAR_API_URL}/getLunCalInfo`, {
+      // 프록시 서버를 통한 호출 (API 키 보안)
+      const response = await axios.get(KASI_PROXY_URL, {
         params: {
-          ServiceKey: API_KEY,
-          solYear: year,
-          solMonth: month,
-          solDay: day,
+          type: 'solarToLunar',
+          year: year,
+          month: month,
+          day: day,
         },
         timeout: 10000,
       });
 
-      const xml = response.data;
+      // 프록시 서버는 JSON 형식으로 응답
+      const data = response.data;
 
-      // XML 응답 유효성 검사
-      if (!this.validateXmlResponse(xml, ['lunYear', 'lunMonth', 'lunDay'])) {
+      // 에러 응답 확인
+      if (data.error) {
         await ErrorLogService.logApiError(
-          'Invalid XML response format',
+          data.error,
           'solarToLunar',
-          { solarDate, responsePreview: xml.substring(0, 200) }
+          { solarDate, details: data.details }
         );
-        throw new Error('KASI_API_INVALID_RESPONSE');
+        throw new Error('KASI_API_PROXY_ERROR');
       }
 
-      const lunYear = this.extractXmlValue(xml, 'lunYear');
-      const lunMonth = this.extractXmlValue(xml, 'lunMonth');
-      const lunDay = this.extractXmlValue(xml, 'lunDay');
-      const lunLeapmonth = this.extractXmlValue(xml, 'lunLeapmonth');
-      const lunSecha = this.extractXmlValue(xml, 'lunSecha');
-      const lunWolgeon = this.extractXmlValue(xml, 'lunWolgeon');
-      const lunIljin = this.extractXmlValue(xml, 'lunIljin');
+      const lunYear = data.lunYear;
+      const lunMonth = data.lunMonth;
+      const lunDay = data.lunDay;
+      const lunLeapmonth = data.lunLeapmonth;
+      const lunSecha = data.lunSecha;
+      const lunWolgeon = data.lunWolgeon;
+      const lunIljin = data.lunIljin;
 
       if (!lunYear || !lunMonth || !lunDay) {
         await ErrorLogService.logApiError(
@@ -303,23 +310,24 @@ export class KasiService {
       return null;
     }
 
-    // 3. API 호출
+    // 3. API 호출 (프록시 서버 사용)
     try {
-      const response = await axios.get(`${LUNAR_API_URL}/getSolCalInfo`, {
+      const response = await axios.get(KASI_PROXY_URL, {
         params: {
-          ServiceKey: API_KEY,
+          type: 'lunarToSolar',
           lunYear: lunYear.toString(),
           lunMonth: lunMonth.toString().padStart(2, '0'),
           lunDay: lunDay.toString().padStart(2, '0'),
-          leapMonth: isLeapMonth ? 'leap' : 'normal',
+          leapMonth: isLeapMonth ? '1' : '0',
         },
         timeout: 10000,
       });
 
-      const xml = response.data;
-      const solYear = this.extractXmlValue(xml, 'solYear');
-      const solMonth = this.extractXmlValue(xml, 'solMonth');
-      const solDay = this.extractXmlValue(xml, 'solDay');
+      // 프록시 서버는 JSON 형식으로 응답
+      const data = response.data;
+      const solYear = data.solYear;
+      const solMonth = data.solMonth;
+      const solDay = data.solDay;
 
       if (!solYear) {
         return null;
