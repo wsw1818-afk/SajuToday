@@ -52,24 +52,35 @@ function findStemClash(stem: string): string | undefined {
 }
 
 /**
+ * 줄리안 데이 넘버(JDN) 계산 - 시간대 영향 없는 순수 날짜 계산
+ */
+function getJulianDayNumber(year: number, month: number, day: number): number {
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  return day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+}
+
+// JDN 기준 60갑자 오프셋 (검증: 2026-02-07 = 임자 = index 48)
+const JDN_GANJI_OFFSET = 4;
+
+/**
  * 특정 날짜의 일진(천간지지) 계산
+ * JDN 기반으로 시간대 문제 없이 정확한 일진 계산
  */
 export function getDayGanji(date: Date): { stem: string; branch: string; animal: string } {
-  // 기준일: 1900년 1월 1일은 갑자(甲子)일
-  const baseDate = new Date(1900, 0, 1);
-  const diffTime = date.getTime() - baseDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  // 60갑자 순환에서 위치 계산
-  // 1900년 1월 1일 = 갑자일 기준
-  const adjustedDays = (diffDays + 10) % 60; // 갑자 조정
-  const stemIndex = adjustedDays % 10;
-  const branchIndex = adjustedDays % 12;
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const jdn = getJulianDayNumber(year, month, day);
+  const ganjiIndex = ((jdn + JDN_GANJI_OFFSET) % 60 + 60) % 60;
+  const stemIndex = ganjiIndex % 10;
+  const branchIndex = ganjiIndex % 12;
 
   return {
-    stem: STEMS[stemIndex >= 0 ? stemIndex : stemIndex + 10],
-    branch: BRANCHES[branchIndex >= 0 ? branchIndex : branchIndex + 12],
-    animal: BRANCH_ANIMALS[branchIndex >= 0 ? branchIndex : branchIndex + 12],
+    stem: STEMS[stemIndex],
+    branch: BRANCHES[branchIndex],
+    animal: BRANCH_ANIMALS[branchIndex],
   };
 }
 

@@ -21,6 +21,7 @@ import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS, SHADOWS } from '../utils/th
 import { useApp } from '../contexts/AppContext';
 import { Gender, SavedPerson } from '../types';
 import { StorageService } from '../services/StorageService';
+import { KasiService } from '../services/KasiService';
 
 // 연도 데이터 생성 (1920~현재)
 const currentYear = new Date().getFullYear();
@@ -61,6 +62,14 @@ function formatTimeToString(time: Date | null): string | null {
   const hours = time.getHours();
   const minutes = time.getMinutes();
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+// Date 객체를 로컬 날짜 문자열(YYYY-MM-DD)로 변환 (UTC 밀림 방지)
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const d = date.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 export default function CompatibilityInputScreen() {
@@ -165,10 +174,24 @@ export default function CompatibilityInputScreen() {
     }
 
     try {
-      const birthDateStr = person.birthDate.toISOString().split('T')[0];
+      let birthDateStr = formatLocalDate(person.birthDate);
       const birthTimeStr = person.unknownTime || !person.birthTime
         ? null
         : formatTimeToString(person.birthTime);
+
+      // 음력인 경우 양력으로 변환 후 사주 계산
+      if (person.calendar === 'lunar') {
+        const y = person.birthDate.getFullYear();
+        const m = person.birthDate.getMonth() + 1;
+        const d = person.birthDate.getDate();
+        const solarDate = await KasiService.lunarToSolar(y, m, d, person.isLeapMonth);
+        if (solarDate) {
+          birthDateStr = solarDate;
+        } else {
+          Alert.alert('변환 실패', '음력→양력 변환에 실패했습니다. 네트워크 연결을 확인해주세요.');
+          return;
+        }
+      }
 
       const saju = calculateSaju(birthDateStr, birthTimeStr);
 
@@ -281,14 +304,33 @@ export default function CompatibilityInputScreen() {
     }
   };
 
-  const handleCheckCompatibility = () => {
+  const handleCheckCompatibility = async () => {
+    // 음력→양력 변환 함수
+    const resolveDate = async (person: PersonInfo): Promise<string | null> => {
+      const localDate = formatLocalDate(person.birthDate);
+      if (person.calendar === 'lunar') {
+        const y = person.birthDate.getFullYear();
+        const m = person.birthDate.getMonth() + 1;
+        const d = person.birthDate.getDate();
+        const solarDate = await KasiService.lunarToSolar(y, m, d, person.isLeapMonth);
+        if (!solarDate) {
+          Alert.alert('변환 실패', `${person.name || '사용자'}의 음력→양력 변환에 실패했습니다. 네트워크를 확인해주세요.`);
+          return null;
+        }
+        return solarDate;
+      }
+      return localDate;
+    };
+
     // 사주 계산
-    const person1DateStr = person1.birthDate.toISOString().split('T')[0];
+    const person1DateStr = await resolveDate(person1);
+    if (!person1DateStr) return;
     const person1TimeStr = person1.unknownTime || !person1.birthTime
       ? null
       : formatTime(person1.birthTime);
 
-    const person2DateStr = person2.birthDate.toISOString().split('T')[0];
+    const person2DateStr = await resolveDate(person2);
+    if (!person2DateStr) return;
     const person2TimeStr = person2.unknownTime || !person2.birthTime
       ? null
       : formatTime(person2.birthTime);

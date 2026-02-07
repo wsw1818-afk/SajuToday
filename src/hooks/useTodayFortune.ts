@@ -34,7 +34,8 @@ export interface TodayFortune {
 
 export function useTodayFortune(sajuResult: SajuResult | null, targetDate?: Date): TodayFortune | null {
   // Date 객체를 문자열로 변환하여 의존성 비교가 정확하게 되도록 함
-  const targetDateStr = targetDate ? targetDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  const formatLocal = (d: Date) => `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+  const targetDateStr = targetDate ? formatLocal(targetDate) : formatLocal(new Date());
 
   return useMemo(() => {
     if (!sajuResult) return null;
@@ -311,5 +312,5 @@ function calculateFortuneByTenGod(
 }
 
 function getHash(str: string): number {
-  return str.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+  return (str.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) >>> 0;
 }

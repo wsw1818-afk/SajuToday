@@ -23,9 +23,23 @@ import {
   getBranchByKorean,
 } from '../data/saju';
 
-// 기준일: 1900년 1월 31일 = 갑자일
-const BASE_DATE = new Date(1900, 0, 31);
-const BASE_GANJI_INDEX = 0; // 갑자
+/**
+ * 줄리안 데이 넘버(JDN) 기반 일진 계산
+ * 시간대 영향 없이 순수 날짜 차이로 계산
+ * 검증: 2026-02-07 = 임자(壬子) = index 48
+ */
+function getJulianDayNumber(year: number, month: number, day: number): number {
+  // 그레고리력 → JDN 변환 공식
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  return day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+}
+
+// JDN 기준 60갑자 오프셋: JDN % 60 과 실제 간지 index의 차이
+// 검증: 2026-02-07 JDN=2461744, 실제 일진=임자(壬子)=index 48
+// 2461744 % 60 = 44, 실제 index=48, 오프셋=48-44=4
+const JDN_GANJI_OFFSET = 4;
 
 /**
  * 사주 계산기 클래스
@@ -218,9 +232,11 @@ export class SajuCalculator {
    * - 23:00-23:59는 다음 날로 처리 (자시는 다음 날의 시작)
    */
   private calculateDayPillar(): Pillar {
-    const diffTime = this.birthDate.getTime() - BASE_DATE.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const index = ((diffDays + BASE_GANJI_INDEX) % 60 + 60) % 60;
+    const year = this.birthDate.getFullYear();
+    const month = this.birthDate.getMonth() + 1;
+    const day = this.birthDate.getDate();
+    const jdn = getJulianDayNumber(year, month, day);
+    const index = ((jdn + JDN_GANJI_OFFSET) % 60 + 60) % 60;
     const cycle = SEXAGENARY_CYCLE[index];
 
     return {

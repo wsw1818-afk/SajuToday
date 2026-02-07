@@ -31,6 +31,15 @@ import { COLORS, SHADOWS } from '../utils/theme';
 import { SavedPerson, Gender, CalendarType } from '../types';
 import { StorageService } from '../services/StorageService';
 import { calculateSaju } from '../services/SajuCalculator';
+import { KasiService } from '../services/KasiService';
+
+// Date 객체를 로컬 날짜 문자열(YYYY-MM-DD)로 변환 (UTC 밀림 방지)
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const d = date.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 // 관계 옵션
 const RELATION_OPTIONS = ['연인', '배우자', '친구', '가족', '직장동료', '기타'];
@@ -123,17 +132,29 @@ export default function SavedPeopleScreen() {
       return;
     }
 
-    const birthDateStr = formBirthDate.toISOString().split('T')[0];
+    let birthDateStr = formatLocalDate(formBirthDate);
     const birthTimeStr = formBirthTime
       ? `${formBirthTime.getHours().toString().padStart(2, '0')}:${formBirthTime.getMinutes().toString().padStart(2, '0')}`
       : null;
 
-    // 사주 계산
+    // 음력인 경우 양력으로 변환 후 사주 계산
+    if (formCalendar === 'lunar') {
+      const y = formBirthDate.getFullYear();
+      const m = formBirthDate.getMonth() + 1;
+      const d = formBirthDate.getDate();
+      const solarDate = await KasiService.lunarToSolar(y, m, d, false);
+      if (solarDate) {
+        birthDateStr = solarDate;
+      } else {
+        Alert.alert('변환 실패', '음력→양력 변환에 실패했습니다. 네트워크 연결을 확인해주세요.');
+        return;
+      }
+    }
+
+    // 사주 계산 (양력 날짜로)
     const saju = calculateSaju(
       birthDateStr,
-      birthTimeStr,
-      formCalendar,
-      false
+      birthTimeStr
     );
 
     const person: SavedPerson = {
