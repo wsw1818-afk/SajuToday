@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../contexts/AppContext';
 import { COLORS, FONT_SIZES } from '../utils/theme';
 import { SajuInterpreter } from '../services/SajuInterpreter';
+import { ELEMENT_DATABASE } from '../data/sajuInterpretations';
 
 // Android LayoutAnimation 활성화
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -196,6 +197,29 @@ export default function SajuScreen() {
   const dayMasterInterpretation = useMemo(() => {
     return SajuInterpreter.interpretDayMaster(safeDayMaster);
   }, [safeDayMaster]);
+
+  // 강약 풍부한 해석 (STRENGTH_DATABASE 활용)
+  const strengthInterpretation = useMemo(() => {
+    const score = (() => {
+      let s = 50;
+      const monthBranch = safePillars?.month?.branch || '';
+      const dayElement = safeDayMasterInfo.element;
+      if ((dayElement === 'wood' && ['인', '묘'].includes(monthBranch)) ||
+          (dayElement === 'fire' && ['사', '오'].includes(monthBranch)) ||
+          (dayElement === 'earth' && ['진', '술', '축', '미'].includes(monthBranch)) ||
+          (dayElement === 'metal' && ['신', '유'].includes(monthBranch)) ||
+          (dayElement === 'water' && ['해', '자'].includes(monthBranch))) {
+        s += 15;
+      }
+      const myElement = dayElement;
+      const myCount = safeElements[myElement as keyof typeof safeElements] || 0;
+      if (myCount >= 3) s += 15;
+      else if (myCount >= 2) s += 5;
+      else s -= 10;
+      return Math.max(20, Math.min(95, s));
+    })();
+    return SajuInterpreter.interpretStrength(score);
+  }, [safePillars, safeDayMasterInfo.element, safeElements]);
 
   const getElementColor = (element: string) => {
     const colors: Record<string, string> = {
@@ -570,25 +594,57 @@ export default function SajuScreen() {
           {dayMasterInterpretation ? (
             <View style={styles.storyContent}>
               <Text style={styles.storyParagraph}>
-                당신은 <Text style={styles.storyHighlight}>{dayMasterInterpretation.symbol}</Text>과 같은 사람입니다.
+                당신은 <Text style={styles.storyHighlight}>{dayMasterInterpretation.symbol}</Text>과 같은 사람이에요.
               </Text>
               <Text style={styles.storyParagraph}>
                 {dayMasterInterpretation.metaphor}
               </Text>
               <Text style={styles.storyParagraph}>
-                기본적으로 <Text style={styles.storyHighlight}>{dayMasterInterpretation.nature}</Text> 성격을 가지고 있어서,{' '}
-                {dayMasterInterpretation.personality[0]}. {dayMasterInterpretation.personality[1]}.
+                기본적으로 <Text style={styles.storyHighlight}>{dayMasterInterpretation.nature}</Text> 같은 성격을 가지고 있어요.
               </Text>
+              <Text style={[styles.storyParagraph, { marginTop: 8, fontWeight: '600', color: COLORS.primary }]}>
+                이런 성격이에요:
+              </Text>
+              {dayMasterInterpretation.personality.map((trait, idx) => (
+                <Text key={idx} style={[styles.storyParagraph, { paddingLeft: 8 }]}>
+                  • {trait}
+                </Text>
+              ))}
               <View style={styles.storyQuoteBox}>
                 <Text style={styles.storyQuote}>"{dayMasterInterpretation.quote}"</Text>
               </View>
             </View>
           ) : (
             <Text style={styles.storyParagraph}>
-              당신은 {safeDayMaster}일간으로, {safeDayMasterInfo.yinYang === 'yang' ? '적극적이고 외향적인' : '수용적이고 내향적인'} 성향을 가지고 있습니다.
+              당신은 {safeDayMaster}일간으로, {safeDayMasterInfo.yinYang === 'yang' ? '적극적이고 외향적인' : '수용적이고 내향적인'} 성향을 가지고 있어요.
             </Text>
           )}
         </View>
+
+        {/* 1-2. 나의 강점과 약점 */}
+        {dayMasterInterpretation && (
+          <View style={styles.storySection}>
+            <Text style={styles.storySectionTitle}>💪 나의 강점과 약점</Text>
+            <View style={styles.storyContent}>
+              <Text style={[styles.storyParagraph, { fontWeight: '600', color: '#4CAF50' }]}>
+                ✅ 이런 점이 정말 멋져요
+              </Text>
+              {dayMasterInterpretation.strengths.map((s, idx) => (
+                <Text key={idx} style={[styles.storyParagraph, { paddingLeft: 8 }]}>
+                  • {s}
+                </Text>
+              ))}
+              <Text style={[styles.storyParagraph, { fontWeight: '600', color: '#FF9800', marginTop: 12 }]}>
+                ⚠️ 이런 부분은 조심하면 좋아요
+              </Text>
+              {dayMasterInterpretation.weaknesses.map((w, idx) => (
+                <Text key={idx} style={[styles.storyParagraph, { paddingLeft: 8 }]}>
+                  • {w}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* 2. 나의 에너지 상태 */}
         <View style={styles.storySection}>
@@ -597,18 +653,48 @@ export default function SajuScreen() {
             <Text style={styles.storyParagraph}>
               사주에서 보면 당신의 기본 에너지는{' '}
               <Text style={styles.storyHighlight}>
-                {strengthAnalysis.score >= 70 ? '강한 편' : strengthAnalysis.score >= 45 ? '균형 잡힌 편' : '부드러운 편'}
-              </Text>입니다.
+                {strengthInterpretation.title} ({strengthAnalysis.score}점)
+              </Text>이에요.
+            </Text>
+            <Text style={styles.storyParagraph}>
+              {strengthInterpretation.subtitle}
             </Text>
             <Text style={styles.storyParagraph}>
               {strengthAnalysis.score >= 70 ? (
-                '에너지가 강하다는 것은 주변 환경에 쉽게 흔들리지 않고, 자신의 뜻대로 밀어붙이는 힘이 있다는 뜻입니다. 리더십이 있고 독립적이지만, 때로는 너무 고집스러워 보일 수 있어요.'
+                '에너지가 강하다는 것은 주변 환경에 쉽게 흔들리지 않고, 자신의 뜻대로 밀어붙이는 힘이 있다는 뜻이에요. 리더십이 있고 독립적이지만, 때로는 너무 고집스러워 보일 수 있어요.'
               ) : strengthAnalysis.score >= 45 ? (
-                '에너지가 균형 잡혀 있다는 것은 상황에 따라 유연하게 대처할 수 있다는 뜻입니다. 강하게 밀어붙일 때와 한 발 물러설 때를 알고, 조화롭게 살아갈 수 있어요.'
+                '에너지가 균형 잡혀 있다는 것은 상황에 따라 유연하게 대처할 수 있다는 뜻이에요. 강하게 밀어붙일 때와 한 발 물러설 때를 알고, 조화롭게 살아갈 수 있어요.'
               ) : (
-                '에너지가 부드럽다는 것은 주변의 도움과 협력을 잘 받아들인다는 뜻입니다. 혼자보다는 함께할 때 더 큰 힘을 발휘하며, 섬세하고 배려심이 깊어요.'
+                '에너지가 부드럽다는 것은 주변의 도움과 협력을 잘 받아들인다는 뜻이에요. 혼자보다는 함께할 때 더 큰 힘을 발휘하며, 섬세하고 배려심이 깊어요.'
               )}
             </Text>
+            <Text style={styles.storyParagraph}>
+              {strengthInterpretation.metaphor}에 비유할 수 있어요. {strengthInterpretation.season}
+            </Text>
+            {strengthAnalysis.reasons.length > 0 && (
+              <>
+                <Text style={[styles.storyParagraph, { fontWeight: '600', color: COLORS.primary, marginTop: 8 }]}>
+                  왜 그런지 살펴볼까요?
+                </Text>
+                {strengthAnalysis.reasons.map((reason, idx) => (
+                  <Text key={idx} style={[styles.storyParagraph, { paddingLeft: 8 }]}>
+                    • {reason}
+                  </Text>
+                ))}
+              </>
+            )}
+            <View style={styles.storyTipBox}>
+              <Text style={styles.storyTipTitle}>👍 이렇게 하면 좋아요</Text>
+              {strengthInterpretation.dos.map((d, idx) => (
+                <Text key={idx} style={styles.storyTipText}>• {d}</Text>
+              ))}
+            </View>
+            <View style={[styles.storyTipBox, { backgroundColor: '#FFF3E0' }]}>
+              <Text style={[styles.storyTipTitle, { color: '#E65100' }]}>🚫 이건 피해주세요</Text>
+              {strengthInterpretation.donts.map((d, idx) => (
+                <Text key={idx} style={styles.storyTipText}>• {d}</Text>
+              ))}
+            </View>
           </View>
         </View>
 
@@ -639,6 +725,14 @@ export default function SajuScreen() {
               <Text style={styles.storyTipText}>• 좋은 방향: {yongsinAnalysis.yongsin === 'wood' ? '동쪽' : yongsinAnalysis.yongsin === 'fire' ? '남쪽' : yongsinAnalysis.yongsin === 'earth' ? '중앙' : yongsinAnalysis.yongsin === 'metal' ? '서쪽' : '북쪽'}</Text>
               <Text style={styles.storyTipText}>• 행운의 숫자: {yongsinAnalysis.yongsin === 'wood' ? '3, 8' : yongsinAnalysis.yongsin === 'fire' ? '2, 7' : yongsinAnalysis.yongsin === 'earth' ? '5, 10' : yongsinAnalysis.yongsin === 'metal' ? '4, 9' : '1, 6'}</Text>
             </View>
+            {ELEMENT_DATABASE[yongsinAnalysis.yongsin as keyof typeof ELEMENT_DATABASE] && (
+              <View style={[styles.storyTipBox, { backgroundColor: '#E8F5E9' }]}>
+                <Text style={[styles.storyTipTitle, { color: '#2E7D32' }]}>🌱 이 기운을 채우는 구체적인 방법</Text>
+                {ELEMENT_DATABASE[yongsinAnalysis.yongsin as keyof typeof ELEMENT_DATABASE].boostMethods.map((method, idx) => (
+                  <Text key={idx} style={styles.storyTipText}>• {method}</Text>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -651,17 +745,25 @@ export default function SajuScreen() {
             </Text>
             <Text style={styles.storyParagraph}>
               {yongsinAnalysis.gishin === 'wood' ? (
-                '나무 기운이 과하면 너무 급하게 시작만 하고 마무리를 못하거나, 욕심이 앞서서 무리하게 됩니다. 차분히 현재에 집중하세요.'
+                '나무 기운이 과하면 너무 급하게 시작만 하고 마무리를 못하거나, 욕심이 앞서서 무리하게 돼요. 차분히 현재에 집중하세요.'
               ) : yongsinAnalysis.gishin === 'fire' ? (
-                '불 기운이 과하면 감정 기복이 심해지거나, 충동적인 결정을 하기 쉽습니다. 흥분될 때 한 템포 쉬어가세요.'
+                '불 기운이 과하면 감정 기복이 심해지거나, 충동적인 결정을 하기 쉬워요. 흥분될 때 한 템포 쉬어가세요.'
               ) : yongsinAnalysis.gishin === 'earth' ? (
-                '흙 기운이 과하면 너무 보수적이 되거나, 변화를 두려워하게 됩니다. 가끔은 새로운 시도도 필요해요.'
+                '흙 기운이 과하면 너무 보수적이 되거나, 변화를 두려워하게 돼요. 가끔은 새로운 시도도 필요해요.'
               ) : yongsinAnalysis.gishin === 'metal' ? (
-                '쇠 기운이 과하면 너무 완벽주의가 되거나, 융통성이 없어질 수 있습니다. 때론 80%로 만족하는 것도 지혜에요.'
+                '쇠 기운이 과하면 너무 완벽주의가 되거나, 융통성이 없어질 수 있어요. 때론 80%로 만족하는 것도 지혜예요.'
               ) : (
-                '물 기운이 과하면 생각만 많아지고 실행이 없거나, 감정에 빠지기 쉽습니다. 머리보다 몸을 먼저 움직여보세요.'
+                '물 기운이 과하면 생각만 많아지고 실행이 없거나, 감정에 빠지기 쉬워요. 머리보다 몸을 먼저 움직여보세요.'
               )}
             </Text>
+            {ELEMENT_DATABASE[yongsinAnalysis.gishin as keyof typeof ELEMENT_DATABASE] && (
+              <View style={[styles.storyTipBox, { backgroundColor: '#FFF3E0' }]}>
+                <Text style={[styles.storyTipTitle, { color: '#E65100' }]}>🔻 이 기운을 줄이는 방법</Text>
+                {ELEMENT_DATABASE[yongsinAnalysis.gishin as keyof typeof ELEMENT_DATABASE].reduceMethods.map((method, idx) => (
+                  <Text key={idx} style={styles.storyTipText}>• {method}</Text>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -683,6 +785,22 @@ export default function SajuScreen() {
                   <Text style={styles.storyAdviceTitle}>🏥 건강</Text>
                   <Text style={styles.storyAdviceText}>{dayMasterInterpretation.health}</Text>
                 </View>
+                {dayMasterInterpretation.growthPoints.length > 0 && (
+                  <View style={[styles.storyAdviceBox, { backgroundColor: '#F3E5F5' }]}>
+                    <Text style={[styles.storyAdviceTitle, { color: COLORS.primary }]}>🌱 성장을 위한 한마디</Text>
+                    {dayMasterInterpretation.growthPoints.map((point, idx) => (
+                      <Text key={idx} style={[styles.storyAdviceText, { marginBottom: 4 }]}>• {point}</Text>
+                    ))}
+                  </View>
+                )}
+                {strengthInterpretation.bestPartners.length > 0 && (
+                  <View style={[styles.storyAdviceBox, { backgroundColor: '#E3F2FD' }]}>
+                    <Text style={[styles.storyAdviceTitle, { color: '#1565C0' }]}>🤝 이런 사람과 잘 맞아요</Text>
+                    {strengthInterpretation.bestPartners.map((p, idx) => (
+                      <Text key={idx} style={[styles.storyAdviceText, { marginBottom: 4 }]}>• {p}</Text>
+                    ))}
+                  </View>
+                )}
               </>
             ) : (
               <Text style={styles.storyParagraph}>
@@ -697,19 +815,32 @@ export default function SajuScreen() {
           <Text style={styles.storySectionTitle}>📅 지금 나의 운은?</Text>
           <View style={styles.storyContent}>
             <Text style={styles.storyParagraph}>
-              현재 당신은 <Text style={styles.storyHighlight}>{daeunList[0].stem}{daeunList[0].branch} 대운</Text>의 영향을 받고 있습니다.
+              현재 당신은 <Text style={styles.storyHighlight}>{daeunList[0].stem}{daeunList[0].branch} 대운</Text>의 영향을 받고 있어요.
+              {daeunList[0].age ? ` (${daeunList[0].age}세)` : ''}
             </Text>
             <Text style={styles.storyParagraph}>
-              대운이란 10년 단위로 바뀌는 큰 운의 흐름입니다.
+              대운이란 10년 단위로 바뀌는 큰 운의 흐름이에요. 인생의 큰 방향을 좌우하는 중요한 에너지죠.
+            </Text>
+            <Text style={styles.storyParagraph}>
               {threeCombines.length > 0
-                ? ' 지금 특별한 에너지 조합이 작용하고 있어서, 큰 변화나 기회가 올 수 있는 시기입니다.'
-                : ' 지금은 비교적 안정적인 흐름이므로, 꾸준히 기본기를 다지는 것이 좋습니다.'}
+                ? '지금 특별한 에너지 조합이 작용하고 있어서, 큰 변화나 기회가 올 수 있는 시기예요. 새로운 도전을 두려워하지 마세요!'
+                : '지금은 비교적 안정적인 흐름이에요. 꾸준히 기본기를 다지면서 다음 기회를 준비하는 게 좋아요.'}
             </Text>
             {clashes.length > 0 && (
               <Text style={styles.storyParagraph}>
-                다만 사주에 변화와 갈등의 에너지도 함께 가지고 있습니다. 이것은 나쁜 것이 아니라,
-                삶에서 성장의 계기가 되는 원동력입니다.
+                다만 사주에 변화와 갈등의 에너지도 함께 가지고 있어요. 이것은 나쁜 것이 아니라,
+                삶에서 성장의 계기가 되는 원동력이에요. 갈등을 피하기보다 지혜롭게 다루는 것이 중요해요.
               </Text>
+            )}
+            {daeunList.length > 1 && (
+              <View style={styles.storyTipBox}>
+                <Text style={styles.storyTipTitle}>📊 앞으로의 대운 흐름</Text>
+                {daeunList.slice(0, 4).map((d, idx) => (
+                  <Text key={idx} style={styles.storyTipText}>
+                    • {d.age ? `${d.age}세` : `${idx + 1}번째`}: {d.stem}{d.branch} 대운{idx === 0 ? ' ← 현재' : ''}
+                  </Text>
+                ))}
+              </View>
             )}
           </View>
         </View>
