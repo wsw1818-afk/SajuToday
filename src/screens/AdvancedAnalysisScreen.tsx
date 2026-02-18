@@ -1,10 +1,10 @@
 /**
  * 고급 사주 분석 화면
- * - 지장간(地藏干) 분석
- * - 삼합(三合) 분석
- * - 육해(六害)/형벌(刑罰) 분석
- * - 일간 강약(强弱) 판단
- * - 용신(用神)/기신(忌神) 분석
+ * - 지장간 분석
+ * - 삼합 분석
+ * - 육해/형벌 분석
+ * - 일간 강약 판단
+ * - 도움 기운/주의 기운 분석
  */
 
 import React, { useMemo, useState } from 'react';
@@ -85,11 +85,11 @@ const StrengthGauge: React.FC<{ score: number; strength: string }> = ({ score, s
   };
 
   const strengthLabels: Record<string, string> = {
-    'extreme-strong': '극강 (極强)',
-    'strong': '신강 (身强)',
-    'neutral': '중화 (中和)',
-    'weak': '신약 (身弱)',
-    'extreme-weak': '극약 (極弱)',
+    'extreme-strong': '매우 강함',
+    'strong': '강한 편',
+    'neutral': '균형 잡힘',
+    'weak': '약한 편',
+    'extreme-weak': '매우 약함',
   };
 
   return (
@@ -168,7 +168,7 @@ const ElementBadge: React.FC<{ element: Element; type: 'yongsin' | 'gishin' }> =
         styles.elementBadgeText,
         { color: isYongsin ? ELEMENT_COLORS[element] : '#E53935' }
       ]}>
-        {info.korean}({info.hanja})
+        {info.korean}
       </Text>
     </View>
   );
@@ -259,7 +259,7 @@ export default function AdvancedAnalysisScreen() {
 
         {/* 2. 용신/기신 */}
         <Section
-          title="용신(用神) / 기신(忌神)"
+          title="도움이 되는 기운 / 주의할 기운"
           icon={<Target size={20} color={COLORS.primary} />}
         >
           <View style={styles.yongsinContainer}>
@@ -323,13 +323,13 @@ export default function AdvancedAnalysisScreen() {
 
         {/* 3. 지장간 */}
         <Section
-          title="지장간(地藏干) 분석"
+          title="지장간 분석"
           icon={<Layers size={20} color={COLORS.primary} />}
           defaultExpanded={false}
         >
           <Text style={styles.sectionDescription}>
-            지장간은 지지(地支) 속에 숨어있는 천간(天干)입니다.
-            겉으로 드러나지 않는 내면의 성향을 보여줍니다.
+            지장간은 지지 속에 숨어있는 기운이에요.
+            겉으로 드러나지 않는 내면의 성향을 보여줘요.
           </Text>
 
           <View style={styles.hiddenStemGrid}>
@@ -353,7 +353,7 @@ export default function AdvancedAnalysisScreen() {
 
         {/* 4. 삼합 */}
         <Section
-          title="삼합(三合) 분석"
+          title="삼합 분석"
           icon={<Triangle size={20} color={COLORS.primary} />}
           defaultExpanded={false}
         >
@@ -401,7 +401,7 @@ export default function AdvancedAnalysisScreen() {
 
         {/* 5. 육해/형벌 */}
         <Section
-          title="육해(六害) / 형벌(刑罰)"
+          title="육해 / 형벌"
           icon={<AlertCircle size={20} color="#E53935" />}
           defaultExpanded={false}
         >
@@ -412,7 +412,7 @@ export default function AdvancedAnalysisScreen() {
 
           {harmsPunishments.harms.length > 0 && (
             <View style={styles.harmContainer}>
-              <Text style={styles.harmTitle}>⚠️ 육해 (六害)</Text>
+              <Text style={styles.harmTitle}>⚠️ 육해</Text>
               {harmsPunishments.harms.map((harm, idx) => (
                 <View key={idx} style={styles.harmCard}>
                   <Text style={styles.harmName}>{harm.name}</Text>
@@ -424,7 +424,7 @@ export default function AdvancedAnalysisScreen() {
 
           {harmsPunishments.punishments.length > 0 && (
             <View style={styles.punishContainer}>
-              <Text style={styles.punishTitle}>⛔ 형벌 (刑罰)</Text>
+              <Text style={styles.punishTitle}>⛔ 형벌</Text>
               {harmsPunishments.punishments.map((punish, idx) => (
                 <View key={idx} style={styles.punishCard}>
                   <Text style={styles.punishName}>{punish.name}</Text>

@@ -165,31 +165,31 @@ export default function FortuneTypeScreen() {
           categories: [
             {
               emoji: '⭐',
-              title: `용신 (用神) - ${analysis.yongsin.element}(${analysis.yongsin.hanja})`,
+              title: `가장 도움되는 기운 - ${analysis.yongsin.element}`,
               content: analysis.yongsin.description,
               score: 90,
             },
             {
               emoji: '😊',
-              title: `희신 (喜神) - ${analysis.heesin.element}(${analysis.heesin.hanja})`,
+              title: `함께 도움주는 기운 - ${analysis.heesin.element}`,
               content: analysis.heesin.description,
               score: 85,
             },
             {
               emoji: '⚠️',
-              title: `기신 (忌神) - ${analysis.gisin.element}(${analysis.gisin.hanja})`,
+              title: `주의할 기운 - ${analysis.gisin.element}`,
               content: analysis.gisin.description,
               score: 40,
             },
             {
               emoji: '🚫',
-              title: `구신 (仇神) - ${analysis.gusin.element}(${analysis.gusin.hanja})`,
+              title: `조심할 기운 - ${analysis.gusin.element}`,
               content: analysis.gusin.description,
               score: 35,
             },
             {
               emoji: '➖',
-              title: `한신 (閑神) - ${analysis.hansin.element}(${analysis.hansin.hanja})`,
+              title: `영향 적은 기운 - ${analysis.hansin.element}`,
               content: analysis.hansin.description,
               score: 50,
             },

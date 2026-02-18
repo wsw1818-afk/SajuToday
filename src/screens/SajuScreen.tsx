@@ -210,11 +210,11 @@ export default function SajuScreen() {
 
   const getElementName = (element: string) => {
     const names: Record<string, string> = {
-      wood: '목',
-      fire: '화',
-      earth: '토',
-      metal: '금',
-      water: '수',
+      wood: '나무',
+      fire: '불',
+      earth: '흙',
+      metal: '금속',
+      water: '물',
     };
     return names[element] || element;
   };
@@ -224,10 +224,10 @@ export default function SajuScreen() {
   // 1. 일간 강약 분석
   const calculateStrength = () => {
     const seasonStrength: Record<string, number> = {
-      '인': 100, '묘': 100, '진': 80,  // 봄 - 목旺
-      '사': 100, '오': 100, '미': 80,  // 여름 - 화旺
-      '신': 100, '유': 100, '술': 80,  // 가을 - 금旺
-      '해': 100, '자': 100, '축': 80,  // 겨울 - 수旺
+      '인': 100, '묘': 100, '진': 80,  // 봄 - 나무 강
+      '사': 100, '오': 100, '미': 80,  // 여름 - 불 강
+      '신': 100, '유': 100, '술': 80,  // 가을 - 금속 강
+      '해': 100, '자': 100, '축': 80,  // 겨울 - 물 강
     };
     
     const monthBranch = safePillars.month.branch;
@@ -306,7 +306,7 @@ export default function SajuScreen() {
       yongsin,
       gishin,
       heeshin,
-      analysis: `일간 ${getElementName(dayElement)}의 기운을 보완하기 위해 ${getElementName(yongsin)}의 기운이 필요합니다. ${getElementName(gishin)}의 기운은 과하면 해롭습니다.`
+      analysis: `${getElementName(dayElement)} 기운의 균형을 맞추기 위해 ${getElementName(yongsin)} 기운이 필요해요. ${getElementName(gishin)} 기운이 너무 많으면 주의가 필요해요.`
     };
   };
 
@@ -351,7 +351,7 @@ export default function SajuScreen() {
 
   const threeCombines = checkThreeCombines();
 
-  // 5. 육충(六冲) 분석
+  // 5. 육충 분석
   const checkClashes = () => {
     const clashes = [
       { pair: ['자', '오'], name: '자오충' },
@@ -376,7 +376,7 @@ export default function SajuScreen() {
 
   const clashes = checkClashes();
 
-  // 6. 육해(六害) 분석
+  // 6. 육해 분석
   const checkHarms = () => {
     const harms = [
       { pair: ['자', '미'], name: '자미해' },
@@ -401,7 +401,7 @@ export default function SajuScreen() {
 
   const harms = checkHarms();
 
-  // 7. 형벌(刑罰) 분석
+  // 7. 형벌 분석
   const checkPunishments = () => {
     const punishments = [
       { branches: ['인', '사', '신'], name: '무례형' },
@@ -618,9 +618,7 @@ export default function SajuScreen() {
           <View style={styles.storyContent}>
             <Text style={styles.storyParagraph}>
               당신의 사주를 분석해보니,{' '}
-              <Text style={styles.storyHighlight}>{getElementName(yongsinAnalysis.yongsin)}(
-                {yongsinAnalysis.yongsin === 'wood' ? '나무' : yongsinAnalysis.yongsin === 'fire' ? '불' : yongsinAnalysis.yongsin === 'earth' ? '흙' : yongsinAnalysis.yongsin === 'metal' ? '쇠' : '물'}
-              )</Text>의 기운이 부족해요.
+              <Text style={styles.storyHighlight}>{getElementName(yongsinAnalysis.yongsin)}</Text> 기운이 부족해요.
             </Text>
             <Text style={styles.storyParagraph}>
               {yongsinAnalysis.yongsin === 'wood' ? (
@@ -649,9 +647,7 @@ export default function SajuScreen() {
           <Text style={styles.storySectionTitle}>⚠️ 주의하면 좋은 점</Text>
           <View style={styles.storyContent}>
             <Text style={styles.storyParagraph}>
-              반대로 <Text style={styles.storyHighlight}>{getElementName(yongsinAnalysis.gishin)}(
-                {yongsinAnalysis.gishin === 'wood' ? '나무' : yongsinAnalysis.gishin === 'fire' ? '불' : yongsinAnalysis.gishin === 'earth' ? '흙' : yongsinAnalysis.gishin === 'metal' ? '쇠' : '물'}
-              )</Text>의 기운은 이미 충분해서, 너무 많으면 오히려 균형이 깨질 수 있어요.
+              반대로 <Text style={styles.storyHighlight}>{getElementName(yongsinAnalysis.gishin)}</Text> 기운은 이미 충분해서, 너무 많으면 오히려 균형이 깨질 수 있어요.
             </Text>
             <Text style={styles.storyParagraph}>
               {yongsinAnalysis.gishin === 'wood' ? (
@@ -819,7 +815,7 @@ export default function SajuScreen() {
         </View>
       </View>
 
-      {/* 일간(日干) 해설 - 5레이어 해석 */}
+      {/* 일간 해설 - 5레이어 해석 */}
       <View
         style={styles.dayMasterCard}
         onLayout={(e) => handleSectionLayout(SECTION_IDS.DAYMASTER, e.nativeEvent.layout.y)}
@@ -913,16 +909,16 @@ export default function SajuScreen() {
           <View style={styles.dayMasterTip}>
             <Text style={styles.dayMasterTipTitle}>💡 일간별 기본 성격</Text>
             <Text style={styles.dayMasterTipText}>
-              {safeDayMaster === '갑' && '갑목(甲木): 큰 나무처럼 곧고 정직하며, 리더십이 있습니다.'}
-              {safeDayMaster === '을' && '을목(乙木): 덩굴처럼 유연하고 적응력이 뛰어납니다.'}
-              {safeDayMaster === '병' && '병화(丙火): 태양처럼 밝고 따뜻하며, 열정적입니다.'}
-              {safeDayMaster === '정' && '정화(丁火): 촛불처럼 은은하고 섬세합니다.'}
-              {safeDayMaster === '무' && '무토(戊土): 산처럼 듬직하고 안정적입니다.'}
-              {safeDayMaster === '기' && '기토(己土): 논밭처럼 포용력이 있습니다.'}
-              {safeDayMaster === '경' && '경금(庚金): 바위처럼 강하고 단호합니다.'}
-              {safeDayMaster === '신' && '신금(辛金): 보석처럼 섬세하고 예민합니다.'}
-              {safeDayMaster === '임' && '임수(壬水): 바다처럼 넓고 깊습니다.'}
-              {safeDayMaster === '계' && '계수(癸水): 비/이슬처럼 조용하고 깊습니다.'}
+              {safeDayMaster === '갑' && '갑목: 큰 나무처럼 곧고 정직하며, 리더십이 있어요.'}
+              {safeDayMaster === '을' && '을목: 덩굴처럼 유연하고 적응력이 뛰어나요.'}
+              {safeDayMaster === '병' && '병화: 태양처럼 밝고 따뜻하며, 열정적이에요.'}
+              {safeDayMaster === '정' && '정화: 촛불처럼 은은하고 섬세해요.'}
+              {safeDayMaster === '무' && '무토: 산처럼 듬직하고 안정적이에요.'}
+              {safeDayMaster === '기' && '기토: 논밭처럼 포용력이 있어요.'}
+              {safeDayMaster === '경' && '경금: 바위처럼 강하고 단호해요.'}
+              {safeDayMaster === '신' && '신금: 보석처럼 섬세하고 예민해요.'}
+              {safeDayMaster === '임' && '임수: 바다처럼 넓고 깊어요.'}
+              {safeDayMaster === '계' && '계수: 비/이슬처럼 조용하고 깊어요.'}
               {!['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'].includes(safeDayMaster) && '일간 정보를 불러올 수 없습니다.'}
             </Text>
           </View>
@@ -1007,23 +1003,23 @@ export default function SajuScreen() {
           <Text style={styles.elementExplainTitle}>🌿 다섯 기운의 의미</Text>
           <View style={styles.elementExplainGrid}>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#4CAF50' }]}>목 (나무)</Text>
+              <Text style={[styles.elementExplainName, { color: '#4CAF50' }]}>나무</Text>
               <Text style={styles.elementExplainText}>성장, 시작{'\n'}인자함, 창의력</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#F44336' }]}>화 (불)</Text>
+              <Text style={[styles.elementExplainName, { color: '#F44336' }]}>불</Text>
               <Text style={styles.elementExplainText}>열정, 표현{'\n'}예절, 명예</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#FFC107' }]}>토 (흙)</Text>
+              <Text style={[styles.elementExplainName, { color: '#FFC107' }]}>흙</Text>
               <Text style={styles.elementExplainText}>중심, 안정{'\n'}신뢰, 포용</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#9E9E9E' }]}>금 (쇠)</Text>
+              <Text style={[styles.elementExplainName, { color: '#9E9E9E' }]}>금속</Text>
               <Text style={styles.elementExplainText}>결단, 정의{'\n'}의리, 강인함</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#2196F3' }]}>수 (물)</Text>
+              <Text style={[styles.elementExplainName, { color: '#2196F3' }]}>물</Text>
               <Text style={styles.elementExplainText}>지혜, 유연{'\n'}적응력, 소통</Text>
             </View>
           </View>
@@ -1213,10 +1209,10 @@ export default function SajuScreen() {
               </View>
               <Text style={styles.combineText}>
                 {getElementName(tc.element)} 기운의 특별한 조합이 형성되어 매우 강하게 작용합니다.{'\n'}
-                {tc.element === 'wood' && '목(木)의 생명력, 성장, 확장의 기운이 강화됩니다.'}
-                {tc.element === 'fire' && '화(火)의 열정, 활력, 명예의 기운이 강화됩니다.'}
-                {tc.element === 'metal' && '금(金)의 결단력, 집중력, 재물의 기운이 강화됩니다.'}
-                {tc.element === 'water' && '수(水)의 지혜, 유동성, 커뮤니케이션 기운이 강화됩니다.'}
+                {tc.element === 'wood' && '나무 기운의 생명력, 성장, 확장의 기운이 강해져요.'}
+                {tc.element === 'fire' && '불 기운의 열정, 활력, 명예의 기운이 강해져요.'}
+                {tc.element === 'metal' && '금속 기운의 결단력, 집중력, 재물의 기운이 강해져요.'}
+                {tc.element === 'water' && '물 기운의 지혜, 유동성, 소통의 기운이 강해져요.'}
               </Text>
             </View>
           ))

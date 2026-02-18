@@ -78,11 +78,11 @@ function stemToElement(stem: string): Element {
  */
 function getElementKorean(element: Element): string {
   const mapping: Record<Element, string> = {
-    wood: '목(木)',
-    fire: '화(火)',
-    earth: '토(土)',
-    metal: '금(金)',
-    water: '수(水)',
+    wood: '나무 기운',
+    fire: '불 기운',
+    earth: '흙 기운',
+    metal: '금속 기운',
+    water: '물 기운',
   };
   return mapping[element];
 }
@@ -173,9 +173,9 @@ export class SajuInterpreter {
       // 용신/기신에 따른 추가 설명
       let description = baseData.description;
       if (yongsin === element) {
-        description += '\n\n✨ 이 오행은 당신의 용신(用神)입니다! 적극적으로 활용하면 운이 좋아집니다.';
+        description += '\n\n✨ 이 기운은 당신에게 가장 도움이 되는 기운이에요! 적극적으로 활용하면 운이 좋아져요.';
       } else if (gishin === element) {
-        description += '\n\n⚠️ 이 오행은 당신의 기신(忌神)입니다. 과다하면 주의가 필요합니다.';
+        description += '\n\n⚠️ 이 기운은 당신에게 주의가 필요한 기운이에요. 너무 많으면 균형이 깨질 수 있어요.';
       }
 
       return {
