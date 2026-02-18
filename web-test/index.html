@@ -3,887 +3,1600 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>사주투데이 - 오늘의 운세</title>
+  <title>사주투데이 - 웹 테스트베드</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #8B4B8B;
+      --primary-light: #F3E5F5;
+      --secondary: #D4AF37;
+      --bg: #FFFEF5;
+      --card: #FFFFFF;
+      --text: #3D3D3D;
+      --text-secondary: #7D7D7D;
+      --text-light: #AAAAAA;
+      --border: #E0E0E0;
+      --divider: #F0F0F0;
+      --wood: #4CAF50;
+      --fire: #F44336;
+      --earth: #FFC107;
+      --metal: #9E9E9E;
+      --water: #2196F3;
+      --success: #4CAF50;
+      --warning: #FF9800;
+      --error: #F44336;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #FDFBF7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+      background: #F0F0F0;
       min-height: 100vh;
     }
 
-    .container {
+    /* ===== Mobile Container ===== */
+    .phone-frame {
       max-width: 430px;
       margin: 0 auto;
-      background: #FDFBF7;
+      background: var(--bg);
       min-height: 100vh;
+      position: relative;
+      padding-bottom: 64px;
     }
 
-    /* Header */
-    .header {
+    /* ===== Bottom Tab Bar ===== */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 430px;
+      width: 100%;
+      background: var(--card);
+      border-top: 1px solid var(--border);
       display: flex;
-      justify-content: space-between;
+      z-index: 100;
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      padding: 16px 24px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1C1917;
-    }
-
-    .icon-btn {
-      padding: 8px;
+      padding: 8px 0 6px;
+      cursor: pointer;
+      border: none;
       background: none;
+      color: var(--text-light);
+      font-size: 10px;
+      transition: color 0.2s;
+    }
+    .tab-item.active { color: var(--primary); }
+    .tab-item .tab-icon { font-size: 22px; margin-bottom: 2px; }
+    .tab-item .tab-label { font-weight: 600; }
+
+    /* ===== Screen Container ===== */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ===== 공통 스타일 ===== */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    /* ===== 날짜 네비게이터 ===== */
+    .date-navigator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    .date-arrow-btn {
+      width: 36px; height: 36px;
+      border-radius: 18px;
+      background: var(--bg);
       border: none;
       cursor: pointer;
-      font-size: 20px;
-    }
-
-    /* Main Content */
-    .main-content {
-      text-align: center;
-      padding: 10px 24px 20px;
-    }
-
-    .main-title {
-      font-size: 24px;
-      font-weight: bold;
-      color: #1C1917;
-      margin-bottom: 4px;
-    }
-
-    .sub-title {
       font-size: 14px;
-      color: #78716C;
-      margin-bottom: 30px;
-    }
-
-    /* Saju Wheel */
-    .saju-wheel {
-      width: 280px;
-      height: 280px;
-      margin: 0 auto 20px;
-      position: relative;
-    }
-
-    .wheel-ring {
-      position: absolute;
-      border-radius: 50%;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
-    .outer-ring {
-      width: 280px;
-      height: 280px;
-      background: linear-gradient(135deg, #F5F5F4, #E7E5E4);
-      top: 0;
-      left: 0;
+    .date-selector {
+      display: flex;
+      align-items: center;
+      padding: 4px 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      gap: 4px;
+      cursor: pointer;
     }
+    .date-selector .label { font-size: 12px; color: var(--text-secondary); }
+    .date-selector .value { font-size: 14px; font-weight: 600; color: var(--text); }
 
-    .middle-ring {
-      width: 200px;
-      height: 200px;
-      background: #FDFBF7;
-      top: 40px;
-      left: 40px;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+    /* ===== 운세 탭 네비게이션 ===== */
+    .fortune-tabs {
+      display: flex;
+      background: var(--card);
+      padding: 8px;
+      border-bottom: 2px solid var(--border);
+      gap: 8px;
     }
-
-    .inner-ring {
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(135deg, #6B5B45, #8B7355);
-      top: 80px;
-      left: 80px;
-      box-shadow: 0 4px 12px rgba(107, 91, 69, 0.3);
+    .fortune-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      border-radius: 12px;
+      background: #F3F4F6;
+      border: 1px solid #E5E7EB;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6B7280;
+      gap: 6px;
+      transition: all 0.2s;
     }
-
-    .center-symbol {
-      font-size: 40px;
-      color: #FDFBF7;
+    .fortune-tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 2px 4px rgba(139,75,139,0.3);
     }
+    .fortune-tab .tab-emoji { font-size: 18px; }
 
-    /* Pillar positions */
-    .pillar {
-      position: absolute;
-      text-align: center;
-      font-size: 12px;
-    }
+    /* ===== 운세 탭 콘텐츠 ===== */
+    .fortune-content { padding: 16px; }
+    .fortune-panel { display: none; }
+    .fortune-panel.active { display: block; }
 
-    .pillar-top { top: 8px; left: 50%; transform: translateX(-50%); }
-    .pillar-right { right: 8px; top: 50%; transform: translateY(-50%); }
-    .pillar-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
-    .pillar-left { left: 8px; top: 50%; transform: translateY(-50%); }
-
-    .pillar-label {
-      font-size: 10px;
-      color: #78716C;
-    }
-
-    .pillar-value {
-      font-weight: bold;
-      color: #1C1917;
-    }
-
-    /* Horoscope Sheet */
-    .horoscope-sheet {
-      background: linear-gradient(to bottom, rgba(250, 250, 249, 0.8), #FFFFFF);
-      border-radius: 40px 40px 0 0;
-      padding: 30px 24px;
-      margin-top: -20px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    }
-
-    .sheet-handle {
-      width: 40px;
-      height: 4px;
-      background: #E5E5E5;
-      border-radius: 2px;
-      margin: 0 auto 20px;
-    }
-
-    /* Date Header */
-    .date-header {
+    /* 헤더 */
+    .fortune-header {
       text-align: center;
       margin-bottom: 20px;
     }
-
-    .lunar-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(231, 229, 228, 0.5);
-      padding: 4px 12px;
-      border-radius: 20px;
-      margin-bottom: 8px;
+    .fortune-date-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
     }
-
-    .lunar-text {
-      font-size: 12px;
-      color: #57534E;
-      font-weight: 500;
-    }
-
-    .dot-separator {
-      width: 4px;
-      height: 4px;
-      background: #A8A29E;
-      border-radius: 50%;
-    }
-
-    .date-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #1C1917;
-    }
-
-    /* Luck Cards Row */
-    .luck-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .luck-card {
-      flex: 1;
-      background: #FFFFFF;
-      border-radius: 16px;
-      padding: 16px 12px;
-      text-align: center;
-      border: 1px solid #F5F5F4;
-    }
-
-    .luck-icon {
-      font-size: 24px;
-      margin-bottom: 8px;
-    }
-
-    .luck-label {
-      font-size: 12px;
-      color: #78716C;
+    .fortune-ganji-text {
+      font-size: 14px;
+      color: var(--text-secondary);
       margin-bottom: 4px;
     }
-
-    .luck-value {
-      font-size: 18px;
-      font-weight: bold;
+    .fortune-tengod-text {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
     }
 
-    .luck-bar {
-      height: 4px;
-      background: #E5E5E5;
-      border-radius: 2px;
-      margin-top: 8px;
-      overflow: hidden;
-    }
-
-    .luck-bar-fill {
-      height: 100%;
-      border-radius: 2px;
-    }
-
-    /* Advice Card */
-    .advice-card {
-      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    /* 운세 점수 카드 */
+    .score-card {
       border-radius: 20px;
       padding: 24px;
-      margin-bottom: 20px;
-      position: relative;
-      overflow: hidden;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      color: white;
     }
+    .score-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; font-weight: 500; }
+    .score-value { font-size: 56px; font-weight: 800; margin-bottom: 4px; }
+    .score-grade { font-size: 18px; font-weight: 700; margin-bottom: 12px; opacity: 0.95; }
+    .score-desc { font-size: 12px; opacity: 0.9; line-height: 1.5; }
 
-    .advice-icon {
-      font-size: 28px;
+    /* 상세 카드 */
+    .detail-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+    .detail-card .title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
       margin-bottom: 12px;
     }
-
-    .advice-main {
-      font-size: 18px;
-      font-weight: bold;
-      color: #78350F;
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .advice-sub {
+    .detail-card .text {
       font-size: 14px;
-      color: #92400E;
-      line-height: 1.5;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .advice-box {
+      background: #E8F5E9;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .advice-box .icon { font-size: 20px; }
+    .advice-box .text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
     }
 
-    /* Detail Grid */
-    .detail-grid {
+    /* 실천 조언 */
+    .action-card {
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .action-card.good { background: #E8F5E9; }
+    .action-card.caution { background: #FFF3E0; }
+    .action-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .action-header .emoji { font-size: 20px; }
+    .action-header .title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .action-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .action-item .bullet { font-size: 16px; margin-top: 2px; }
+    .action-item.good .bullet { color: #22C55E; }
+    .action-item.caution .bullet { color: #F97316; }
+    .action-item .text { font-size: 14px; color: var(--text); line-height: 1.6; }
+
+    /* 미니 행운 */
+    .mini-lucky-box {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    .mini-lucky-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .mini-lucky-row {
+      display: flex;
+      justify-content: space-around;
+    }
+    .mini-lucky-item { text-align: center; }
+    .mini-lucky-item .label { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+    .mini-lucky-item .value { font-size: 14px; font-weight: 700; color: var(--primary); }
+
+    /* 카테고리 그리드 */
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .category-card {
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .category-card .icon { font-size: 28px; margin-bottom: 10px; }
+    .category-card .title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .category-card .score-box {
+      background: rgba(0,0,0,0.05);
+      border-radius: 8px;
+      padding: 4px 8px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .category-card .score { font-size: 12px; font-weight: 700; color: var(--text); }
+    .category-card .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* 활동/주의사항 카드 */
+    .activity-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .activity-item .icon { font-size: 20px; }
+    .activity-item .text { font-size: 14px; color: var(--text); }
+    .caution-card {
+      background: #FFF3E0;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .caution-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .caution-item .icon { font-size: 16px; color: #FF9800; }
+    .caution-item .text { font-size: 14px; color: var(--text); }
+
+    /* 행운 그리드 */
+    .lucky-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+    }
+    .lucky-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .lucky-card .emoji { font-size: 32px; margin-bottom: 8px; }
+    .lucky-card .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .lucky-card .value { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .lucky-card .hint { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* 팁 카드 */
+    .tip-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .tip-item {
+      display: flex;
+      gap: 12px;
       margin-bottom: 16px;
     }
+    .tip-item:last-child { margin-bottom: 0; }
+    .tip-item .emoji { font-size: 28px; }
+    .tip-item .content { flex: 1; }
+    .tip-item .title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .tip-item .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
 
-    .detail-item {
-      background: #FFFFFF;
-      border-radius: 12px;
-      padding: 16px;
-      border: 1px solid #F5F5F4;
+    /* ===== 사주 화면 ===== */
+
+    /* 사주 상단 네비게이션 */
+    .saju-nav {
+      display: flex;
+      overflow-x: auto;
+      background: var(--card);
+      padding: 8px;
+      border-bottom: 2px solid var(--border);
+      gap: 6px;
+      -webkit-overflow-scrolling: touch;
     }
-
-    .detail-label {
-      font-size: 12px;
-      color: #78716C;
-      margin-bottom: 6px;
-    }
-
-    .detail-value-row {
+    .saju-nav::-webkit-scrollbar { display: none; }
+    .saju-nav-item {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: #F3F4F6;
+      border: 1px solid #E5E7EB;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6B7280;
+      transition: all 0.2s;
+      white-space: nowrap;
     }
-
-    .detail-value {
-      font-size: 18px;
-      font-weight: bold;
-      color: #1C1917;
+    .saju-nav-item.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 2px 4px rgba(139,75,139,0.3);
     }
+    .saju-nav-item .emoji { font-size: 16px; }
 
-    .color-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
+    .saju-content { padding: 16px; }
 
-    .detail-icon {
-      font-size: 14px;
-      color: #A8A29E;
-    }
-
-    /* Compat Card */
-    .compat-card {
-      background: #292524;
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    /* 사주 헤더 */
+    .saju-header {
+      text-align: center;
       margin-bottom: 20px;
     }
+    .saju-header .title { font-size: 24px; font-weight: 700; color: var(--text); }
+    .saju-header .subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
 
-    .compat-item {
-      flex: 1;
+    /* 나의 사주 이야기 카드 */
+    .story-card {
+      background: linear-gradient(135deg, #FEFCE8, #FEF3C7);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #FDE68A;
     }
-
-    .compat-label {
-      font-size: 12px;
-      color: #A8A29E;
+    .story-card .main-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
       margin-bottom: 4px;
     }
-
-    .compat-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .story-card .main-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
     }
-
-    .compat-emoji {
-      font-size: 20px;
+    .story-section {
+      margin-bottom: 20px;
+      padding-top: 16px;
+      border-top: 1px dashed #E5D5A0;
     }
-
-    .compat-value {
+    .story-section:first-of-type { border-top: none; padding-top: 0; }
+    .story-section-title {
       font-size: 16px;
-      font-weight: bold;
-      color: #FFFFFF;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
     }
-
-    .compat-divider {
-      width: 1px;
-      height: 40px;
-      background: rgba(255,255,255,0.2);
-      margin: 0 16px;
+    .story-paragraph {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 8px;
     }
-
-    .compat-right {
-      text-align: right;
+    .story-highlight {
+      color: var(--primary);
+      font-weight: 700;
     }
-
-    /* Action Button */
-    .action-button {
-      width: 100%;
-      background: #6B5B45;
-      color: #FDFBF7;
-      border: none;
-      padding: 18px;
-      border-radius: 16px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(107, 91, 69, 0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
+    .story-quote-box {
+      background: rgba(139,75,139,0.08);
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
     }
-
-    .action-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(107, 91, 69, 0.4);
-    }
-
-    .action-button:active {
-      transform: translateY(0);
-    }
-
-    /* Fortune Detail Modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: flex-end;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: #F5F5F4;
-      width: 100%;
-      max-width: 430px;
-      max-height: 90vh;
-      border-radius: 24px 24px 0 0;
-      overflow: hidden;
-    }
-
-    .modal-header {
-      background: linear-gradient(135deg, #6B5B45, #8B7355);
-      padding: 20px 24px 30px;
-      color: white;
-    }
-
-    .modal-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .modal-back {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    .modal-title {
-      font-size: 18px;
+    .story-quote {
+      font-size: 14px;
+      color: var(--primary);
+      font-style: italic;
       font-weight: 600;
     }
-
-    .modal-date {
-      font-size: 14px;
-      opacity: 0.7;
-      margin-bottom: 4px;
+    .story-tip-box {
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
     }
-
-    .modal-user {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-
-    .modal-summary {
-      font-size: 16px;
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
-    .keywords {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .keyword {
-      background: rgba(255,255,255,0.2);
-      padding: 6px 12px;
-      border-radius: 16px;
+    .story-tip-title {
       font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .story-tip-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .story-advice-box {
+      background: rgba(255,255,255,0.6);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .story-advice-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .story-advice-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .story-final-box {
+      background: rgba(139,75,139,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .story-final-emoji { font-size: 32px; margin-bottom: 10px; }
+    .story-final-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
       font-weight: 500;
     }
 
-    .modal-body {
-      padding: 24px 16px;
-      overflow-y: auto;
-      max-height: calc(90vh - 200px);
-    }
-
-    .fortune-card {
-      background: white;
+    /* 접이식 섹션 */
+    .collapsible {
+      background: var(--card);
       border-radius: 16px;
-      padding: 20px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
     }
-
-    .fortune-card-header {
+    .collapsible-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .collapsible-header .title-row {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
+      gap: 8px;
     }
-
-    .fortune-icon-container {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
-
-    .fortune-card-title {
-      flex: 1;
-      margin-left: 12px;
-    }
-
-    .fortune-category {
+    .collapsible-header .emoji { font-size: 20px; }
+    .collapsible-header .title { font-size: 16px; font-weight: 700; color: var(--text); }
+    .collapsible-header .arrow {
       font-size: 14px;
-      color: #78716C;
-      margin-bottom: 2px;
+      color: var(--text-secondary);
+      transition: transform 0.2s;
     }
-
-    .fortune-score {
-      font-size: 20px;
-      font-weight: bold;
+    .collapsible.expanded .collapsible-header .arrow { transform: rotate(180deg); }
+    .collapsible-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--divider);
     }
+    .collapsible.expanded .collapsible-body { display: block; }
 
-    .fortune-progress {
-      width: 50px;
-      height: 50px;
-      position: relative;
-    }
-
-    .fortune-progress svg {
-      transform: rotate(-90deg);
-    }
-
-    .fortune-progress-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .fortune-description {
-      font-size: 15px;
-      color: #44403C;
-      line-height: 1.5;
-    }
-
-    .dos-donts {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
+    /* 사주표 */
+    .pillar-table {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 16px;
     }
-
-    .do-card, .dont-card {
-      flex: 1;
-      padding: 16px;
-      border-radius: 12px;
+    .pillar-table th, .pillar-table td {
+      text-align: center;
+      padding: 12px 8px;
+      border: 1px solid var(--border);
     }
-
-    .do-card {
-      background: #ECFDF5;
-      border: 1px solid #A7F3D0;
+    .pillar-table th {
+      background: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
     }
-
-    .dont-card {
-      background: #FEF2F2;
-      border: 1px solid #FECACA;
+    .pillar-table .stem {
+      font-size: 24px;
+      font-weight: 700;
     }
-
-    .dos-donts-label {
+    .pillar-table .branch {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .pillar-meaning {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pillar-meaning-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+    .pillar-meaning-item .label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .pillar-meaning-item .desc {
       font-size: 12px;
-      color: #78716C;
+      color: var(--text-secondary);
+    }
+
+    /* 에너지 게이지 */
+    .gauge-container { margin-bottom: 16px; }
+    .gauge-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .gauge-label { font-size: 14px; color: var(--text); }
+    .gauge-value { font-size: 14px; font-weight: 700; }
+    .gauge-bar {
+      height: 12px;
+      background: #E5E5E5;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s;
+    }
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    /* 오행 바 */
+    .element-bar-container {
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .element-bar-container.yongsin { background: #E8F5E920; border: 1px dashed var(--success); }
+    .element-bar-header {
+      display: flex;
+      justify-content: space-between;
       margin-bottom: 6px;
     }
-
-    .dos-donts-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1C1917;
+    .element-bar-name-row { display: flex; align-items: center; gap: 6px; }
+    .element-bar-name { font-size: 14px; font-weight: 700; }
+    .yongsin-star { font-size: 11px; color: var(--success); font-weight: 700; }
+    .gishin-mark { font-size: 12px; }
+    .element-bar-count { font-size: 12px; color: var(--text-secondary); }
+    .element-bar-bg {
+      height: 8px;
+      background: #E5E5E5;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .element-bar-fill {
+      height: 100%;
+      border-radius: 4px;
     }
 
+    /* 오행 설명 그리드 */
+    .element-explain-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .element-explain-item {
+      text-align: center;
+      padding: 8px 4px;
+      background: var(--bg);
+      border-radius: 8px;
+    }
+    .element-explain-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .element-explain-text { font-size: 10px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* 용신/기신 뱃지 */
+    .yongsin-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .yongsin-badge {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .yongsin-badge .label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+    .yongsin-badge .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .yongsin-badge .name { font-size: 15px; font-weight: 700; color: var(--text); }
+
+    /* 추천/주의 박스 */
+    .recommend-box {
+      background: #E8F5E9;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .recommend-box .box-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .recommend-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .recommend-row .label { color: var(--text-secondary); white-space: nowrap; }
+    .recommend-row .value { color: var(--text); font-weight: 500; }
+
+    .caution-box-styled {
+      background: #FFF3E0;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .caution-box-styled .box-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+
+    /* 십신 관계 */
+    .tengod-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tengod-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 10px;
+    }
+    .tengod-item .pillar-name { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+    .tengod-item .tengod-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+    .tengod-item .tengod-meaning { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* 대운 타임라인 */
+    .daeun-timeline {
+      display: flex;
+      overflow-x: auto;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .daeun-timeline::-webkit-scrollbar { display: none; }
+    .daeun-item {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      min-width: 80px;
+    }
+    .daeun-item.current {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(139,75,139,0.2);
+    }
+    .daeun-item.past { opacity: 0.5; }
+    .daeun-item .age { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+    .daeun-item .ganji { font-size: 18px; font-weight: 700; color: var(--text); }
+    .daeun-item.current .ganji { color: var(--primary); }
+    .daeun-item .label-tag {
+      font-size: 10px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    /* 분석 텍스트 */
+    .analysis-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .reasons-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .reason-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    /* 면책 */
     .disclaimer {
       font-size: 12px;
-      color: #A8A29E;
+      color: var(--text-light);
       text-align: center;
-      margin-top: 8px;
+      margin-top: 16px;
+      padding-bottom: 16px;
+    }
+
+    /* 정보 카드 (인포 타이틀 포함) */
+    .info-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .info-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .info-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <button class="icon-btn">☰</button>
-      <span class="header-title">사주팔자</span>
-      <button class="icon-btn">🔔</button>
-    </div>
+  <div class="phone-frame">
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <h1 class="main-title">나의 사주팔자</h1>
-      <p class="sub-title">오늘의 운세를 확인해보세요</p>
-
-      <!-- Saju Wheel -->
-      <div class="saju-wheel">
-        <div class="wheel-ring outer-ring">
-          <div class="pillar pillar-top">
-            <div class="pillar-label">년주</div>
-            <div class="pillar-value">갑자</div>
-          </div>
-          <div class="pillar pillar-right">
-            <div class="pillar-label">월주</div>
-            <div class="pillar-value">병인</div>
-          </div>
-          <div class="pillar pillar-bottom">
-            <div class="pillar-label">일주</div>
-            <div class="pillar-value">무진</div>
-          </div>
-          <div class="pillar pillar-left">
-            <div class="pillar-label">시주</div>
-            <div class="pillar-value">경오</div>
-          </div>
+    <!-- ===== 오늘의 운세 화면 ===== -->
+    <div class="screen active" id="screen-fortune">
+      <!-- 날짜 네비게이터 -->
+      <div class="date-navigator">
+        <button class="date-arrow-btn" onclick="changeDate(-1)">◀</button>
+        <div class="date-selector">
+          <span class="label" id="date-label">📅 오늘</span>
+          <span class="value" id="date-value"></span>
         </div>
-        <div class="wheel-ring middle-ring"></div>
-        <div class="wheel-ring inner-ring">
-          <span class="center-symbol">☯</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Horoscope Sheet -->
-    <div class="horoscope-sheet">
-      <div class="sheet-handle"></div>
-
-      <!-- Date Header -->
-      <div class="date-header">
-        <div class="lunar-badge">
-          <span class="lunar-text" id="lunar-date">음력 11월 29일</span>
-          <div class="dot-separator"></div>
-          <span class="lunar-text" id="solar-term">동지</span>
-        </div>
-        <div class="date-title" id="today-date">12월 29일 (일)</div>
+        <button class="date-arrow-btn" onclick="changeDate(1)">▶</button>
       </div>
 
-      <!-- Luck Cards -->
-      <div class="luck-row">
-        <div class="luck-card">
-          <div class="luck-icon">✨</div>
-          <div class="luck-label">종합운</div>
-          <div class="luck-value" style="color: #F59E0B;" id="overall-score">95점</div>
-          <div class="luck-bar">
-            <div class="luck-bar-fill" style="width: 95%; background: #F59E0B;"></div>
-          </div>
+      <!-- 운세 탭 -->
+      <div class="fortune-tabs">
+        <div class="fortune-tab active" onclick="switchFortuneTab('summary', this)">
+          <span class="tab-emoji">📋</span> 요약
         </div>
-        <div class="luck-card">
-          <div class="luck-icon">❤️</div>
-          <div class="luck-label">애정운</div>
-          <div class="luck-value" style="color: #F43F5E;" id="love-score">80점</div>
-          <div class="luck-bar">
-            <div class="luck-bar-fill" style="width: 80%; background: #F43F5E;"></div>
-          </div>
+        <div class="fortune-tab" onclick="switchFortuneTab('detail', this)">
+          <span class="tab-emoji">📊</span> 상세
         </div>
-        <div class="luck-card">
-          <div class="luck-icon">📈</div>
-          <div class="luck-label">금전운</div>
-          <div class="luck-value" style="color: #10B981;" id="money-score">매우 좋음</div>
-          <div class="luck-bar">
-            <div class="luck-bar-fill" style="width: 90%; background: #10B981;"></div>
-          </div>
+        <div class="fortune-tab" onclick="switchFortuneTab('lucky', this)">
+          <span class="tab-emoji">🍀</span> 행운
         </div>
       </div>
 
-      <!-- Advice Card -->
-      <div class="advice-card">
-        <div class="advice-icon">🌟</div>
-        <div class="advice-main" id="advice-main">흐르는 물처럼 유연하게 대처해보세요.</div>
-        <div class="advice-sub" id="advice-sub">서두르지 말고 차분하게 마음을 가라앉히면 의외의 곳에서 해결책을 찾을 수 있어요.</div>
-      </div>
+      <div class="fortune-content">
+        <!-- ===== 요약 탭 ===== -->
+        <div class="fortune-panel active" id="panel-summary">
+          <!-- 헤더 -->
+          <div class="fortune-header">
+            <div class="fortune-date-text" id="fortune-date-full"></div>
+            <div class="fortune-ganji-text">나의 일주: 무진 | 오늘 일진: 경오</div>
+            <div class="fortune-tengod-text">오늘의 십신: 편재</div>
+          </div>
 
-      <!-- Detail Grid -->
-      <div class="detail-grid">
-        <div class="detail-item">
-          <div class="detail-label">행운의 색</div>
-          <div class="detail-value-row">
-            <span class="detail-value" id="lucky-color">남색</span>
-            <div class="color-dot" id="lucky-color-dot" style="background: #312E81;"></div>
+          <!-- 종합 운세 점수 -->
+          <div class="score-card" style="background: #4CAF50;">
+            <div class="score-label">오늘의 운세</div>
+            <div class="score-value">82점</div>
+            <div class="score-grade">길</div>
+            <div class="score-desc">오늘은 새로운 기회가 찾아오는 날이에요. 적극적으로 움직여보세요.</div>
           </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">행운의 숫자</div>
-          <div class="detail-value-row">
-            <span class="detail-value" id="lucky-number">3, 17</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">행운의 방향</div>
-          <div class="detail-value-row">
-            <span class="detail-value" id="lucky-direction">동쪽</span>
-            <span class="detail-icon">🧭</span>
-          </div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">행운의 시간</div>
-          <div class="detail-value-row">
-            <span class="detail-value" id="lucky-time">오후 3시</span>
-            <span class="detail-icon">🕐</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Compat Card -->
-      <div class="compat-card">
-        <div class="compat-item">
-          <div class="compat-label">오늘의 귀인</div>
-          <div class="compat-row">
-            <span class="compat-emoji" id="lucky-zodiac-emoji">🐒</span>
-            <span class="compat-value" id="lucky-zodiac">원숭이띠</span>
-          </div>
-        </div>
-        <div class="compat-divider"></div>
-        <div class="compat-item compat-right">
-          <div class="compat-label">주의할 띠</div>
-          <div class="compat-row" style="justify-content: flex-end;">
-            <span class="compat-value" id="caution-zodiac">호랑이띠</span>
-            <span class="compat-emoji" id="caution-zodiac-emoji">🐯</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Button -->
-      <button class="action-button" onclick="showFortuneDetail()">전체 운세 보기</button>
-    </div>
-  </div>
-
-  <!-- Fortune Detail Modal -->
-  <div class="modal-overlay" id="fortune-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-header-row">
-          <button class="modal-back" onclick="hideFortuneDetail()">←</button>
-          <span class="modal-title">오늘의 운세</span>
-          <div style="width: 32px;"></div>
-        </div>
-        <div class="modal-date" id="modal-date">2024년 12월 29일</div>
-        <div class="modal-user">사용자님의 운세</div>
-        <div class="modal-summary" id="modal-summary">흐르는 물처럼 유연하게 대처해보세요.</div>
-        <div class="keywords">
-          <span class="keyword">#평온</span>
-          <span class="keyword">#유연</span>
-          <span class="keyword">#기회</span>
-        </div>
-      </div>
-      <div class="modal-body">
-        <!-- 종합운 -->
-        <div class="fortune-card">
-          <div class="fortune-card-header">
-            <div class="fortune-icon-container" style="background: rgba(245, 158, 11, 0.2);">✨</div>
-            <div class="fortune-card-title">
-              <div class="fortune-category">종합운</div>
-              <div class="fortune-score" style="color: #F59E0B;">95점</div>
-            </div>
-            <div class="fortune-progress">
-              <svg width="50" height="50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#F59E0B" stroke-width="4"
-                  stroke-dasharray="125.6" stroke-dashoffset="6.28" stroke-linecap="round"/>
-              </svg>
-              <span class="fortune-progress-text" style="color: #F59E0B;">95</span>
+          <!-- 종합 운세 요약 -->
+          <div class="section">
+            <div class="section-title">📋 오늘의 운세 요약</div>
+            <div class="detail-card">
+              <div class="title">오늘은 새로운 기회가 찾아오는 날이에요</div>
+              <div class="text">주변 사람들과의 소통이 좋은 결과를 가져올 수 있어요. 평소 미루던 일을 시작하기에도 좋은 타이밍이에요. 다만 너무 급하게 결정하기보다는 한 번 더 생각해보는 여유가 필요해요.</div>
+              <div class="advice-box">
+                <span class="icon">💡</span>
+                <span class="text">차분하게 계획을 세우고 한 걸음씩 나아가면 좋은 결과가 있을 거예요.</span>
+              </div>
             </div>
           </div>
-          <div class="fortune-description">서두르지 말고 차분하게 마음을 가라앉히면 의외의 곳에서 해결책을 찾을 수 있어요.</div>
+
+          <!-- 실천 조언 -->
+          <div class="section">
+            <div class="section-title">✨ 오늘 이렇게 하세요</div>
+
+            <div class="action-card good">
+              <div class="action-header">
+                <span class="emoji">✅</span>
+                <span class="title">이렇게 하세요</span>
+              </div>
+              <div class="action-item good"><span class="bullet">•</span><span class="text">새로운 사람과의 만남에 적극적으로 임해보세요</span></div>
+              <div class="action-item good"><span class="bullet">•</span><span class="text">미뤄둔 업무나 과제를 정리해보세요</span></div>
+              <div class="action-item good"><span class="bullet">•</span><span class="text">가벼운 운동으로 에너지를 충전하세요</span></div>
+            </div>
+
+            <div class="action-card caution">
+              <div class="action-header">
+                <span class="emoji">⚠️</span>
+                <span class="title">피하세요</span>
+              </div>
+              <div class="action-item caution"><span class="bullet">•</span><span class="text">큰 금액의 투자나 계약은 신중하게 판단하세요</span></div>
+              <div class="action-item caution"><span class="bullet">•</span><span class="text">감정적인 대화는 피하고 이성적으로 접근하세요</span></div>
+            </div>
+
+            <!-- 미니 행운 포인트 -->
+            <div class="mini-lucky-box">
+              <div class="mini-lucky-title">🍀 오늘의 행운 포인트</div>
+              <div class="mini-lucky-row">
+                <div class="mini-lucky-item">
+                  <div class="label">색</div>
+                  <div class="value">남색</div>
+                </div>
+                <div class="mini-lucky-item">
+                  <div class="label">숫자</div>
+                  <div class="value">3, 7</div>
+                </div>
+                <div class="mini-lucky-item">
+                  <div class="label">방향</div>
+                  <div class="value">동쪽</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- 애정운 -->
-        <div class="fortune-card">
-          <div class="fortune-card-header">
-            <div class="fortune-icon-container" style="background: rgba(244, 63, 94, 0.2);">❤️</div>
-            <div class="fortune-card-title">
-              <div class="fortune-category">애정운</div>
-              <div class="fortune-score" style="color: #F43F5E;">80점</div>
-            </div>
-            <div class="fortune-progress">
-              <svg width="50" height="50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#F43F5E" stroke-width="4"
-                  stroke-dasharray="125.6" stroke-dashoffset="25.12" stroke-linecap="round"/>
-              </svg>
-              <span class="fortune-progress-text" style="color: #F43F5E;">80</span>
+        <!-- ===== 상세 탭 ===== -->
+        <div class="fortune-panel" id="panel-detail">
+          <div class="section">
+            <div class="section-title">📊 카테고리별 운세</div>
+            <div class="category-grid">
+              <div class="category-card" style="background: #FFF3E0;">
+                <div class="icon">💰</div>
+                <div class="title">재물운</div>
+                <div class="score-box"><span class="score">75점</span></div>
+                <div class="desc">안정적인 재물 흐름이에요. 작은 수입이 기분 좋게 찾아올 수 있어요.</div>
+              </div>
+              <div class="category-card" style="background: #FCE4EC;">
+                <div class="icon">💕</div>
+                <div class="title">연애운</div>
+                <div class="score-box"><span class="score">80점</span></div>
+                <div class="desc">진심 어린 대화가 관계를 깊게 해줘요. 상대방의 말에 귀 기울여 보세요.</div>
+              </div>
+              <div class="category-card" style="background: #E3F2FD;">
+                <div class="icon">💼</div>
+                <div class="title">직장운</div>
+                <div class="score-box"><span class="score">85점</span></div>
+                <div class="desc">동료와의 협업이 빛을 발하는 날이에요. 새로운 프로젝트에 도전해보세요.</div>
+              </div>
+              <div class="category-card" style="background: #E8F5E9;">
+                <div class="icon">🏃</div>
+                <div class="title">건강운</div>
+                <div class="score-box"><span class="score">70점</span></div>
+                <div class="desc">가벼운 산책이 기분 전환에 도움이 돼요. 충분한 수면을 취해보세요.</div>
+              </div>
             </div>
           </div>
-          <div class="fortune-description">진심 어린 대화가 관계를 깊게 해줘요. 상대방의 말에 귀 기울여 보세요.</div>
+
+          <div class="section">
+            <div class="section-title">✅ 오늘의 추천 활동</div>
+            <div class="activity-card">
+              <div class="activity-item"><span class="icon">👍</span><span class="text">새로운 사람과의 만남에 적극적으로 임해보세요</span></div>
+              <div class="activity-item"><span class="icon">👍</span><span class="text">미뤄둔 업무나 과제를 정리해보세요</span></div>
+              <div class="activity-item"><span class="icon">👍</span><span class="text">가벼운 운동으로 에너지를 충전하세요</span></div>
+              <div class="activity-item"><span class="icon">👍</span><span class="text">감사 일기를 써보세요</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">⚠️ 주의사항</div>
+            <div class="caution-card">
+              <div class="caution-item"><span class="icon">•</span><span class="text">큰 금액의 투자나 계약은 신중하게 판단하세요</span></div>
+              <div class="caution-item"><span class="icon">•</span><span class="text">감정적인 대화는 피하고 이성적으로 접근하세요</span></div>
+              <div class="caution-item"><span class="icon">•</span><span class="text">과도한 음주나 야식은 피하세요</span></div>
+            </div>
+          </div>
         </div>
 
-        <!-- 금전운 -->
-        <div class="fortune-card">
-          <div class="fortune-card-header">
-            <div class="fortune-icon-container" style="background: rgba(16, 185, 129, 0.2);">📈</div>
-            <div class="fortune-card-title">
-              <div class="fortune-category">금전운</div>
-              <div class="fortune-score" style="color: #10B981;">90점</div>
-            </div>
-            <div class="fortune-progress">
-              <svg width="50" height="50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#10B981" stroke-width="4"
-                  stroke-dasharray="125.6" stroke-dashoffset="12.56" stroke-linecap="round"/>
-              </svg>
-              <span class="fortune-progress-text" style="color: #10B981;">90</span>
+        <!-- ===== 행운 탭 ===== -->
+        <div class="fortune-panel" id="panel-lucky">
+          <div class="section">
+            <div class="section-title">🍀 오늘의 행운 정보</div>
+            <div class="lucky-grid">
+              <div class="lucky-card">
+                <div class="emoji">🎨</div>
+                <div class="label">행운의 색</div>
+                <div class="value">남색</div>
+                <div class="hint">오늘 이 색상의 옷이나 소품을 활용해보세요</div>
+              </div>
+              <div class="lucky-card">
+                <div class="emoji">🔢</div>
+                <div class="label">행운의 숫자</div>
+                <div class="value">3, 7</div>
+                <div class="hint">중요한 선택에 이 숫자를 참고해보세요</div>
+              </div>
+              <div class="lucky-card">
+                <div class="emoji">🧭</div>
+                <div class="label">행운의 방향</div>
+                <div class="value">동쪽</div>
+                <div class="hint">이 방향으로 이동하면 좋은 기운이 있어요</div>
+              </div>
+              <div class="lucky-card">
+                <div class="emoji">✨</div>
+                <div class="label">행운의 아이템</div>
+                <div class="value">수첩</div>
+                <div class="hint">오늘 이 아이템을 가지고 다녀보세요</div>
+              </div>
             </div>
           </div>
-          <div class="fortune-description">작은 투자보다는 저축이 좋아요. 큰 지출은 피하는 게 좋겠어요.</div>
-        </div>
 
-        <!-- 직장운 -->
-        <div class="fortune-card">
-          <div class="fortune-card-header">
-            <div class="fortune-icon-container" style="background: rgba(59, 130, 246, 0.2);">💼</div>
-            <div class="fortune-card-title">
-              <div class="fortune-category">직장운</div>
-              <div class="fortune-score" style="color: #3B82F6;">85점</div>
+          <div class="section">
+            <div class="section-title">💡 행운을 높이는 팁</div>
+            <div class="tip-card">
+              <div class="tip-item">
+                <span class="emoji">🌅</span>
+                <div class="content">
+                  <div class="title">아침 루틴</div>
+                  <div class="desc">동쪽 방향을 향해 심호흡 3번으로 하루를 시작해보세요</div>
+                </div>
+              </div>
+              <div class="tip-item">
+                <span class="emoji">👔</span>
+                <div class="content">
+                  <div class="title">스타일 팁</div>
+                  <div class="desc">남색 계열의 악세사리나 옷을 포인트로 활용해보세요</div>
+                </div>
+              </div>
+              <div class="tip-item">
+                <span class="emoji">🎯</span>
+                <div class="content">
+                  <div class="title">행운 시간</div>
+                  <div class="desc">오전 10시~12시가 가장 좋은 시간대입니다</div>
+                </div>
+              </div>
             </div>
-            <div class="fortune-progress">
-              <svg width="50" height="50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#3B82F6" stroke-width="4"
-                  stroke-dasharray="125.6" stroke-dashoffset="18.84" stroke-linecap="round"/>
-              </svg>
-              <span class="fortune-progress-text" style="color: #3B82F6;">85</span>
-            </div>
-          </div>
-          <div class="fortune-description">동료와의 협업이 빛을 발하는 날이에요. 새로운 프로젝트에 도전해보세요.</div>
-        </div>
-
-        <!-- 건강운 -->
-        <div class="fortune-card">
-          <div class="fortune-card-header">
-            <div class="fortune-icon-container" style="background: rgba(139, 92, 246, 0.2);">💪</div>
-            <div class="fortune-card-title">
-              <div class="fortune-category">건강운</div>
-              <div class="fortune-score" style="color: #8B5CF6;">88점</div>
-            </div>
-            <div class="fortune-progress">
-              <svg width="50" height="50">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#E5E5E5" stroke-width="4"/>
-                <circle cx="25" cy="25" r="20" fill="none" stroke="#8B5CF6" stroke-width="4"
-                  stroke-dasharray="125.6" stroke-dashoffset="15.07" stroke-linecap="round"/>
-              </svg>
-              <span class="fortune-progress-text" style="color: #8B5CF6;">88</span>
-            </div>
-          </div>
-          <div class="fortune-description">가벼운 산책이 기분 전환에 도움이 돼요. 충분한 수면을 취해보세요.</div>
-        </div>
-
-        <!-- Do & Don't -->
-        <div class="dos-donts">
-          <div class="do-card">
-            <div class="dos-donts-label">오늘 하면 좋은 것</div>
-            <div class="dos-donts-text">감사 일기 쓰기</div>
-          </div>
-          <div class="dont-card">
-            <div class="dos-donts-label">오늘 피할 것</div>
-            <div class="dos-donts-text">불필요한 걱정하기</div>
           </div>
         </div>
 
         <div class="disclaimer">운세는 재미와 참고용이에요.</div>
       </div>
     </div>
+
+    <!-- ===== 내 사주 화면 ===== -->
+    <div class="screen" id="screen-saju">
+      <!-- 사주 상단 네비게이션 -->
+      <div class="saju-nav" id="saju-nav">
+        <div class="saju-nav-item active" onclick="scrollToSaju('advice', this)"><span class="emoji">📖</span> 내 이야기</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('pillar', this)"><span class="emoji">🏛️</span> 사주표</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('daymaster', this)"><span class="emoji">🌟</span> 성격</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('strength', this)"><span class="emoji">📊</span> 에너지</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('elements', this)"><span class="emoji">🔥</span> 기운</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('yongsin', this)"><span class="emoji">🎯</span> 행운</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('tengod', this)"><span class="emoji">🎭</span> 관계</div>
+        <div class="saju-nav-item" onclick="scrollToSaju('daeun', this)"><span class="emoji">📈</span> 흐름</div>
+      </div>
+
+      <div class="saju-content" id="saju-scroll">
+        <!-- 사주 헤더 -->
+        <div class="saju-header">
+          <div class="title">나의 사주</div>
+          <div class="subtitle">홍길동님의 사주팔자</div>
+        </div>
+
+        <!-- ===== 나의 사주 이야기 ===== -->
+        <div class="story-card" id="section-advice">
+          <div class="main-title">📖 나의 사주 이야기</div>
+          <div class="main-subtitle">어려운 용어 없이, 쉽게 풀어드립니다</div>
+
+          <!-- 1. 나는 어떤 사람인가 -->
+          <div class="story-section">
+            <div class="story-section-title">🌟 나는 어떤 사람인가요?</div>
+            <p class="story-paragraph">
+              당신은 <span class="story-highlight">큰 산</span>과 같은 사람입니다.
+            </p>
+            <p class="story-paragraph">
+              높은 산처럼 듬직하고 안정감이 있으며, 주변 사람들에게 든든한 존재감을 줍니다.
+            </p>
+            <p class="story-paragraph">
+              기본적으로 <span class="story-highlight">포용적이고 안정적인</span> 성격을 가지고 있어서,
+              어떤 상황에서도 흔들리지 않고 중심을 잡아줍니다. 사람들이 자연스럽게 믿고 의지합니다.
+            </p>
+            <div class="story-quote-box">
+              <div class="story-quote">"산은 움직이지 않아도 모든 것을 품는다"</div>
+            </div>
+          </div>
+
+          <!-- 2. 나의 에너지 상태 -->
+          <div class="story-section">
+            <div class="story-section-title">⚡ 나의 에너지는 어떤가요?</div>
+            <p class="story-paragraph">
+              사주에서 보면 당신의 기본 에너지는 <span class="story-highlight">균형 잡힌 편</span>입니다.
+            </p>
+            <p class="story-paragraph">
+              에너지가 균형 잡혀 있다는 것은 상황에 따라 유연하게 대처할 수 있다는 뜻입니다. 강하게 밀어붙일 때와 한 발 물러설 때를 알고, 조화롭게 살아갈 수 있어요.
+            </p>
+          </div>
+
+          <!-- 3. 나에게 필요한 것 -->
+          <div class="story-section">
+            <div class="story-section-title">🎯 나에게 필요한 기운은?</div>
+            <p class="story-paragraph">
+              당신의 사주를 분석해보니, <span class="story-highlight">나무</span> 기운이 부족해요.
+            </p>
+            <p class="story-paragraph">
+              나무 기운은 성장, 시작, 창의성을 뜻합니다. 새로운 도전이나 배움을 시작하면 좋고, 녹색 물건이나 동쪽 방향이 도움이 됩니다. 아침에 산책하거나 식물을 키우는 것도 좋아요.
+            </p>
+            <div class="story-tip-box">
+              <div class="story-tip-title">💡 실생활 적용 팁</div>
+              <div class="story-tip-text">• 행운의 색: 녹색, 청록색</div>
+              <div class="story-tip-text">• 좋은 방향: 동쪽</div>
+              <div class="story-tip-text">• 행운의 숫자: 3, 8</div>
+            </div>
+          </div>
+
+          <!-- 4. 주의할 점 -->
+          <div class="story-section">
+            <div class="story-section-title">⚠️ 주의하면 좋은 점</div>
+            <p class="story-paragraph">
+              반대로 <span class="story-highlight">흙</span> 기운은 이미 충분해서, 너무 많으면 오히려 균형이 깨질 수 있어요.
+            </p>
+            <p class="story-paragraph">
+              흙 기운이 과하면 너무 보수적이 되거나, 변화를 두려워하게 됩니다. 가끔은 새로운 시도도 필요해요.
+            </p>
+          </div>
+
+          <!-- 5. 인생 조언 -->
+          <div class="story-section">
+            <div class="story-section-title">🌈 당신을 위한 인생 조언</div>
+            <div class="story-advice-box">
+              <div class="story-advice-title">💼 직업과 커리어</div>
+              <div class="story-advice-text">안정적이고 꾸준한 일이 잘 맞아요. 부동산, 건설, 교육, 컨설팅 등 신뢰가 중요한 분야에서 빛을 발합니다.</div>
+            </div>
+            <div class="story-advice-box">
+              <div class="story-advice-title">💑 인간관계</div>
+              <div class="story-advice-text">사람들에게 안정감을 주는 타입이에요. 다만 가끔 고집이 셀 수 있으니, 다른 사람의 의견도 열린 마음으로 들어보세요.</div>
+            </div>
+            <div class="story-advice-box">
+              <div class="story-advice-title">🏥 건강</div>
+              <div class="story-advice-text">소화기 건강에 특히 신경 쓰세요. 규칙적인 식사와 가벼운 운동이 중요합니다.</div>
+            </div>
+          </div>
+
+          <!-- 6. 현재 운의 흐름 -->
+          <div class="story-section">
+            <div class="story-section-title">📅 지금 나의 운은?</div>
+            <p class="story-paragraph">
+              현재 당신은 <span class="story-highlight">기사 대운</span>의 영향을 받고 있습니다.
+            </p>
+            <p class="story-paragraph">
+              대운이란 10년 단위로 바뀌는 큰 운의 흐름입니다.
+              지금은 비교적 안정적인 흐름이므로, 꾸준히 기본기를 다지는 것이 좋습니다.
+            </p>
+          </div>
+
+          <!-- 마무리 -->
+          <div class="story-final-box">
+            <div class="story-final-emoji">🍀</div>
+            <div class="story-final-text">
+              사주는 운명을 정해주는 것이 아니라, 나 자신을 이해하는 도구입니다.<br>
+              강점은 살리고, 부족한 부분은 채워가며<br>
+              더 나은 내일을 만들어가세요!
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 사주표 ===== -->
+        <div class="info-card" id="section-pillar">
+          <div class="info-title">🏛️ 나의 사주팔자</div>
+          <table class="pillar-table">
+            <tr>
+              <th>년주</th><th>월주</th><th>일주</th><th>시주</th>
+            </tr>
+            <tr>
+              <td><span class="stem" style="color: var(--wood);">갑</span></td>
+              <td><span class="stem" style="color: var(--fire);">병</span></td>
+              <td><span class="stem" style="color: var(--earth);">무</span></td>
+              <td><span class="stem" style="color: var(--metal);">경</span></td>
+            </tr>
+            <tr>
+              <td><span class="branch">자</span></td>
+              <td><span class="branch">인</span></td>
+              <td><span class="branch">진</span></td>
+              <td><span class="branch">오</span></td>
+            </tr>
+          </table>
+
+          <div class="pillar-meaning">
+            <div class="pillar-meaning-item"><span class="label">년주 - 태어난 해</span><span class="desc">조상운, 어린 시절 (0~16세)</span></div>
+            <div class="pillar-meaning-item"><span class="label">월주 - 태어난 달</span><span class="desc">부모운, 청년기 (17~32세)</span></div>
+            <div class="pillar-meaning-item"><span class="label">일주 - 태어난 날</span><span class="desc">본인/배우자, 중년 (33~48세)</span></div>
+            <div class="pillar-meaning-item"><span class="label">시주 - 태어난 시간</span><span class="desc">자녀운, 노년기 (49세~)</span></div>
+          </div>
+        </div>
+
+        <!-- ===== 성격 (일간 해설) ===== -->
+        <div class="info-card" id="section-daymaster">
+          <div class="info-title">🌟 나를 대표하는 글자: 무</div>
+          <div class="info-desc">사주에서 '나 자신'을 나타내는 가장 중요한 글자입니다</div>
+
+          <div style="background: rgba(255,193,7,0.12); padding: 12px; border-radius: 10px; margin-bottom: 16px;">
+            <div style="font-size: 15px; font-weight: 700; color: var(--earth);">흙 기운 (무토)</div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">양 - 적극적이고 외향적인 성향</div>
+          </div>
+
+          <div style="text-align: center; margin-bottom: 16px;">
+            <span style="font-size: 16px; font-weight: 600; color: var(--text);">「큰 산」 - 포용적이고 안정적인 성격</span>
+          </div>
+
+          <div style="background: var(--bg); border-radius: 12px; padding: 14px; margin-bottom: 16px; font-style: italic;">
+            <div style="font-size: 14px; color: var(--text); line-height: 1.5;">"높은 산처럼 듬직하고 안정감이 있으며, 주변 사람들에게 든든한 존재감을 줍니다."</div>
+            <div style="font-size: 13px; color: var(--primary); margin-top: 8px;">💬 "산은 움직이지 않아도 모든 것을 품는다"</div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px;">🎭 나의 성격 특성</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.8;">
+              • 어떤 상황에서도 흔들리지 않는 안정감이 있어요<br>
+              • 사람들이 자연스럽게 믿고 의지하는 타입이에요<br>
+              • 한번 정한 것은 끝까지 밀어붙이는 끈기가 있어요<br>
+              • 변화를 받아들이는 데 시간이 좀 걸릴 수 있어요
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1; background: #E8F5E9; border-radius: 12px; padding: 14px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">✨ 강점</div>
+              <div style="font-size: 12px; color: var(--text); line-height: 1.7;">
+                • 안정적이고 신뢰감이 높아요<br>
+                • 포용력이 크고 배려심이 깊어요<br>
+                • 인내심이 강하고 꾸준해요
+              </div>
+            </div>
+            <div style="flex: 1; background: #FFF3E0; border-radius: 12px; padding: 14px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">⚠️ 약점</div>
+              <div style="font-size: 12px; color: var(--text); line-height: 1.7;">
+                • 고집이 세서 융통성이 부족할 수 있어요<br>
+                • 변화에 느리게 적응할 수 있어요<br>
+                • 걱정이 많아 결정을 미루기도 해요
+              </div>
+            </div>
+          </div>
+
+          <!-- 접이식: 실전 생활 조언 -->
+          <div class="collapsible" onclick="toggleCollapsible(this)">
+            <div class="collapsible-header">
+              <div class="title-row">
+                <span class="emoji">💡</span>
+                <span class="title">실전 생활 조언</span>
+              </div>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="collapsible-body">
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">💼 직업/커리어</div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">안정적이고 꾸준한 일이 잘 맞아요. 부동산, 건설, 교육, 컨설팅 등 신뢰가 중요한 분야에서 빛을 발합니다.</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">💑 대인관계</div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">사람들에게 안정감을 주는 타입이에요. 다만 가끔 고집이 셀 수 있으니, 열린 마음으로 들어보세요.</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">🏥 건강 관리</div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">소화기 건강에 특히 신경 쓰세요. 규칙적인 식사와 가벼운 운동이 중요합니다.</div>
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">🌱 성장 포인트</div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                  ✓ 새로운 것에 도전하는 용기를 키워보세요<br>
+                  ✓ 다른 사람의 의견을 적극적으로 수용해보세요<br>
+                  ✓ 변화를 두려워하지 말고 한 발자국 먼저 내디뎌보세요
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 에너지 강도 ===== -->
+        <div class="info-card" id="section-strength">
+          <div class="info-title">📊 나의 에너지 강도</div>
+
+          <div class="gauge-container">
+            <div class="gauge-header">
+              <span class="gauge-label">나의 기본 에너지</span>
+              <span class="gauge-value" style="color: #FFC107;">균형 잡힌 편 (58점)</span>
+            </div>
+            <div class="gauge-bar">
+              <div class="gauge-fill" style="width: 58%; background: #FFC107;"></div>
+            </div>
+            <div class="gauge-labels">
+              <span>약</span><span>중화</span><span>강</span>
+            </div>
+          </div>
+
+          <p class="analysis-text">주변과 조화를 이루며 살아갑니다. 유연성이 있고 적응력이 좋아서, 상황에 따라 잘 대처할 수 있어요.</p>
+
+          <div class="reasons-box">
+            <div class="reason-text">• 월지(인)의 계절 기운이 일간을 도움</div>
+            <div class="reason-text">• 일간 오행이 사주 내에서 적당한 비율</div>
+          </div>
+        </div>
+
+        <!-- ===== 다섯 가지 기운 (오행) ===== -->
+        <div class="info-card" id="section-elements">
+          <div class="info-title">🔥 나의 다섯 가지 기운</div>
+          <div class="info-desc">사주에 담긴 나무·불·흙·쇠·물의 균형을 확인해보세요</div>
+
+          <div class="element-bar-container yongsin">
+            <div class="element-bar-header">
+              <div class="element-bar-name-row">
+                <span class="element-bar-name" style="color: var(--wood);">나무</span>
+                <span class="yongsin-star">★ 필요</span>
+              </div>
+              <span class="element-bar-count">1개 (12%)</span>
+            </div>
+            <div class="element-bar-bg"><div class="element-bar-fill" style="width: 12%; background: var(--wood);"></div></div>
+          </div>
+
+          <div class="element-bar-container">
+            <div class="element-bar-header">
+              <div class="element-bar-name-row"><span class="element-bar-name" style="color: var(--fire);">불</span></div>
+              <span class="element-bar-count">2개 (25%)</span>
+            </div>
+            <div class="element-bar-bg"><div class="element-bar-fill" style="width: 25%; background: var(--fire);"></div></div>
+          </div>
+
+          <div class="element-bar-container">
+            <div class="element-bar-header">
+              <div class="element-bar-name-row">
+                <span class="element-bar-name" style="color: var(--earth);">흙</span>
+                <span class="gishin-mark">⚠️</span>
+              </div>
+              <span class="element-bar-count">3개 (38%)</span>
+            </div>
+            <div class="element-bar-bg"><div class="element-bar-fill" style="width: 38%; background: var(--earth);"></div></div>
+          </div>
+
+          <div class="element-bar-container">
+            <div class="element-bar-header">
+              <div class="element-bar-name-row"><span class="element-bar-name" style="color: var(--metal);">금속</span></div>
+              <span class="element-bar-count">1개 (12%)</span>
+            </div>
+            <div class="element-bar-bg"><div class="element-bar-fill" style="width: 12%; background: var(--metal);"></div></div>
+          </div>
+
+          <div class="element-bar-container">
+            <div class="element-bar-header">
+              <div class="element-bar-name-row"><span class="element-bar-name" style="color: var(--water);">물</span></div>
+              <span class="element-bar-count">1개 (12%)</span>
+            </div>
+            <div class="element-bar-bg"><div class="element-bar-fill" style="width: 12%; background: var(--water);"></div></div>
+          </div>
+
+          <!-- 다섯 기운의 의미 -->
+          <div style="margin-top: 20px;">
+            <div style="font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px;">🌿 다섯 기운의 의미</div>
+            <div class="element-explain-grid">
+              <div class="element-explain-item">
+                <div class="element-explain-name" style="color: var(--wood);">나무</div>
+                <div class="element-explain-text">성장, 시작<br>인자함, 창의력</div>
+              </div>
+              <div class="element-explain-item">
+                <div class="element-explain-name" style="color: var(--fire);">불</div>
+                <div class="element-explain-text">열정, 표현<br>예절, 명예</div>
+              </div>
+              <div class="element-explain-item">
+                <div class="element-explain-name" style="color: var(--earth);">흙</div>
+                <div class="element-explain-text">중심, 안정<br>신뢰, 포용</div>
+              </div>
+              <div class="element-explain-item">
+                <div class="element-explain-name" style="color: var(--metal);">금속</div>
+                <div class="element-explain-text">결단, 정의<br>의리, 강인함</div>
+              </div>
+              <div class="element-explain-item">
+                <div class="element-explain-name" style="color: var(--water);">물</div>
+                <div class="element-explain-text">지혜, 유연<br>적응력, 소통</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 오행 밸런스 -->
+          <div style="background: var(--bg); border-radius: 12px; padding: 14px; margin-top: 16px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px;">⚖️ 나의 오행 밸런스</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">
+              가장 강한 기운: 흙(3개)<br>
+              가장 약한 기운: 나무(1개)<br><br>
+              ⚠️ 오행의 균형이 다소 치우쳐 있습니다. 부족한 기운을 보완하면 좋습니다.
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 행운 (용신/기신) ===== -->
+        <div class="info-card" id="section-yongsin">
+          <div class="info-title">🎯 나에게 필요한 기운</div>
+          <div class="info-desc">부족한 기운을 채우고, 넘치는 기운을 조절하세요</div>
+
+          <div class="yongsin-row">
+            <div class="yongsin-badge" style="background: #E8F5E9;">
+              <div class="label">✨ 도움이 되는 기운</div>
+              <div class="dot" style="background: var(--wood);"></div>
+              <div class="name">나무</div>
+            </div>
+            <div class="yongsin-badge" style="background: #FFF3E0;">
+              <div class="label">💫 보조 기운</div>
+              <div class="dot" style="background: var(--water);"></div>
+              <div class="name">물</div>
+            </div>
+            <div class="yongsin-badge" style="background: #FFEBEE;">
+              <div class="label">⚠️ 주의할 기운</div>
+              <div class="dot" style="background: var(--earth);"></div>
+              <div class="name">흙</div>
+            </div>
+          </div>
+
+          <p class="analysis-text">흙 기운의 균형을 맞추기 위해 나무 기운이 필요해요. 흙 기운이 너무 많으면 주의가 필요해요.</p>
+
+          <div class="recommend-box">
+            <div class="box-title">💡 행운 가이드</div>
+            <div class="recommend-row"><span class="label">🎨 유리한 색상:</span><span class="value">녹색, 청록색</span></div>
+            <div class="recommend-row"><span class="label">🧭 유리한 방향:</span><span class="value">동쪽 (90°)</span></div>
+            <div class="recommend-row"><span class="label">🔢 행운의 숫자:</span><span class="value">3, 8</span></div>
+            <div class="recommend-row"><span class="label">🌿 추천 활동:</span><span class="value">산책, 등산, 원예, 독서</span></div>
+          </div>
+
+          <div class="caution-box-styled">
+            <div class="box-title">⚠️ 조심하면 좋은 것들</div>
+            <div class="recommend-row"><span class="label">피해야 할 색상:</span><span class="value">노란색, 갈색 계열</span></div>
+            <div class="recommend-row"><span class="label">주의할 활동:</span><span class="value">완고한 고집, 변화 거부</span></div>
+          </div>
+        </div>
+
+        <!-- ===== 관계 (십신) ===== -->
+        <div class="info-card" id="section-tengod">
+          <div class="info-title">🎭 나와 주변의 관계</div>
+          <div class="info-desc">사주의 각 위치가 나와 어떤 관계인지 보여줍니다</div>
+
+          <div class="tengod-grid">
+            <div class="tengod-item">
+              <div class="pillar-name">년주</div>
+              <div class="tengod-name">편재</div>
+              <div class="tengod-meaning">재물, 아버지</div>
+            </div>
+            <div class="tengod-item">
+              <div class="pillar-name">월주</div>
+              <div class="tengod-name">편인</div>
+              <div class="tengod-meaning">학문, 어머니</div>
+            </div>
+            <div class="tengod-item">
+              <div class="pillar-name">시주</div>
+              <div class="tengod-name">식신</div>
+              <div class="tengod-meaning">표현, 자녀</div>
+            </div>
+          </div>
+
+          <!-- 접이식: 십신이란? -->
+          <div class="collapsible" onclick="toggleCollapsible(this)">
+            <div class="collapsible-header">
+              <div class="title-row">
+                <span class="emoji">📖</span>
+                <span class="title">십신이란?</span>
+              </div>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="collapsible-body">
+              <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.7;">
+                십신은 일간(나)을 기준으로 다른 글자와의 관계를 나타내요. 나를 돕는 관계, 나를 키워주는 관계, 내가 키우는 관계 등을 파악할 수 있어요.<br><br>
+                • <b>비견/겁재</b>: 나와 같은 기운 (형제, 친구, 경쟁자)<br>
+                • <b>식신/상관</b>: 내가 낳는 기운 (표현, 자녀, 창작)<br>
+                • <b>편재/정재</b>: 내가 다스리는 기운 (재물, 아버지)<br>
+                • <b>편관/정관</b>: 나를 다스리는 기운 (직장, 남편)<br>
+                • <b>편인/정인</b>: 나를 낳아주는 기운 (학문, 어머니)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 흐름 (대운) ===== -->
+        <div class="info-card" id="section-daeun">
+          <div class="info-title">📈 나의 인생 흐름 (대운)</div>
+          <div class="info-desc">10년 단위로 바뀌는 큰 운의 흐름입니다</div>
+
+          <div class="daeun-timeline">
+            <div class="daeun-item past">
+              <div class="age">21-30세</div>
+              <div class="ganji">무자</div>
+            </div>
+            <div class="daeun-item current">
+              <div class="age">31-40세</div>
+              <div class="ganji">기사</div>
+              <div class="label-tag">현재</div>
+            </div>
+            <div class="daeun-item">
+              <div class="age">41-50세</div>
+              <div class="ganji">경오</div>
+            </div>
+            <div class="daeun-item">
+              <div class="age">51-60세</div>
+              <div class="ganji">신미</div>
+            </div>
+            <div class="daeun-item">
+              <div class="age">61-70세</div>
+              <div class="ganji">임신</div>
+            </div>
+          </div>
+
+          <!-- 접이식: 대운이란? -->
+          <div class="collapsible" onclick="toggleCollapsible(this)" style="margin-top: 16px;">
+            <div class="collapsible-header">
+              <div class="title-row">
+                <span class="emoji">📖</span>
+                <span class="title">대운이란?</span>
+              </div>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="collapsible-body">
+              <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.7;">
+                대운은 10년 단위로 바뀌는 인생의 큰 흐름이에요. 월주를 기준으로 순행 또는 역행하며, 각 대운마다 다른 에너지가 작용합니다.<br><br>
+                현재 대운의 기운이 나의 사주와 잘 어울리면 순조로운 시기이고, 충돌하면 변화와 성장의 시기라고 볼 수 있어요.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="disclaimer">사주는 운명을 정해주는 것이 아니라, 나 자신을 이해하는 도구예요.</div>
+      </div>
+    </div>
+
+    <!-- ===== 하단 탭 바 ===== -->
+    <div class="bottom-tab-bar">
+      <button class="tab-item active" onclick="switchScreen('fortune', this)">
+        <span class="tab-icon">🔮</span>
+        <span class="tab-label">오늘의 운세</span>
+      </button>
+      <button class="tab-item" onclick="switchScreen('saju', this)">
+        <span class="tab-icon">☯</span>
+        <span class="tab-label">내 사주</span>
+      </button>
+    </div>
   </div>
 
   <script>
-    // 오늘 날짜 설정
-    const today = new Date();
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    document.getElementById('today-date').textContent =
-      `${today.getMonth() + 1}월 ${today.getDate()}일 (${days[today.getDay()]})`;
-    document.getElementById('modal-date').textContent =
-      `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+    // ===== 날짜 관리 =====
+    let currentDate = new Date();
 
-    // 모달 표시/숨김
-    function showFortuneDetail() {
-      document.getElementById('fortune-modal').classList.add('active');
-      document.body.style.overflow = 'hidden';
+    function updateDateDisplay() {
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const month = currentDate.getMonth() + 1;
+      const day = currentDate.getDate();
+      const dayOfWeek = days[currentDate.getDay()];
+
+      const isToday = currentDate.toDateString() === new Date().toDateString();
+      document.getElementById('date-label').textContent = isToday ? '📅 오늘' : '📅 선택';
+      document.getElementById('date-value').textContent = `${month}/${day} (${dayOfWeek})`;
+
+      const fullDate = currentDate.toLocaleDateString('ko-KR', {
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+      });
+      document.getElementById('fortune-date-full').textContent = fullDate;
     }
 
-    function hideFortuneDetail() {
-      document.getElementById('fortune-modal').classList.remove('active');
-      document.body.style.overflow = '';
+    function changeDate(delta) {
+      currentDate.setDate(currentDate.getDate() + delta);
+      updateDateDisplay();
     }
 
-    // 모달 외부 클릭 시 닫기
-    document.getElementById('fortune-modal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideFortuneDetail();
+    // ===== 하단 탭 전환 =====
+    function switchScreen(screenId, btn) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + screenId).classList.add('active');
+
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ===== 운세 탭 전환 =====
+    function switchFortuneTab(tabId, btn) {
+      document.querySelectorAll('.fortune-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + tabId).classList.add('active');
+
+      document.querySelectorAll('.fortune-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ===== 사주 섹션 스크롤 =====
+    function scrollToSaju(sectionId, btn) {
+      const el = document.getElementById('section-' + sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    });
+      document.querySelectorAll('.saju-nav-item').forEach(n => n.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ===== 접이식 토글 =====
+    function toggleCollapsible(el) {
+      // 이벤트가 body 내부에서 발생한 경우 무시
+      if (event.target.closest('.collapsible-body')) return;
+      el.classList.toggle('expanded');
+    }
+
+    // ===== 초기화 =====
+    updateDateDisplay();
   </script>
 </body>
 </html>
