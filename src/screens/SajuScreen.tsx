@@ -35,16 +35,16 @@ const SECTION_IDS = {
   ADVICE: 'advice',
 } as const;
 
-// 섹션 메뉴 정의
+// 섹션 메뉴 정의 - 쉬운 해석을 먼저 배치
 const SECTION_MENU = [
-  { id: SECTION_IDS.CONCEPT, emoji: '📚', label: '개념' },
-  { id: SECTION_IDS.PILLAR, emoji: '🏛️', label: '사주' },
-  { id: SECTION_IDS.DAYMASTER, emoji: '🌟', label: '일간' },
-  { id: SECTION_IDS.STRENGTH, emoji: '📊', label: '강약' },
-  { id: SECTION_IDS.ELEMENTS, emoji: '🔥', label: '오행' },
-  { id: SECTION_IDS.YONGSIN, emoji: '🎯', label: '용신' },
-  { id: SECTION_IDS.TENGOD, emoji: '🎭', label: '십신' },
-  { id: SECTION_IDS.DAEUN, emoji: '📈', label: '대운' },
+  { id: SECTION_IDS.ADVICE, emoji: '📖', label: '내 이야기' },
+  { id: SECTION_IDS.PILLAR, emoji: '🏛️', label: '사주표' },
+  { id: SECTION_IDS.DAYMASTER, emoji: '🌟', label: '성격' },
+  { id: SECTION_IDS.STRENGTH, emoji: '📊', label: '에너지' },
+  { id: SECTION_IDS.ELEMENTS, emoji: '🔥', label: '기운' },
+  { id: SECTION_IDS.YONGSIN, emoji: '🎯', label: '행운' },
+  { id: SECTION_IDS.TENGOD, emoji: '🎭', label: '관계' },
+  { id: SECTION_IDS.DAEUN, emoji: '📈', label: '흐름' },
 ];
 
 // 접이식 섹션 컴포넌트
@@ -270,17 +270,17 @@ export default function SajuScreen() {
     let analysis = '일간의 세력이 적당하여 균형 잡힌 사주입니다.';
     
     if (score >= 80) {
-      strength = '신강 (身强)';
-      analysis = '일간의 세력이 강하여 주변 환경에 영향을 덜 받습니다. 자신의 뜻대로 살아가는 성향이며, 리더십과 추진력이 있습니다.';
+      strength = '에너지가 강한 편';
+      analysis = '주변 환경에 영향을 덜 받고 자신의 뜻대로 살아가는 성향입니다. 리더십과 추진력이 뛰어나지만, 가끔 고집으로 보일 수 있어요.';
     } else if (score >= 60) {
-      strength = '보통';
-      analysis = '일간의 세력이 적당하여 주변과 조화를 이루며 살아갑니다. 유연성이 있고 적응력이 좋습니다.';
+      strength = '균형 잡힌 편';
+      analysis = '주변과 조화를 이루며 살아갑니다. 유연성이 있고 적응력이 좋아서, 상황에 따라 잘 대처할 수 있어요.';
     } else if (score >= 40) {
-      strength = '신약 (身弱)';
-      analysis = '일간의 세력이 약하여 주변 환경의 영향을 많이 받습니다. 협력과 도움이 필요하며, 인내심이 강합니다.';
+      strength = '부드러운 편';
+      analysis = '주변 환경의 영향을 많이 받지만, 그만큼 협력을 잘 이끌어냅니다. 함께할 때 더 큰 힘을 발휘해요.';
     } else {
-      strength = '극약 (極弱)';
-      analysis = '일간의 세력이 매우 약하여 많은 도움이 필요합니다. 주변의 보호와 지지가 중요합니다.';
+      strength = '섬세한 편';
+      analysis = '많은 도움이 필요하지만 그만큼 주변 사람들과 깊은 유대감을 형성합니다. 보호와 지지가 중요해요.';
     }
     
     return { score, strength, analysis, reasons };
@@ -556,766 +556,13 @@ export default function SajuScreen() {
           <Text style={styles.subtitle}>{profile?.name}님의 사주팔자</Text>
         </View>
 
-      {/* 사주팔자 개념 설명 */}
-      <View
-        style={styles.conceptCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.CONCEPT, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.conceptTitle}>📚 사주팔자(四柱八字)란?</Text>
-        <Text style={styles.conceptText}>
-          사주팔자는 태어난 <Text style={styles.highlightText}>연(年)·월(月)·일(日)·시(時)</Text>를
-          4개의 기둥(柱)으로 표현하고, 각 기둥마다 <Text style={styles.highlightText}>천간(天干)</Text>과
-          <Text style={styles.highlightText}>지지(地支)</Text> 2글자씩 총 8글자로 나타낸 것입니다.
-        </Text>
-        <View style={styles.conceptDivider} />
-        <View style={styles.conceptRow}>
-          <View style={styles.conceptItem}>
-            <Text style={styles.conceptItemTitle}>천간 (위쪽)</Text>
-            <Text style={styles.conceptItemDesc}>하늘의 기운{'\n'}갑을병정무기경신임계</Text>
-          </View>
-          <View style={styles.conceptItem}>
-            <Text style={styles.conceptItemTitle}>지지 (아래쪽)</Text>
-            <Text style={styles.conceptItemDesc}>땅의 기운{'\n'}자축인묘진사오미신유술해</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 4주 표 */}
-      <View
-        style={styles.pillarCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.PILLAR, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.pillarTitle}>사주팔자 (四柱八字)</Text>
-        <View style={styles.pillarTable}>
-          <View style={styles.tableRow}>
-            <View style={styles.tableCell}><Text style={styles.tableHeader}>년주</Text></View>
-            <View style={styles.tableCell}><Text style={styles.tableHeader}>월주</Text></View>
-            <View style={styles.tableCell}><Text style={styles.tableHeader}>일주</Text></View>
-            <View style={styles.tableCell}><Text style={styles.tableHeader}>시주</Text></View>
-          </View>
-          <View style={styles.tableRow}>
-            <View style={styles.tableCell}>
-              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safePillars.year.stem)) }]}>{safePillars.year.stem}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safePillars.month.stem)) }]}>{safePillars.month.stem}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safeDayMaster)) }]}>{safeDayMaster}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={[styles.stemText, { color: safePillars.hour ? getElementColor(stemToElement(safePillars.hour.stem)) : '#999' }]}>{safePillars.hour?.stem || '-'}</Text>
-            </View>
-          </View>
-          <View style={styles.tableRow}>
-            <View style={styles.tableCell}>
-              <Text style={styles.branchText}>{safePillars.year.branch}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={styles.branchText}>{safePillars.month.branch}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={styles.branchText}>{safePillars.day.branch}</Text>
-            </View>
-            <View style={styles.tableCell}>
-              <Text style={styles.branchText}>{safePillars.hour?.branch || '-'}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 4주 각각의 의미 설명 */}
-        <View style={styles.pillarMeanings}>
-          <View style={styles.pillarMeaningItem}>
-            <Text style={styles.pillarMeaningLabel}>년주 (年柱)</Text>
-            <Text style={styles.pillarMeaningDesc}>조상운, 유년기 (0~16세)</Text>
-          </View>
-          <View style={styles.pillarMeaningItem}>
-            <Text style={styles.pillarMeaningLabel}>월주 (月柱)</Text>
-            <Text style={styles.pillarMeaningDesc}>부모운, 청년기 (17~32세)</Text>
-          </View>
-          <View style={styles.pillarMeaningItem}>
-            <Text style={styles.pillarMeaningLabel}>일주 (日柱)</Text>
-            <Text style={styles.pillarMeaningDesc}>본인/배우자, 중년 (33~48세)</Text>
-          </View>
-          <View style={styles.pillarMeaningItem}>
-            <Text style={styles.pillarMeaningLabel}>시주 (時柱)</Text>
-            <Text style={styles.pillarMeaningDesc}>자녀운, 노년 (49세~)</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 일간(日干) 해설 - 5레이어 해석 */}
-      <View
-        style={styles.dayMasterCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.DAYMASTER, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.dayMasterTitle}>🌟 나의 일간(日干): {safeDayMaster}</Text>
-        <Text style={styles.dayMasterSubtitle}>일간은 '나 자신'을 나타내는 가장 중요한 글자입니다</Text>
-
-        <View style={styles.dayMasterInfo}>
-          <View style={[styles.dayMasterElement, { backgroundColor: getElementColor(safeDayMasterInfo.element) + '20' }]}>
-            <Text style={[styles.dayMasterElementText, { color: getElementColor(safeDayMasterInfo.element) }]}>
-              {dayMasterInterpretation?.koreanName || `${getElementName(safeDayMasterInfo.element)} (${safeDayMasterInfo.element.toUpperCase()})`}
-            </Text>
-            <Text style={styles.dayMasterYinYang}>
-              {safeDayMasterInfo.yinYang === 'yang' ? '양(陽) - 적극적, 외향적' : '음(陰) - 수용적, 내향적'}
-            </Text>
-          </View>
-          {dayMasterInterpretation && (
-            <Text style={styles.dayMasterSymbol}>
-              「{dayMasterInterpretation.symbol}」 - {dayMasterInterpretation.nature}
-            </Text>
-          )}
-          <Text style={styles.dayMasterMeaning}>{safeDayMasterInfo.meaning}</Text>
-        </View>
-
-        {/* Layer 5: 스토리텔링 - 메타포 */}
-        {dayMasterInterpretation && (
-          <View style={styles.metaphorBox}>
-            <Text style={styles.metaphorText}>"{dayMasterInterpretation.metaphor}"</Text>
-            <Text style={styles.quoteText}>💬 {dayMasterInterpretation.quote}</Text>
-          </View>
-        )}
-
-        {/* Layer 3: 성격 특성 */}
-        {dayMasterInterpretation && (
-          <View style={styles.personalitySection}>
-            <Text style={styles.sectionSubtitle}>🎭 나의 성격 특성</Text>
-            <View style={styles.bulletList}>
-              {dayMasterInterpretation.personality.map((trait, idx) => (
-                <Text key={idx} style={styles.bulletItem}>• {trait}</Text>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* 강점 / 약점 */}
-        {dayMasterInterpretation && (
-          <View style={styles.strengthWeaknessRow}>
-            <View style={styles.strengthBox}>
-              <Text style={styles.strengthBoxTitle}>✨ 강점</Text>
-              {dayMasterInterpretation.strengths.map((s, idx) => (
-                <Text key={idx} style={styles.strengthItem}>• {s}</Text>
-              ))}
-            </View>
-            <View style={styles.weaknessBox}>
-              <Text style={styles.weaknessBoxTitle}>⚠️ 약점</Text>
-              {dayMasterInterpretation.weaknesses.map((w, idx) => (
-                <Text key={idx} style={styles.weaknessItem}>• {w}</Text>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Layer 4: 실전 조언 (접이식) */}
-        {dayMasterInterpretation && (
-          <CollapsibleSection title="실전 생활 조언" emoji="💡" defaultExpanded={false}>
-            <View style={styles.dayMasterAdviceSection}>
-              <View style={styles.dayMasterAdviceBlock}>
-                <Text style={styles.dayMasterAdviceLabel}>💼 직업/커리어</Text>
-                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.career}</Text>
-              </View>
-              <View style={styles.dayMasterAdviceBlock}>
-                <Text style={styles.dayMasterAdviceLabel}>💑 대인관계</Text>
-                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.relationships}</Text>
-              </View>
-              <View style={styles.dayMasterAdviceBlock}>
-                <Text style={styles.dayMasterAdviceLabel}>🏥 건강 관리</Text>
-                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.health}</Text>
-              </View>
-              <View style={styles.growthSection}>
-                <Text style={styles.dayMasterAdviceLabel}>🌱 성장 포인트</Text>
-                {dayMasterInterpretation.growthPoints.map((point, idx) => (
-                  <Text key={idx} style={styles.growthItem}>✓ {point}</Text>
-                ))}
-              </View>
-            </View>
-          </CollapsibleSection>
-        )}
-
-        {/* 기존 기본 성격 (dayMasterInterpretation이 없을 때 폴백) */}
-        {!dayMasterInterpretation && (
-          <View style={styles.dayMasterTip}>
-            <Text style={styles.dayMasterTipTitle}>💡 일간별 기본 성격</Text>
-            <Text style={styles.dayMasterTipText}>
-              {safeDayMaster === '갑' && '갑목(甲木): 큰 나무처럼 곧고 정직하며, 리더십이 있습니다.'}
-              {safeDayMaster === '을' && '을목(乙木): 덩굴처럼 유연하고 적응력이 뛰어납니다.'}
-              {safeDayMaster === '병' && '병화(丙火): 태양처럼 밝고 따뜻하며, 열정적입니다.'}
-              {safeDayMaster === '정' && '정화(丁火): 촛불처럼 은은하고 섬세합니다.'}
-              {safeDayMaster === '무' && '무토(戊土): 산처럼 듬직하고 안정적입니다.'}
-              {safeDayMaster === '기' && '기토(己土): 논밭처럼 포용력이 있습니다.'}
-              {safeDayMaster === '경' && '경금(庚金): 바위처럼 강하고 단호합니다.'}
-              {safeDayMaster === '신' && '신금(辛金): 보석처럼 섬세하고 예민합니다.'}
-              {safeDayMaster === '임' && '임수(壬水): 바다처럼 넓고 깊습니다.'}
-              {safeDayMaster === '계' && '계수(癸水): 비/이슬처럼 조용하고 깊습니다.'}
-              {!['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'].includes(safeDayMaster) && '일간 정보를 불러올 수 없습니다.'}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* ===== 고급 분석 시작 ===== */}
-
-      {/* 1. 일간 강약 분석 */}
-      <View
-        style={styles.infoCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.STRENGTH, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.infoTitle}>📊 일간 강약 분석</Text>
-        <View style={styles.strengthGauge}>
-          <View style={styles.gaugeHeader}>
-            <Text style={styles.gaugeLabel}>일간 세력</Text>
-            <Text style={[styles.gaugeValue, { 
-              color: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336' 
-            }]}>
-              {strengthAnalysis.strength} ({strengthAnalysis.score}점)
-            </Text>
-          </View>
-          <View style={styles.gaugeBar}>
-            <View style={[styles.gaugeFill, { 
-              width: `${strengthAnalysis.score}%`,
-              backgroundColor: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336'
-            }]} />
-          </View>
-          <View style={styles.gaugeLabels}>
-            <Text style={styles.gaugeLabelText}>약</Text>
-            <Text style={styles.gaugeLabelText}>중화</Text>
-            <Text style={styles.gaugeLabelText}>강</Text>
-          </View>
-        </View>
-        <Text style={styles.analysisText}>{strengthAnalysis.analysis}</Text>
-        <View style={styles.reasonsBox}>
-          {strengthAnalysis.reasons.map((reason, idx) => (
-            <Text key={idx} style={styles.reasonText}>• {reason}</Text>
-          ))}
-        </View>
-      </View>
-
-      {/* 오행 분포 시각화 */}
-      <View
-        style={styles.infoCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.ELEMENTS, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.infoTitle}>🔥 오행(五行) 분포</Text>
-        <Text style={styles.elementDesc}>내 사주에 담긴 5가지 기운의 균형을 확인해보세요</Text>
-
-        <View style={styles.elementChart}>
-          {Object.entries(safeElements).map(([element, count]) => {
-            const total = Object.values(safeElements).reduce((a, b) => a + b, 0);
-            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-            const isYongsin = element === yongsinAnalysis.yongsin;
-            const isGishin = element === yongsinAnalysis.gishin;
-            return (
-              <View key={element} style={[styles.elementBarContainer, isYongsin && styles.elementBarYongsin]}>
-                <View style={styles.elementBarHeader}>
-                  <View style={styles.elementBarNameRow}>
-                    <Text style={[styles.elementBarName, { color: getElementColor(element) }]}>
-                      {getElementName(element)}
-                    </Text>
-                    {isYongsin && <Text style={styles.yongsinStar}>★ 용신</Text>}
-                    {isGishin && <Text style={styles.gishinMark}>⚠️</Text>}
-                  </View>
-                  <Text style={styles.elementBarCount}>{count}개 ({percent}%)</Text>
-                </View>
-                <View style={styles.elementBarBg}>
-                  <View style={[styles.elementBarFill, {
-                    width: `${Math.max(percent, 5)}%`,
-                    backgroundColor: getElementColor(element)
-                  }]} />
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        <View style={styles.elementExplain}>
-          <Text style={styles.elementExplainTitle}>🌿 오행의 의미</Text>
-          <View style={styles.elementExplainGrid}>
-            <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#4CAF50' }]}>목(木)</Text>
-              <Text style={styles.elementExplainText}>성장, 시작{'\n'}인자함, 창의력</Text>
-            </View>
-            <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#F44336' }]}>화(火)</Text>
-              <Text style={styles.elementExplainText}>열정, 표현{'\n'}예절, 명예</Text>
-            </View>
-            <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#FFC107' }]}>토(土)</Text>
-              <Text style={styles.elementExplainText}>중심, 안정{'\n'}신뢰, 포용</Text>
-            </View>
-            <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#9E9E9E' }]}>금(金)</Text>
-              <Text style={styles.elementExplainText}>결단, 정의{'\n'}의리, 강인함</Text>
-            </View>
-            <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#2196F3' }]}>수(水)</Text>
-              <Text style={styles.elementExplainText}>지혜, 유연{'\n'}적응력, 소통</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.elementBalance}>
-          <Text style={styles.elementBalanceTitle}>⚖️ 나의 오행 밸런스</Text>
-          <Text style={styles.elementBalanceText}>
-            {(() => {
-              const sorted = Object.entries(safeElements).sort((a, b) => b[1] - a[1]);
-              const strongest = sorted[0];
-              const weakest = sorted[sorted.length - 1];
-              return `가장 강한 기운: ${getElementName(strongest[0])}(${strongest[1]}개)\n가장 약한 기운: ${getElementName(weakest[0])}(${weakest[1]}개)\n\n${strongest[1] - weakest[1] > 3 ? '⚠️ 오행의 균형이 다소 치우쳐 있습니다. 부족한 기운을 보완하면 좋습니다.' : '✅ 오행이 비교적 균형 잡혀 있습니다.'}`;
-            })()}
-          </Text>
-        </View>
-      </View>
-
-      {/* 2. 용신/기신 분석 */}
-      <View
-        style={styles.infoCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.YONGSIN, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.infoTitle}>🎯 용신(用神) / 기신(忌神)</Text>
-        <Text style={styles.yongsinDesc}>사주의 균형을 위한 오행 분석</Text>
-        
-        <View style={styles.yongsinRow}>
-          <View style={[styles.yongsinBadge, { backgroundColor: '#E8F5E9' }]}>
-            <Text style={styles.yongsinBadgeLabel}>✨ 용신 (도움)</Text>
-            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.yongsin) }]} />
-            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.yongsin)}</Text>
-          </View>
-          <View style={[styles.yongsinBadge, { backgroundColor: '#FFF3E0' }]}>
-            <Text style={styles.yongsinBadgeLabel}>💫 희신 (보조)</Text>
-            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.heeshin) }]} />
-            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.heeshin)}</Text>
-          </View>
-          <View style={[styles.yongsinBadge, { backgroundColor: '#FFEBEE' }]}>
-            <Text style={styles.yongsinBadgeLabel}>⚠️ 기신 (주의)</Text>
-            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.gishin) }]} />
-            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.gishin)}</Text>
-          </View>
-        </View>
-        
-        <Text style={styles.yongsinAnalysis}>{yongsinAnalysis.analysis}</Text>
-        
-        <View style={styles.recommendBox}>
-          <Text style={styles.recommendTitle}>💡 행운 가이드</Text>
-          <View style={styles.recommendRow}>
-            <Text style={styles.recommendLabel}>🎨 유리한 색상:</Text>
-            <Text style={styles.recommendValue}>
-              {yongsinAnalysis.yongsin === 'wood' ? '녹색, 청록색' :
-               yongsinAnalysis.yongsin === 'fire' ? '빨간색, 주황색' :
-               yongsinAnalysis.yongsin === 'earth' ? '노란색, 갈색' :
-               yongsinAnalysis.yongsin === 'metal' ? '흰색, 금색, 은색' : '검은색, 파란색'}
-            </Text>
-          </View>
-          <View style={styles.recommendRow}>
-            <Text style={styles.recommendLabel}>🧭 유리한 방향:</Text>
-            <Text style={styles.recommendValue}>
-              {yongsinAnalysis.yongsin === 'wood' ? '동쪽 (90°)' :
-               yongsinAnalysis.yongsin === 'fire' ? '남쪽 (180°)' :
-               yongsinAnalysis.yongsin === 'earth' ? '중앙' :
-               yongsinAnalysis.yongsin === 'metal' ? '서쪽 (270°)' : '북쪽 (0°)'}
-            </Text>
-          </View>
-          <View style={styles.recommendRow}>
-            <Text style={styles.recommendLabel}>🔢 행운의 숫자:</Text>
-            <Text style={styles.recommendValue}>
-              {yongsinAnalysis.yongsin === 'wood' ? '3, 8' :
-               yongsinAnalysis.yongsin === 'fire' ? '2, 7' :
-               yongsinAnalysis.yongsin === 'earth' ? '5, 10' :
-               yongsinAnalysis.yongsin === 'metal' ? '4, 9' : '1, 6'}
-            </Text>
-          </View>
-          <View style={styles.recommendRow}>
-            <Text style={styles.recommendLabel}>🌿 추천 활동:</Text>
-            <Text style={styles.recommendValue}>
-              {yongsinAnalysis.yongsin === 'wood' ? '산책, 등산, 원예, 독서' :
-               yongsinAnalysis.yongsin === 'fire' ? '운동, 사교 모임, 발표, 창작 활동' :
-               yongsinAnalysis.yongsin === 'earth' ? '명상, 요리, 부동산 관련, 안정적 투자' :
-               yongsinAnalysis.yongsin === 'metal' ? '정리정돈, 재무관리, 결단 필요한 일' : '수영, 여행, 학습, 유연한 대응'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.cautionBox}>
-          <Text style={styles.cautionTitle}>⚠️ 주의사항 (기신 관련)</Text>
-          <View style={styles.cautionRow}>
-            <Text style={styles.cautionLabel}>피해야 할 색상:</Text>
-            <Text style={styles.cautionValue}>
-              {yongsinAnalysis.gishin === 'wood' ? '녹색 계열' :
-               yongsinAnalysis.gishin === 'fire' ? '빨간색 계열' :
-               yongsinAnalysis.gishin === 'earth' ? '노란색, 갈색 계열' :
-               yongsinAnalysis.gishin === 'metal' ? '흰색, 금속색' : '검은색, 파란색 계열'}
-            </Text>
-          </View>
-          <View style={styles.cautionRow}>
-            <Text style={styles.cautionLabel}>주의할 활동:</Text>
-            <Text style={styles.cautionValue}>
-              {yongsinAnalysis.gishin === 'wood' ? '무리한 시작, 과도한 확장' :
-               yongsinAnalysis.gishin === 'fire' ? '과도한 경쟁, 충동적 결정' :
-               yongsinAnalysis.gishin === 'earth' ? '완고한 고집, 변화 거부' :
-               yongsinAnalysis.gishin === 'metal' ? '지나친 비판, 완벽주의' : '우유부단, 감정적 결정'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 3. 지장간 분석 */}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>🔮 지장간(地藏干) 분석</Text>
-        <Text style={styles.hiddenStemDesc}>지지 속에 숨겨진 천간 (내면의 성향)</Text>
-        
-        {['year', 'month', 'day', 'hour'].map((pillar) => {
-          const p = safePillars[pillar as keyof typeof safePillars];
-          if (!p || pillar === 'hour' && !p) return null;
-          const hidden = getHiddenStems(p.branch);
-          if (!hidden) return null;
-          
-          const names = { year: '년주', month: '월주', day: '일주', hour: '시주' };
-          const meanings: Record<string, string> = {
-            'year': '조상, 부모, 유년기의 영향을 나타냅니다.',
-            'month': '형제, 부모, 청년기의 환경을 나타냅니다.',
-            'day': '배우자, 자신, 중년의 운세를 나타냅니다.',
-            'hour': '자녀, 노년, 남은 생의 영향을 나타냅니다.',
-          };
-          
-          return (
-            <View key={pillar} style={styles.hiddenStemCard}>
-              <View style={styles.hiddenStemHeader}>
-                <Text style={styles.hiddenStemPillar}>{names[pillar as keyof typeof names]}</Text>
-                <Text style={styles.hiddenStemBranch}>{p.branch}</Text>
-              </View>
-              <Text style={styles.hiddenStemMeaning}>{meanings[pillar]}</Text>
-              <View style={styles.hiddenStemRow}>
-                <View style={styles.hiddenStemItem}>
-                  <Text style={styles.hiddenStemLabel}>본기(主氣)</Text>
-                  <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.main)) }]}>{hidden.main}</Text>
-                  <Text style={styles.hiddenStemDesc}>가장 강한 기운</Text>
-                </View>
-                {hidden.middle && (
-                  <View style={styles.hiddenStemItem}>
-                    <Text style={styles.hiddenStemLabel}>중기(中氣)</Text>
-                    <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.middle)) }]}>{hidden.middle}</Text>
-                    <Text style={styles.hiddenStemDesc}>중간 기운</Text>
-                  </View>
-                )}
-                {hidden.residue && (
-                  <View style={styles.hiddenStemItem}>
-                    <Text style={styles.hiddenStemLabel}>여기(餘氣)</Text>
-                    <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.residue)) }]}>{hidden.residue}</Text>
-                    <Text style={styles.hiddenStemDesc}>잔여 기운</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          );
-        })}
-        
-        <CollapsibleSection
-          title="지장간(地藏干)이란?"
-          emoji="🔮"
-          defaultExpanded={false}
-        >
-          <Text style={styles.hiddenStemInfoText}>
-            지장간은 지지(地支) 속에 숨겨진 천간(天干)으로, 겉으로 드러나지 않는 내면의 성향이나
-            잠재력을 나타냅니다.{'\n\n'}
-            • <Text style={{ fontWeight: '700' }}>본기(主氣)</Text>: 가장 강한 영향력{'\n'}
-            • <Text style={{ fontWeight: '700' }}>중기(中氣)</Text>: 중간 정도의 영향{'\n'}
-            • <Text style={{ fontWeight: '700' }}>여기(餘氣)</Text>: 보조적인 영향
-          </Text>
-        </CollapsibleSection>
-      </View>
-
-      {/* 4. 삼합 분석 */}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>⚡ 삼합(三合) 분석</Text>
-        <Text style={styles.combineDesc}>세 지지의 강력한 결합 - 해당 오행의 기운이 극대화됩니다</Text>
-        
-        {threeCombines.length > 0 ? (
-          threeCombines.map((tc, idx) => (
-            <View key={idx} style={[styles.combineCard, { borderLeftColor: getElementColor(tc.element) }]}>
-              <View style={styles.combineHeader}>
-                <View style={[styles.elementDot, { backgroundColor: getElementColor(tc.element) }]} />
-                <Text style={styles.combineName}>{tc.name}</Text>
-              </View>
-              <Text style={styles.combineText}>
-                {getElementName(tc.element)}(三合局)이 형성되어 {getElementName(tc.element)}의 기운이 매우 강하게 작용합니다.{'\n'}
-                {tc.element === 'wood' && '목(木)의 생명력, 성장, 확장의 기운이 강화됩니다.'}
-                {tc.element === 'fire' && '화(火)의 열정, 활력, 명예의 기운이 강화됩니다.'}
-                {tc.element === 'metal' && '금(金)의 결단력, 집중력, 재물의 기운이 강화됩니다.'}
-                {tc.element === 'water' && '수(水)의 지혜, 유동성, 커뮤니케이션 기운이 강화됩니다.'}
-              </Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noCombineText}>사주에 삼합이 형성되지 않았습니다.</Text>
-        )}
-        
-        <CollapsibleSection
-          title="삼합이란?"
-          emoji="📚"
-          defaultExpanded={false}
-        >
-          <Text style={styles.combineInfoText}>
-            삼합은 세 개의 지지가 결합하여 특정 오행의 기운을 극대화하는 현상입니다.{'\n\n'}
-            • <Text style={{ color: '#2196F3', fontWeight: '600' }}>신자진합(申子辰合)</Text>: 수(水)국{'\n'}
-            • <Text style={{ color: '#4CAF50', fontWeight: '600' }}>해묘미합(亥卯未合)</Text>: 목(木)국{'\n'}
-            • <Text style={{ color: '#F44336', fontWeight: '600' }}>인오술합(寅午戌合)</Text>: 화(火)국{'\n'}
-            • <Text style={{ color: '#9E9E9E', fontWeight: '600' }}>사유축합(巳酉丑合)</Text>: 금(金)국
-          </Text>
-        </CollapsibleSection>
-      </View>
-
-      {/* 5. 육충 분석 */}
-      {clashes.length > 0 && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>⚠️ 충(冲) 분석</Text>
-          <Text style={styles.clashDesc}>지지 간의 대립 관계 - 변화와 갈등의 기운</Text>
-          {clashes.map((clash, idx) => (
-            <View key={idx} style={styles.clashItem}>
-              <Text style={styles.clashText}>{clash}</Text>
-            </View>
-          ))}
-          <Text style={styles.clashNote}>
-            충은 대립과 변화를 의미합니다. 주변 환경이나 인간관계에서 갈등이 생길 수 있으며, 
-            이를 극복하면 큰 성장의 계기가 됩니다.
-          </Text>
-        </View>
-      )}
-
-      {/* 6. 육해 분석 */}
-      {harms.length > 0 && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>💔 육해(六害) 분석</Text>
-          <Text style={styles.harmDesc}>지지 간의 해로운 관계 - 미묘한 갈등과 손실</Text>
-          {harms.map((harm, idx) => (
-            <View key={idx} style={styles.harmItem}>
-              <Text style={styles.harmText}>{harm}</Text>
-            </View>
-          ))}
-          <Text style={styles.harmNote}>
-            육해는 명백하지 않은 미묘한 갈등을 나타냅니다. 보이지 않는 곳에서 손실이나 
-            어려움이 발생할 수 있으니 신중한 판단이 필요합니다.
-          </Text>
-        </View>
-      )}
-
-      {/* 7. 형벌 분석 */}
-      {punishments.length > 0 && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>⛓️ 형벌(刑罰) 분석</Text>
-          <Text style={styles.punishDesc}>지지 간의 형벌 관계</Text>
-          {punishments.map((p, idx) => (
-            <View key={idx} style={styles.punishItem}>
-              <Text style={styles.punishText}>{p}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 8. 반합 분석 */}
-      {halfCombines.length > 0 && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>🔸 반합(半合) 분석</Text>
-          <Text style={styles.halfDesc}>2/3 형성된 삼합</Text>
-          {halfCombines.map((hc, idx) => (
-            <View key={idx} style={styles.halfItem}>
-              <View style={styles.halfHeader}>
-                <View style={[styles.elementDot, { backgroundColor: getElementColor(hc.element) }]} />
-                <Text style={styles.halfName}>{hc.name}</Text>
-              </View>
-              <Text style={styles.halfText}>
-                보유: {hc.have.join(', ')} / 부족: {hc.missing.join(', ')}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 9. 십신 정보 */}
-      <View
-        style={styles.infoCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.TENGOD, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.infoTitle}>🎭 십신(十神) 정보</Text>
-        <Text style={styles.tenGodDesc}>십신은 일간(나)을 기준으로 다른 천간과의 관계를 나타냅니다</Text>
-
-        <View style={styles.tenGodRow}>
-          <View style={styles.tenGodItem}>
-            <Text style={styles.tenGodLabel}>년간</Text>
-            <Text style={styles.tenGodValue}>{safeTenGods.year}</Text>
-          </View>
-          <View style={styles.tenGodItem}>
-            <Text style={styles.tenGodLabel}>월간</Text>
-            <Text style={styles.tenGodValue}>{safeTenGods.month}</Text>
-          </View>
-          {safeTenGods.hour && (
-            <View style={styles.tenGodItem}>
-              <Text style={styles.tenGodLabel}>시간</Text>
-              <Text style={styles.tenGodValue}>{safeTenGods.hour}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* 십신 상세 해설 - 접이식 */}
-        <CollapsibleSection
-          title="십신(十神) 의미 해설"
-          emoji="📖"
-          defaultExpanded={false}
-        >
-          <View style={styles.tenGodCategory}>
-            <Text style={styles.tenGodCategoryTitle}>👥 비겁(比劫) - 나와 같은 오행</Text>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>비견(比肩)</Text>
-              <Text style={styles.tenGodDetailDesc}>형제, 친구, 동료. 자존심, 독립심을 나타냅니다.</Text>
-            </View>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>겁재(劫財)</Text>
-              <Text style={styles.tenGodDetailDesc}>경쟁자. 욕심, 추진력, 도전정신을 나타냅니다.</Text>
-            </View>
-          </View>
-
-          <View style={styles.tenGodCategory}>
-            <Text style={styles.tenGodCategoryTitle}>💡 식상(食傷) - 내가 생하는 오행</Text>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>식신(食神)</Text>
-              <Text style={styles.tenGodDetailDesc}>자녀, 창작물. 재능, 표현력을 나타냅니다.</Text>
-            </View>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>상관(傷官)</Text>
-              <Text style={styles.tenGodDetailDesc}>예술성, 자유로움. 창의력, 언변을 나타냅니다.</Text>
-            </View>
-          </View>
-
-          <View style={styles.tenGodCategory}>
-            <Text style={styles.tenGodCategoryTitle}>💵 재성(財星) - 내가 극하는 오행</Text>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>편재(偏財)</Text>
-              <Text style={styles.tenGodDetailDesc}>횡재, 아버지. 사업수완, 투자력을 나타냅니다.</Text>
-            </View>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>정재(正財)</Text>
-              <Text style={styles.tenGodDetailDesc}>월급, 아내. 성실함, 안정추구를 나타냅니다.</Text>
-            </View>
-          </View>
-
-          <View style={styles.tenGodCategory}>
-            <Text style={styles.tenGodCategoryTitle}>👔 관성(官星) - 나를 극하는 오행</Text>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>편관(偏官)</Text>
-              <Text style={styles.tenGodDetailDesc}>권력, 남편(여). 카리스마, 결단력을 나타냅니다.</Text>
-            </View>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>정관(正官)</Text>
-              <Text style={styles.tenGodDetailDesc}>직장, 명예. 책임감, 질서의식을 나타냅니다.</Text>
-            </View>
-          </View>
-
-          <View style={[styles.tenGodCategory, { borderBottomWidth: 0 }]}>
-            <Text style={styles.tenGodCategoryTitle}>📚 인성(印星) - 나를 생하는 오행</Text>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>편인(偏印)</Text>
-              <Text style={styles.tenGodDetailDesc}>스승. 창의력, 독창성, 영감을 나타냅니다.</Text>
-            </View>
-            <View style={styles.tenGodDetailItem}>
-              <Text style={styles.tenGodDetailName}>정인(正印)</Text>
-              <Text style={styles.tenGodDetailDesc}>어머니, 학문. 지혜, 학습능력을 나타냅니다.</Text>
-            </View>
-          </View>
-        </CollapsibleSection>
-      </View>
-
-      {/* 7. 대운 */}
-      <View
-        style={styles.infoCard}
-        onLayout={(e) => handleSectionLayout(SECTION_IDS.DAEUN, e.nativeEvent.layout.y)}
-      >
-        <Text style={styles.infoTitle}>📈 10년 대운(大運)</Text>
-        <Text style={styles.daeunExplainText}>
-          대운은 10년마다 바뀌는 인생의 큰 흐름입니다. 마치 계절이 바뀌듯 삶의 환경과 운의 흐름이 변합니다.
-        </Text>
-
-        {daeunList.map((daeun, idx) => {
-          const daeunElement = stemToElement(daeun.stem);
-          const dayElement = safeDayMasterInfo.element;
-
-          // 대운과 일간의 관계 분석
-          const getRelation = () => {
-            if (daeunElement === dayElement) return { type: '비겁운', desc: '독립심과 자존심이 강해지는 시기입니다. 경쟁이 치열해지지만 성장의 기회도 있습니다.', color: '#9C27B0' };
-            // 오행상생상극 관계
-            const generates: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };
-            const controls: Record<string, string> = { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' };
-
-            if (generates[dayElement] === daeunElement) return { type: '식상운', desc: '표현력과 창의력이 높아지는 시기입니다. 예술, 창작 활동에 유리합니다.', color: '#FF9800' };
-            if (generates[daeunElement] === dayElement) return { type: '인성운', desc: '학습, 자격증, 부동산에 유리한 시기입니다. 어머니/어른의 도움이 있습니다.', color: '#2196F3' };
-            if (controls[dayElement] === daeunElement) return { type: '재성운', desc: '재물운이 활발한 시기입니다. 사업, 투자에 적극적으로 나설 때입니다.', color: '#4CAF50' };
-            if (controls[daeunElement] === dayElement) return { type: '관성운', desc: '직장, 승진, 시험에 유리한 시기입니다. 책임감이 커지고 사회적 인정을 받습니다.', color: '#F44336' };
-            return { type: '혼합운', desc: '다양한 기운이 작용하는 시기입니다.', color: '#607D8B' };
-          };
-
-          const relation = getRelation();
-
-          return (
-            <View key={idx} style={[
-              styles.daeunItem,
-              daeun.isCurrent && styles.daeunItemCurrent,
-              daeun.isPast && styles.daeunItemPast,
-            ]}>
-              <View style={styles.daeunHeader}>
-                <View style={styles.daeunAge}>
-                  <Text style={[styles.daeunAgeText, daeun.isPast && styles.daeunAgePast]}>{daeun.age}세</Text>
-                  {daeun.isCurrent && <View style={styles.daeunCurrentBadge}><Text style={styles.daeunCurrentText}>현재</Text></View>}
-                  {daeun.isPast && <Text style={styles.daeunPastLabel}>지난 대운</Text>}
-                </View>
-                <View style={styles.daeunGanji}>
-                  <Text style={[styles.daeunStem, { color: getElementColor(daeunElement) }]}>{daeun.stem}</Text>
-                  <Text style={styles.daeunBranch}>{daeun.branch}</Text>
-                </View>
-              </View>
-              <View style={[styles.daeunRelation, { backgroundColor: relation.color + '15' }]}>
-                <Text style={[styles.daeunRelationType, { color: relation.color }]}>{relation.type}</Text>
-                <Text style={styles.daeunRelationDesc}>{daeun.isCurrent ? relation.desc : `${relation.type}의 시기입니다.`}</Text>
-              </View>
-            </View>
-          );
-        })}
-
-        <View style={styles.daeunTip}>
-          <Text style={styles.daeunTipTitle}>💡 대운 활용 팁</Text>
-          <Text style={styles.daeunTipText}>
-            • <Text style={{ fontWeight: '700' }}>비겁운</Text>: 독립, 창업에 도전하되 경쟁에 주의{'\n'}
-            • <Text style={{ fontWeight: '700' }}>식상운</Text>: 창작, 표현, 자녀 관련 일에 집중{'\n'}
-            • <Text style={{ fontWeight: '700' }}>재성운</Text>: 적극적인 투자와 사업 확장의 기회{'\n'}
-            • <Text style={{ fontWeight: '700' }}>관성운</Text>: 승진, 시험, 사회적 성취에 유리{'\n'}
-            • <Text style={{ fontWeight: '700' }}>인성운</Text>: 학습, 자격증 취득, 부동산에 좋음
-          </Text>
-        </View>
-      </View>
-
-      {/* 8. 합충 정보 */}
-      {relations && (relations.combines.length > 0 || relations.clashes.length > 0) && (
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>🔗 합충 관계</Text>
-          {relations.combines.length > 0 && (
-            <View style={styles.relationRow}>
-              <Text style={styles.relationLabel}>합:</Text>
-              <Text style={styles.relationValue}>{relations.combines.join(', ')}</Text>
-            </View>
-          )}
-          {relations.clashes.length > 0 && (
-            <View style={styles.relationRow}>
-              <Text style={styles.relationLabel}>충:</Text>
-              <Text style={styles.relationValue}>{relations.clashes.join(', ')}</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* 9. 나의 사주 이야기 - 쉬운 종합 해석 */}
+      {/* ===== 쉬운 해석 (최상단) ===== */}
       <View
         style={[styles.infoCard, styles.storyCard]}
         onLayout={(e) => handleSectionLayout(SECTION_IDS.ADVICE, e.nativeEvent.layout.y)}
       >
         <Text style={styles.storyTitle}>📖 나의 사주 이야기</Text>
-        <Text style={styles.storySubtitle}>어려운 사주 용어 없이, 쉽게 풀어드립니다</Text>
+        <Text style={styles.storySubtitle}>어려운 용어 없이, 쉽게 풀어드립니다</Text>
 
         {/* 1. 나는 어떤 사람인가 */}
         <View style={styles.storySection}>
@@ -1348,7 +595,7 @@ export default function SajuScreen() {
           <Text style={styles.storySectionTitle}>⚡ 나의 에너지는 어떤가요?</Text>
           <View style={styles.storyContent}>
             <Text style={styles.storyParagraph}>
-              사주에서 보면 당신의 기본 에너지(일간의 힘)는{' '}
+              사주에서 보면 당신의 기본 에너지는{' '}
               <Text style={styles.storyHighlight}>
                 {strengthAnalysis.score >= 70 ? '강한 편' : strengthAnalysis.score >= 45 ? '균형 잡힌 편' : '부드러운 편'}
               </Text>입니다.
@@ -1464,8 +711,7 @@ export default function SajuScreen() {
             </Text>
             {clashes.length > 0 && (
               <Text style={styles.storyParagraph}>
-                다만 사주에 <Text style={styles.storyHighlight}>{clashes.join(', ')}</Text>이 있어서,
-                변화와 갈등의 에너지도 함께 가지고 있습니다. 이것은 나쁜 것이 아니라,
+                다만 사주에 변화와 갈등의 에너지도 함께 가지고 있습니다. 이것은 나쁜 것이 아니라,
                 삶에서 성장의 계기가 되는 원동력입니다.
               </Text>
             )}
@@ -1482,6 +728,759 @@ export default function SajuScreen() {
           </Text>
         </View>
       </View>
+
+      {/* ===== 전문 분석 (아래로) ===== */}
+
+      {/* 사주팔자 개념 설명 */}
+      <View
+        style={styles.conceptCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.CONCEPT, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.conceptTitle}>📚 사주팔자란?</Text>
+        <Text style={styles.conceptText}>
+          사주팔자는 태어난 <Text style={styles.highlightText}>연·월·일·시</Text>를
+          4개의 기둥으로 표현하고, 각 기둥마다 <Text style={styles.highlightText}>하늘 글자</Text>와{' '}
+          <Text style={styles.highlightText}>땅 글자</Text> 2글자씩 총 8글자로 나타낸 것입니다.
+        </Text>
+        <View style={styles.conceptDivider} />
+        <View style={styles.conceptRow}>
+          <View style={styles.conceptItem}>
+            <Text style={styles.conceptItemTitle}>하늘 글자 (위쪽)</Text>
+            <Text style={styles.conceptItemDesc}>하늘의 기운 10가지{'\n'}갑을병정무기경신임계</Text>
+          </View>
+          <View style={styles.conceptItem}>
+            <Text style={styles.conceptItemTitle}>땅 글자 (아래쪽)</Text>
+            <Text style={styles.conceptItemDesc}>땅의 기운 12가지{'\n'}자축인묘진사오미신유술해</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 4주 표 */}
+      <View
+        style={styles.pillarCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.PILLAR, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.pillarTitle}>나의 사주팔자</Text>
+        <View style={styles.pillarTable}>
+          <View style={styles.tableRow}>
+            <View style={styles.tableCell}><Text style={styles.tableHeader}>년주</Text></View>
+            <View style={styles.tableCell}><Text style={styles.tableHeader}>월주</Text></View>
+            <View style={styles.tableCell}><Text style={styles.tableHeader}>일주</Text></View>
+            <View style={styles.tableCell}><Text style={styles.tableHeader}>시주</Text></View>
+          </View>
+          <View style={styles.tableRow}>
+            <View style={styles.tableCell}>
+              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safePillars.year.stem)) }]}>{safePillars.year.stem}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safePillars.month.stem)) }]}>{safePillars.month.stem}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={[styles.stemText, { color: getElementColor(stemToElement(safeDayMaster)) }]}>{safeDayMaster}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={[styles.stemText, { color: safePillars.hour ? getElementColor(stemToElement(safePillars.hour.stem)) : '#999' }]}>{safePillars.hour?.stem || '-'}</Text>
+            </View>
+          </View>
+          <View style={styles.tableRow}>
+            <View style={styles.tableCell}>
+              <Text style={styles.branchText}>{safePillars.year.branch}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={styles.branchText}>{safePillars.month.branch}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={styles.branchText}>{safePillars.day.branch}</Text>
+            </View>
+            <View style={styles.tableCell}>
+              <Text style={styles.branchText}>{safePillars.hour?.branch || '-'}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 4주 각각의 의미 설명 */}
+        <View style={styles.pillarMeanings}>
+          <View style={styles.pillarMeaningItem}>
+            <Text style={styles.pillarMeaningLabel}>년주 - 태어난 해</Text>
+            <Text style={styles.pillarMeaningDesc}>조상운, 어린 시절 (0~16세)</Text>
+          </View>
+          <View style={styles.pillarMeaningItem}>
+            <Text style={styles.pillarMeaningLabel}>월주 - 태어난 달</Text>
+            <Text style={styles.pillarMeaningDesc}>부모운, 청년기 (17~32세)</Text>
+          </View>
+          <View style={styles.pillarMeaningItem}>
+            <Text style={styles.pillarMeaningLabel}>일주 - 태어난 날</Text>
+            <Text style={styles.pillarMeaningDesc}>본인/배우자, 중년 (33~48세)</Text>
+          </View>
+          <View style={styles.pillarMeaningItem}>
+            <Text style={styles.pillarMeaningLabel}>시주 - 태어난 시간</Text>
+            <Text style={styles.pillarMeaningDesc}>자녀운, 노년기 (49세~)</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 일간(日干) 해설 - 5레이어 해석 */}
+      <View
+        style={styles.dayMasterCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.DAYMASTER, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.dayMasterTitle}>🌟 나를 대표하는 글자: {safeDayMaster}</Text>
+        <Text style={styles.dayMasterSubtitle}>사주에서 '나 자신'을 나타내는 가장 중요한 글자입니다</Text>
+
+        <View style={styles.dayMasterInfo}>
+          <View style={[styles.dayMasterElement, { backgroundColor: getElementColor(safeDayMasterInfo.element) + '20' }]}>
+            <Text style={[styles.dayMasterElementText, { color: getElementColor(safeDayMasterInfo.element) }]}>
+              {dayMasterInterpretation?.koreanName || `${getElementName(safeDayMasterInfo.element)} (${safeDayMasterInfo.element.toUpperCase()})`}
+            </Text>
+            <Text style={styles.dayMasterYinYang}>
+              {safeDayMasterInfo.yinYang === 'yang' ? '양 - 적극적이고 외향적인 성향' : '음 - 수용적이고 내향적인 성향'}
+            </Text>
+          </View>
+          {dayMasterInterpretation && (
+            <Text style={styles.dayMasterSymbol}>
+              「{dayMasterInterpretation.symbol}」 - {dayMasterInterpretation.nature}
+            </Text>
+          )}
+          <Text style={styles.dayMasterMeaning}>{safeDayMasterInfo.meaning}</Text>
+        </View>
+
+        {/* Layer 5: 스토리텔링 - 메타포 */}
+        {dayMasterInterpretation && (
+          <View style={styles.metaphorBox}>
+            <Text style={styles.metaphorText}>"{dayMasterInterpretation.metaphor}"</Text>
+            <Text style={styles.quoteText}>💬 {dayMasterInterpretation.quote}</Text>
+          </View>
+        )}
+
+        {/* Layer 3: 성격 특성 */}
+        {dayMasterInterpretation && (
+          <View style={styles.personalitySection}>
+            <Text style={styles.sectionSubtitle}>🎭 나의 성격 특성</Text>
+            <View style={styles.bulletList}>
+              {dayMasterInterpretation.personality.map((trait, idx) => (
+                <Text key={idx} style={styles.bulletItem}>• {trait}</Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 강점 / 약점 */}
+        {dayMasterInterpretation && (
+          <View style={styles.strengthWeaknessRow}>
+            <View style={styles.strengthBox}>
+              <Text style={styles.strengthBoxTitle}>✨ 강점</Text>
+              {dayMasterInterpretation.strengths.map((s, idx) => (
+                <Text key={idx} style={styles.strengthItem}>• {s}</Text>
+              ))}
+            </View>
+            <View style={styles.weaknessBox}>
+              <Text style={styles.weaknessBoxTitle}>⚠️ 약점</Text>
+              {dayMasterInterpretation.weaknesses.map((w, idx) => (
+                <Text key={idx} style={styles.weaknessItem}>• {w}</Text>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Layer 4: 실전 조언 (접이식) */}
+        {dayMasterInterpretation && (
+          <CollapsibleSection title="실전 생활 조언" emoji="💡" defaultExpanded={false}>
+            <View style={styles.dayMasterAdviceSection}>
+              <View style={styles.dayMasterAdviceBlock}>
+                <Text style={styles.dayMasterAdviceLabel}>💼 직업/커리어</Text>
+                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.career}</Text>
+              </View>
+              <View style={styles.dayMasterAdviceBlock}>
+                <Text style={styles.dayMasterAdviceLabel}>💑 대인관계</Text>
+                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.relationships}</Text>
+              </View>
+              <View style={styles.dayMasterAdviceBlock}>
+                <Text style={styles.dayMasterAdviceLabel}>🏥 건강 관리</Text>
+                <Text style={styles.dayMasterAdviceText}>{dayMasterInterpretation.health}</Text>
+              </View>
+              <View style={styles.growthSection}>
+                <Text style={styles.dayMasterAdviceLabel}>🌱 성장 포인트</Text>
+                {dayMasterInterpretation.growthPoints.map((point, idx) => (
+                  <Text key={idx} style={styles.growthItem}>✓ {point}</Text>
+                ))}
+              </View>
+            </View>
+          </CollapsibleSection>
+        )}
+
+        {/* 기존 기본 성격 (dayMasterInterpretation이 없을 때 폴백) */}
+        {!dayMasterInterpretation && (
+          <View style={styles.dayMasterTip}>
+            <Text style={styles.dayMasterTipTitle}>💡 일간별 기본 성격</Text>
+            <Text style={styles.dayMasterTipText}>
+              {safeDayMaster === '갑' && '갑목(甲木): 큰 나무처럼 곧고 정직하며, 리더십이 있습니다.'}
+              {safeDayMaster === '을' && '을목(乙木): 덩굴처럼 유연하고 적응력이 뛰어납니다.'}
+              {safeDayMaster === '병' && '병화(丙火): 태양처럼 밝고 따뜻하며, 열정적입니다.'}
+              {safeDayMaster === '정' && '정화(丁火): 촛불처럼 은은하고 섬세합니다.'}
+              {safeDayMaster === '무' && '무토(戊土): 산처럼 듬직하고 안정적입니다.'}
+              {safeDayMaster === '기' && '기토(己土): 논밭처럼 포용력이 있습니다.'}
+              {safeDayMaster === '경' && '경금(庚金): 바위처럼 강하고 단호합니다.'}
+              {safeDayMaster === '신' && '신금(辛金): 보석처럼 섬세하고 예민합니다.'}
+              {safeDayMaster === '임' && '임수(壬水): 바다처럼 넓고 깊습니다.'}
+              {safeDayMaster === '계' && '계수(癸水): 비/이슬처럼 조용하고 깊습니다.'}
+              {!['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'].includes(safeDayMaster) && '일간 정보를 불러올 수 없습니다.'}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* ===== 고급 분석 시작 ===== */}
+
+      {/* 1. 일간 강약 분석 */}
+      <View
+        style={styles.infoCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.STRENGTH, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.infoTitle}>📊 나의 에너지 강도</Text>
+        <View style={styles.strengthGauge}>
+          <View style={styles.gaugeHeader}>
+            <Text style={styles.gaugeLabel}>나의 기본 에너지</Text>
+            <Text style={[styles.gaugeValue, { 
+              color: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336' 
+            }]}>
+              {strengthAnalysis.strength} ({strengthAnalysis.score}점)
+            </Text>
+          </View>
+          <View style={styles.gaugeBar}>
+            <View style={[styles.gaugeFill, { 
+              width: `${strengthAnalysis.score}%`,
+              backgroundColor: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336'
+            }]} />
+          </View>
+          <View style={styles.gaugeLabels}>
+            <Text style={styles.gaugeLabelText}>약</Text>
+            <Text style={styles.gaugeLabelText}>중화</Text>
+            <Text style={styles.gaugeLabelText}>강</Text>
+          </View>
+        </View>
+        <Text style={styles.analysisText}>{strengthAnalysis.analysis}</Text>
+        <View style={styles.reasonsBox}>
+          {strengthAnalysis.reasons.map((reason, idx) => (
+            <Text key={idx} style={styles.reasonText}>• {reason}</Text>
+          ))}
+        </View>
+      </View>
+
+      {/* 오행 분포 시각화 */}
+      <View
+        style={styles.infoCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.ELEMENTS, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.infoTitle}>🔥 나의 다섯 가지 기운</Text>
+        <Text style={styles.elementDesc}>사주에 담긴 나무·불·흙·쇠·물의 균형을 확인해보세요</Text>
+
+        <View style={styles.elementChart}>
+          {Object.entries(safeElements).map(([element, count]) => {
+            const total = Object.values(safeElements).reduce((a, b) => a + b, 0);
+            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+            const isYongsin = element === yongsinAnalysis.yongsin;
+            const isGishin = element === yongsinAnalysis.gishin;
+            return (
+              <View key={element} style={[styles.elementBarContainer, isYongsin && styles.elementBarYongsin]}>
+                <View style={styles.elementBarHeader}>
+                  <View style={styles.elementBarNameRow}>
+                    <Text style={[styles.elementBarName, { color: getElementColor(element) }]}>
+                      {getElementName(element)}
+                    </Text>
+                    {isYongsin && <Text style={styles.yongsinStar}>★ 필요</Text>}
+                    {isGishin && <Text style={styles.gishinMark}>⚠️</Text>}
+                  </View>
+                  <Text style={styles.elementBarCount}>{count}개 ({percent}%)</Text>
+                </View>
+                <View style={styles.elementBarBg}>
+                  <View style={[styles.elementBarFill, {
+                    width: `${Math.max(percent, 5)}%`,
+                    backgroundColor: getElementColor(element)
+                  }]} />
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.elementExplain}>
+          <Text style={styles.elementExplainTitle}>🌿 다섯 기운의 의미</Text>
+          <View style={styles.elementExplainGrid}>
+            <View style={styles.elementExplainItem}>
+              <Text style={[styles.elementExplainName, { color: '#4CAF50' }]}>목 (나무)</Text>
+              <Text style={styles.elementExplainText}>성장, 시작{'\n'}인자함, 창의력</Text>
+            </View>
+            <View style={styles.elementExplainItem}>
+              <Text style={[styles.elementExplainName, { color: '#F44336' }]}>화 (불)</Text>
+              <Text style={styles.elementExplainText}>열정, 표현{'\n'}예절, 명예</Text>
+            </View>
+            <View style={styles.elementExplainItem}>
+              <Text style={[styles.elementExplainName, { color: '#FFC107' }]}>토 (흙)</Text>
+              <Text style={styles.elementExplainText}>중심, 안정{'\n'}신뢰, 포용</Text>
+            </View>
+            <View style={styles.elementExplainItem}>
+              <Text style={[styles.elementExplainName, { color: '#9E9E9E' }]}>금 (쇠)</Text>
+              <Text style={styles.elementExplainText}>결단, 정의{'\n'}의리, 강인함</Text>
+            </View>
+            <View style={styles.elementExplainItem}>
+              <Text style={[styles.elementExplainName, { color: '#2196F3' }]}>수 (물)</Text>
+              <Text style={styles.elementExplainText}>지혜, 유연{'\n'}적응력, 소통</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.elementBalance}>
+          <Text style={styles.elementBalanceTitle}>⚖️ 나의 오행 밸런스</Text>
+          <Text style={styles.elementBalanceText}>
+            {(() => {
+              const sorted = Object.entries(safeElements).sort((a, b) => b[1] - a[1]);
+              const strongest = sorted[0];
+              const weakest = sorted[sorted.length - 1];
+              return `가장 강한 기운: ${getElementName(strongest[0])}(${strongest[1]}개)\n가장 약한 기운: ${getElementName(weakest[0])}(${weakest[1]}개)\n\n${strongest[1] - weakest[1] > 3 ? '⚠️ 오행의 균형이 다소 치우쳐 있습니다. 부족한 기운을 보완하면 좋습니다.' : '✅ 오행이 비교적 균형 잡혀 있습니다.'}`;
+            })()}
+          </Text>
+        </View>
+      </View>
+
+      {/* 2. 용신/기신 분석 */}
+      <View
+        style={styles.infoCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.YONGSIN, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.infoTitle}>🎯 나에게 필요한 기운</Text>
+        <Text style={styles.yongsinDesc}>부족한 기운을 채우고, 넘치는 기운을 조절하세요</Text>
+
+        <View style={styles.yongsinRow}>
+          <View style={[styles.yongsinBadge, { backgroundColor: '#E8F5E9' }]}>
+            <Text style={styles.yongsinBadgeLabel}>✨ 도움이 되는 기운</Text>
+            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.yongsin) }]} />
+            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.yongsin)}</Text>
+          </View>
+          <View style={[styles.yongsinBadge, { backgroundColor: '#FFF3E0' }]}>
+            <Text style={styles.yongsinBadgeLabel}>💫 보조 기운</Text>
+            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.heeshin) }]} />
+            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.heeshin)}</Text>
+          </View>
+          <View style={[styles.yongsinBadge, { backgroundColor: '#FFEBEE' }]}>
+            <Text style={styles.yongsinBadgeLabel}>⚠️ 주의할 기운</Text>
+            <View style={[styles.elementDot, { backgroundColor: getElementColor(yongsinAnalysis.gishin) }]} />
+            <Text style={styles.yongsinBadgeText}>{getElementName(yongsinAnalysis.gishin)}</Text>
+          </View>
+        </View>
+        
+        <Text style={styles.yongsinAnalysis}>{yongsinAnalysis.analysis}</Text>
+        
+        <View style={styles.recommendBox}>
+          <Text style={styles.recommendTitle}>💡 행운 가이드</Text>
+          <View style={styles.recommendRow}>
+            <Text style={styles.recommendLabel}>🎨 유리한 색상:</Text>
+            <Text style={styles.recommendValue}>
+              {yongsinAnalysis.yongsin === 'wood' ? '녹색, 청록색' :
+               yongsinAnalysis.yongsin === 'fire' ? '빨간색, 주황색' :
+               yongsinAnalysis.yongsin === 'earth' ? '노란색, 갈색' :
+               yongsinAnalysis.yongsin === 'metal' ? '흰색, 금색, 은색' : '검은색, 파란색'}
+            </Text>
+          </View>
+          <View style={styles.recommendRow}>
+            <Text style={styles.recommendLabel}>🧭 유리한 방향:</Text>
+            <Text style={styles.recommendValue}>
+              {yongsinAnalysis.yongsin === 'wood' ? '동쪽 (90°)' :
+               yongsinAnalysis.yongsin === 'fire' ? '남쪽 (180°)' :
+               yongsinAnalysis.yongsin === 'earth' ? '중앙' :
+               yongsinAnalysis.yongsin === 'metal' ? '서쪽 (270°)' : '북쪽 (0°)'}
+            </Text>
+          </View>
+          <View style={styles.recommendRow}>
+            <Text style={styles.recommendLabel}>🔢 행운의 숫자:</Text>
+            <Text style={styles.recommendValue}>
+              {yongsinAnalysis.yongsin === 'wood' ? '3, 8' :
+               yongsinAnalysis.yongsin === 'fire' ? '2, 7' :
+               yongsinAnalysis.yongsin === 'earth' ? '5, 10' :
+               yongsinAnalysis.yongsin === 'metal' ? '4, 9' : '1, 6'}
+            </Text>
+          </View>
+          <View style={styles.recommendRow}>
+            <Text style={styles.recommendLabel}>🌿 추천 활동:</Text>
+            <Text style={styles.recommendValue}>
+              {yongsinAnalysis.yongsin === 'wood' ? '산책, 등산, 원예, 독서' :
+               yongsinAnalysis.yongsin === 'fire' ? '운동, 사교 모임, 발표, 창작 활동' :
+               yongsinAnalysis.yongsin === 'earth' ? '명상, 요리, 부동산 관련, 안정적 투자' :
+               yongsinAnalysis.yongsin === 'metal' ? '정리정돈, 재무관리, 결단 필요한 일' : '수영, 여행, 학습, 유연한 대응'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cautionBox}>
+          <Text style={styles.cautionTitle}>⚠️ 조심하면 좋은 것들</Text>
+          <View style={styles.cautionRow}>
+            <Text style={styles.cautionLabel}>피해야 할 색상:</Text>
+            <Text style={styles.cautionValue}>
+              {yongsinAnalysis.gishin === 'wood' ? '녹색 계열' :
+               yongsinAnalysis.gishin === 'fire' ? '빨간색 계열' :
+               yongsinAnalysis.gishin === 'earth' ? '노란색, 갈색 계열' :
+               yongsinAnalysis.gishin === 'metal' ? '흰색, 금속색' : '검은색, 파란색 계열'}
+            </Text>
+          </View>
+          <View style={styles.cautionRow}>
+            <Text style={styles.cautionLabel}>주의할 활동:</Text>
+            <Text style={styles.cautionValue}>
+              {yongsinAnalysis.gishin === 'wood' ? '무리한 시작, 과도한 확장' :
+               yongsinAnalysis.gishin === 'fire' ? '과도한 경쟁, 충동적 결정' :
+               yongsinAnalysis.gishin === 'earth' ? '완고한 고집, 변화 거부' :
+               yongsinAnalysis.gishin === 'metal' ? '지나친 비판, 완벽주의' : '우유부단, 감정적 결정'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 3. 지장간 분석 */}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>🔮 숨겨진 내면의 성향</Text>
+        <Text style={styles.hiddenStemDesc}>겉으로 보이지 않는 나의 잠재력과 성향</Text>
+        
+        {['year', 'month', 'day', 'hour'].map((pillar) => {
+          const p = safePillars[pillar as keyof typeof safePillars];
+          if (!p || pillar === 'hour' && !p) return null;
+          const hidden = getHiddenStems(p.branch);
+          if (!hidden) return null;
+          
+          const names = { year: '년주', month: '월주', day: '일주', hour: '시주' };
+          const meanings: Record<string, string> = {
+            'year': '조상, 부모, 유년기의 영향을 나타냅니다.',
+            'month': '형제, 부모, 청년기의 환경을 나타냅니다.',
+            'day': '배우자, 자신, 중년의 운세를 나타냅니다.',
+            'hour': '자녀, 노년, 남은 생의 영향을 나타냅니다.',
+          };
+          
+          return (
+            <View key={pillar} style={styles.hiddenStemCard}>
+              <View style={styles.hiddenStemHeader}>
+                <Text style={styles.hiddenStemPillar}>{names[pillar as keyof typeof names]}</Text>
+                <Text style={styles.hiddenStemBranch}>{p.branch}</Text>
+              </View>
+              <Text style={styles.hiddenStemMeaning}>{meanings[pillar]}</Text>
+              <View style={styles.hiddenStemRow}>
+                <View style={styles.hiddenStemItem}>
+                  <Text style={styles.hiddenStemLabel}>주된 성향</Text>
+                  <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.main)) }]}>{hidden.main}</Text>
+                  <Text style={styles.hiddenStemDesc}>가장 강한 내면</Text>
+                </View>
+                {hidden.middle && (
+                  <View style={styles.hiddenStemItem}>
+                    <Text style={styles.hiddenStemLabel}>보조 성향</Text>
+                    <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.middle)) }]}>{hidden.middle}</Text>
+                    <Text style={styles.hiddenStemDesc}>함께 작용하는 성향</Text>
+                  </View>
+                )}
+                {hidden.residue && (
+                  <View style={styles.hiddenStemItem}>
+                    <Text style={styles.hiddenStemLabel}>잠재 성향</Text>
+                    <Text style={[styles.hiddenStemValue, { color: getElementColor(stemToElement(hidden.residue)) }]}>{hidden.residue}</Text>
+                    <Text style={styles.hiddenStemDesc}>숨은 잠재력</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        })}
+        
+        <CollapsibleSection
+          title="숨겨진 성향이란?"
+          emoji="🔮"
+          defaultExpanded={false}
+        >
+          <Text style={styles.hiddenStemInfoText}>
+            사주의 땅 글자 안에는 눈에 보이지 않는 숨겨진 성향이 있습니다.
+            겉으로 드러나지 않지만 내면에서 작용하는 잠재력이에요.{'\n\n'}
+            • <Text style={{ fontWeight: '700' }}>주된 성향</Text>: 가장 강하게 작용하는 내면{'\n'}
+            • <Text style={{ fontWeight: '700' }}>보조 성향</Text>: 함께 영향을 주는 성향{'\n'}
+            • <Text style={{ fontWeight: '700' }}>잠재 성향</Text>: 특정 상황에서 나타나는 성향
+          </Text>
+        </CollapsibleSection>
+      </View>
+
+      {/* 4. 삼합 분석 */}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>⚡ 특별한 기운 조합</Text>
+        <Text style={styles.combineDesc}>세 가지 글자가 만나 특정 기운이 극대화되는 현상</Text>
+        
+        {threeCombines.length > 0 ? (
+          threeCombines.map((tc, idx) => (
+            <View key={idx} style={[styles.combineCard, { borderLeftColor: getElementColor(tc.element) }]}>
+              <View style={styles.combineHeader}>
+                <View style={[styles.elementDot, { backgroundColor: getElementColor(tc.element) }]} />
+                <Text style={styles.combineName}>{tc.name}</Text>
+              </View>
+              <Text style={styles.combineText}>
+                {getElementName(tc.element)} 기운의 특별한 조합이 형성되어 매우 강하게 작용합니다.{'\n'}
+                {tc.element === 'wood' && '목(木)의 생명력, 성장, 확장의 기운이 강화됩니다.'}
+                {tc.element === 'fire' && '화(火)의 열정, 활력, 명예의 기운이 강화됩니다.'}
+                {tc.element === 'metal' && '금(金)의 결단력, 집중력, 재물의 기운이 강화됩니다.'}
+                {tc.element === 'water' && '수(水)의 지혜, 유동성, 커뮤니케이션 기운이 강화됩니다.'}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noCombineText}>사주에 특별한 기운 조합이 없습니다.</Text>
+        )}
+        
+        <CollapsibleSection
+          title="삼합이란?"
+          emoji="📚"
+          defaultExpanded={false}
+        >
+          <Text style={styles.combineInfoText}>
+            특별한 기운 조합은 세 글자가 합쳐져 하나의 기운을 극대화하는 현상이에요.{'\n\n'}
+            • <Text style={{ color: '#2196F3', fontWeight: '600' }}>신·자·진</Text> → 물 기운 극대화{'\n'}
+            • <Text style={{ color: '#4CAF50', fontWeight: '600' }}>해·묘·미</Text> → 나무 기운 극대화{'\n'}
+            • <Text style={{ color: '#F44336', fontWeight: '600' }}>인·오·술</Text> → 불 기운 극대화{'\n'}
+            • <Text style={{ color: '#9E9E9E', fontWeight: '600' }}>사·유·축</Text> → 쇠 기운 극대화
+          </Text>
+        </CollapsibleSection>
+      </View>
+
+      {/* 5. 육충 분석 */}
+      {clashes.length > 0 && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>⚠️ 부딪히는 기운</Text>
+          <Text style={styles.clashDesc}>서로 대립하는 기운이 있어 변화와 긴장이 생길 수 있어요</Text>
+          {clashes.map((clash, idx) => (
+            <View key={idx} style={styles.clashItem}>
+              <Text style={styles.clashText}>{clash}</Text>
+            </View>
+          ))}
+          <Text style={styles.clashNote}>
+            부딪히는 기운은 변화와 성장의 에너지입니다. 갈등이 생길 수 있지만, 이를 잘 극복하면 큰 성장의 계기가 됩니다.
+          </Text>
+        </View>
+      )}
+
+      {/* 6. 육해 분석 */}
+      {harms.length > 0 && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>💔 조심할 관계</Text>
+          <Text style={styles.harmDesc}>눈에 보이지 않는 미묘한 갈등의 기운이 있어요</Text>
+          {harms.map((harm, idx) => (
+            <View key={idx} style={styles.harmItem}>
+              <Text style={styles.harmText}>{harm}</Text>
+            </View>
+          ))}
+          <Text style={styles.harmNote}>
+            눈에 잘 보이지 않는 미묘한 갈등이 있을 수 있어요. 보이지 않는 곳에서 작은 어려움이 생길 수 있으니 신중하게 판단하면 좋습니다.
+          </Text>
+        </View>
+      )}
+
+      {/* 7. 형벌 분석 */}
+      {punishments.length > 0 && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>⛓️ 긴장의 기운</Text>
+          <Text style={styles.punishDesc}>내면에 긴장과 갈등을 일으키는 기운이에요</Text>
+          {punishments.map((p, idx) => (
+            <View key={idx} style={styles.punishItem}>
+              <Text style={styles.punishText}>{p}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* 8. 반합 분석 */}
+      {halfCombines.length > 0 && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>🔸 거의 완성된 기운 조합</Text>
+          <Text style={styles.halfDesc}>특별한 조합이 거의 완성되었어요 (3개 중 2개)</Text>
+          {halfCombines.map((hc, idx) => (
+            <View key={idx} style={styles.halfItem}>
+              <View style={styles.halfHeader}>
+                <View style={[styles.elementDot, { backgroundColor: getElementColor(hc.element) }]} />
+                <Text style={styles.halfName}>{hc.name}</Text>
+              </View>
+              <Text style={styles.halfText}>
+                보유: {hc.have.join(', ')} / 부족: {hc.missing.join(', ')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* 9. 십신 정보 */}
+      <View
+        style={styles.infoCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.TENGOD, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.infoTitle}>🎭 나와 주변의 관계</Text>
+        <Text style={styles.tenGodDesc}>나를 중심으로 주변 사람·환경과의 관계를 보여줍니다</Text>
+
+        <View style={styles.tenGodRow}>
+          <View style={styles.tenGodItem}>
+            <Text style={styles.tenGodLabel}>년간</Text>
+            <Text style={styles.tenGodValue}>{safeTenGods.year}</Text>
+          </View>
+          <View style={styles.tenGodItem}>
+            <Text style={styles.tenGodLabel}>월간</Text>
+            <Text style={styles.tenGodValue}>{safeTenGods.month}</Text>
+          </View>
+          {safeTenGods.hour && (
+            <View style={styles.tenGodItem}>
+              <Text style={styles.tenGodLabel}>시간</Text>
+              <Text style={styles.tenGodValue}>{safeTenGods.hour}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* 십신 상세 해설 - 접이식 */}
+        <CollapsibleSection
+          title="관계 유형 자세히 보기"
+          emoji="📖"
+          defaultExpanded={false}
+        >
+          <View style={styles.tenGodCategory}>
+            <Text style={styles.tenGodCategoryTitle}>👥 나와 비슷한 사람들</Text>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>비견 - 동료, 친구</Text>
+              <Text style={styles.tenGodDetailDesc}>나와 비슷한 사람들. 함께 성장하지만 경쟁도 할 수 있어요.</Text>
+            </View>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>겁재 - 라이벌</Text>
+              <Text style={styles.tenGodDetailDesc}>나를 자극하는 경쟁자. 욕심과 추진력을 불러일으켜요.</Text>
+            </View>
+          </View>
+
+          <View style={styles.tenGodCategory}>
+            <Text style={styles.tenGodCategoryTitle}>💡 내가 만들어내는 것</Text>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>식신 - 재능, 작품</Text>
+              <Text style={styles.tenGodDetailDesc}>내 안의 재능이 밖으로 나오는 것. 표현력과 창작물이에요.</Text>
+            </View>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>상관 - 자유, 예술</Text>
+              <Text style={styles.tenGodDetailDesc}>틀에 얽매이지 않는 자유로운 표현. 창의력이 빛나요.</Text>
+            </View>
+          </View>
+
+          <View style={styles.tenGodCategory}>
+            <Text style={styles.tenGodCategoryTitle}>💵 내가 얻는 것 (돈, 기회)</Text>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>편재 - 뜻밖의 수입</Text>
+              <Text style={styles.tenGodDetailDesc}>사업수완, 투자력. 기회를 잘 포착하는 능력이에요.</Text>
+            </View>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>정재 - 꾸준한 수입</Text>
+              <Text style={styles.tenGodDetailDesc}>월급, 저축. 성실하게 쌓아가는 안정적인 재물이에요.</Text>
+            </View>
+          </View>
+
+          <View style={styles.tenGodCategory}>
+            <Text style={styles.tenGodCategoryTitle}>👔 나를 이끄는 것 (직장, 사회)</Text>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>편관 - 도전, 압박</Text>
+              <Text style={styles.tenGodDetailDesc}>강한 리더십과 카리스마. 도전적이고 결단력이 있어요.</Text>
+            </View>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>정관 - 명예, 책임</Text>
+              <Text style={styles.tenGodDetailDesc}>직장과 사회적 인정. 책임감 있고 질서를 중시해요.</Text>
+            </View>
+          </View>
+
+          <View style={[styles.tenGodCategory, { borderBottomWidth: 0 }]}>
+            <Text style={styles.tenGodCategoryTitle}>📚 나를 도와주는 것 (배움, 지원)</Text>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>편인 - 영감, 독창성</Text>
+              <Text style={styles.tenGodDetailDesc}>비정규적 도움. 독창적인 아이디어와 영감을 줘요.</Text>
+            </View>
+            <View style={styles.tenGodDetailItem}>
+              <Text style={styles.tenGodDetailName}>정인 - 학문, 지혜</Text>
+              <Text style={styles.tenGodDetailDesc}>정통적인 배움. 지식과 학습능력을 키워줘요.</Text>
+            </View>
+          </View>
+        </CollapsibleSection>
+      </View>
+
+      {/* 7. 대운 */}
+      <View
+        style={styles.infoCard}
+        onLayout={(e) => handleSectionLayout(SECTION_IDS.DAEUN, e.nativeEvent.layout.y)}
+      >
+        <Text style={styles.infoTitle}>📈 10년 단위 운의 흐름</Text>
+        <Text style={styles.daeunExplainText}>
+          10년마다 바뀌는 인생의 큰 흐름이에요. 마치 계절이 바뀌듯 삶의 환경과 운이 달라집니다.
+        </Text>
+
+        {daeunList.map((daeun, idx) => {
+          const daeunElement = stemToElement(daeun.stem);
+          const dayElement = safeDayMasterInfo.element;
+
+          // 대운과 일간의 관계 분석
+          const getRelation = () => {
+            if (daeunElement === dayElement) return { type: '동료운', desc: '독립심이 강해지고 주변에 비슷한 사람들이 모이는 시기입니다. 경쟁도 있지만 성장의 기회도 커요.', color: '#9C27B0' };
+            // 오행상생상극 관계
+            const generates: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };
+            const controls: Record<string, string> = { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' };
+
+            if (generates[dayElement] === daeunElement) return { type: '표현운', desc: '표현력과 창의력이 높아지는 시기입니다. 새로운 시도나 창작 활동에 유리해요.', color: '#FF9800' };
+            if (generates[daeunElement] === dayElement) return { type: '배움운', desc: '배움과 성장에 유리한 시기입니다. 공부, 자격증, 전문가의 조언이 도움이 돼요.', color: '#2196F3' };
+            if (controls[dayElement] === daeunElement) return { type: '재물운', desc: '재물운이 활발한 시기입니다. 수입이 늘거나 투자 기회가 올 수 있어요.', color: '#4CAF50' };
+            if (controls[daeunElement] === dayElement) return { type: '성취운', desc: '직장, 승진, 시험에 유리한 시기입니다. 사회적으로 인정받을 수 있어요.', color: '#F44336' };
+            return { type: '전환운', desc: '다양한 기운이 작용하는 변화의 시기입니다.', color: '#607D8B' };
+          };
+
+          const relation = getRelation();
+
+          return (
+            <View key={idx} style={[
+              styles.daeunItem,
+              daeun.isCurrent && styles.daeunItemCurrent,
+              daeun.isPast && styles.daeunItemPast,
+            ]}>
+              <View style={styles.daeunHeader}>
+                <View style={styles.daeunAge}>
+                  <Text style={[styles.daeunAgeText, daeun.isPast && styles.daeunAgePast]}>{daeun.age}세</Text>
+                  {daeun.isCurrent && <View style={styles.daeunCurrentBadge}><Text style={styles.daeunCurrentText}>현재</Text></View>}
+                  {daeun.isPast && <Text style={styles.daeunPastLabel}>지난 대운</Text>}
+                </View>
+                <View style={styles.daeunGanji}>
+                  <Text style={[styles.daeunStem, { color: getElementColor(daeunElement) }]}>{daeun.stem}</Text>
+                  <Text style={styles.daeunBranch}>{daeun.branch}</Text>
+                </View>
+              </View>
+              <View style={[styles.daeunRelation, { backgroundColor: relation.color + '15' }]}>
+                <Text style={[styles.daeunRelationType, { color: relation.color }]}>{relation.type}</Text>
+                <Text style={styles.daeunRelationDesc}>{daeun.isCurrent ? relation.desc : `${relation.type}의 시기입니다.`}</Text>
+              </View>
+            </View>
+          );
+        })}
+
+        <View style={styles.daeunTip}>
+          <Text style={styles.daeunTipTitle}>💡 운의 흐름 활용법</Text>
+          <Text style={styles.daeunTipText}>
+            • <Text style={{ fontWeight: '700' }}>동료운</Text>: 독립, 창업에 도전하되 경쟁에 주의{'\n'}
+            • <Text style={{ fontWeight: '700' }}>표현운</Text>: 창작, 표현, 새로운 시도에 집중{'\n'}
+            • <Text style={{ fontWeight: '700' }}>재물운</Text>: 적극적인 투자와 사업 확장의 기회{'\n'}
+            • <Text style={{ fontWeight: '700' }}>성취운</Text>: 승진, 시험, 사회적 인정에 유리{'\n'}
+            • <Text style={{ fontWeight: '700' }}>배움운</Text>: 학습, 자격증 취득, 자기계발에 좋음
+          </Text>
+        </View>
+      </View>
+
+      {/* 8. 합충 정보 */}
+      {relations && (relations.combines.length > 0 || relations.clashes.length > 0) && (
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>🔗 합충 관계</Text>
+          {relations.combines.length > 0 && (
+            <View style={styles.relationRow}>
+              <Text style={styles.relationLabel}>합:</Text>
+              <Text style={styles.relationValue}>{relations.combines.join(', ')}</Text>
+            </View>
+          )}
+          {relations.clashes.length > 0 && (
+            <View style={styles.relationRow}>
+              <Text style={styles.relationLabel}>충:</Text>
+              <Text style={styles.relationValue}>{relations.clashes.join(', ')}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* 하단 여백 */}
       <View style={{ height: 40 }} />
