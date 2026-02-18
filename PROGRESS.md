@@ -621,72 +621,7 @@ const testUniqueFortunes = () => {
 
 ## 📋 작업 로그
 
-### 2026-02-01: FortuneMenu 중복 기능 제거 및 릴리즈 빌드
-
-#### 변경 내용
-
-**FortuneMenuScreen.tsx** - 날짜 선택 기능 완전 제거
-- Daily 탭과 중복되는 날짜 선택 기능 제거
-- "날짜 지정 운세" 메뉴 항목 삭제
-- 관련 상태 변수 및 함수 삭제 (`selectedDate`, `goToPrevDay`, `goToNextDay`, `goToToday`)
-- 사용하지 않는 import 정리 (`useMemo`, `useCallback`, `useRoute`, `useFocusEffect`)
-- 관련 스타일 삭제 (`dateNavigator`, `dateArrowBtn`, `dateArrowText`, `dateSelector`, `dateLabelText`, `dateValueText`, `todayBtn`, `todayBtnText`)
-
-#### 빌드 과정
-
-1. **첫 번째 빌드 시도**: JavaScript 번들이 캐시되어 변경사항 미반영
-2. **캐시 정리 및 클린 빌드**:
-   ```bash
-   # 캐시 삭제
-   powershell -Command "Remove-Item -Recurse -Force '.expo','node_modules\.cache','android\app\build','android\.gradle' -ErrorAction SilentlyContinue"
-
-   # 클린 릴리즈 빌드
-   cd android && .\gradlew.bat clean assembleRelease && cd ..
-   ```
-3. **결과**: 변경사항 정상 반영 확인
-
-#### 배포
-
-- **파일명**: SajuToday-release.apk
-- **크기**: 117MB
-- **경로**: `D:\OneDrive\코드작업\결과물\SajuToday-release.apk`
-
-#### 배운 점
-
-- Release APK 빌드 시 JavaScript 번들 캐시 문제 주의
-- 4가지 캐시 폴더 모두 삭제 필요: `.expo`, `node_modules/.cache`, `android/app/build`, `android/.gradle`
-- `gradlew clean assembleRelease` 사용으로 완전한 클린 빌드 수행
-
----
-
-### 2026-02-02: 버그 리포트 검증 및 SajuScreen 탭 스타일 개선
-
-#### 버그 리포트 검증 결과
-
-| 버그 항목 | 리포트 내용 | 검증 결과 | 조치 |
-|----------|------------|----------|------|
-| Navigation.tsx 테마 색상 | COLORS.white/border 없음 | ✅ theme.ts에 정상 정의됨 | 오류 아님으로 수정 |
-| SajuCalculator 자시 처리 | 00:00-00:59 누락 | ✅ 조자시 방식 정상 구현 | 오류 아님으로 수정 |
-| ThemeContext 깜빡임 | 🟠 High | SplashScreen이 커버 | 🟢 Low로 하향 |
-
-#### SajuScreen 상단 탭 스타일 개선
-
-**파일**: `src/screens/SajuScreen.tsx`
-
-| 항목 | 이전 | 개선 후 |
-|------|------|---------|
-| 탭 패딩 | 8px | 10px |
-| 테두리 | 없음 | 1px 테두리 추가 |
-| 활성 탭 그림자 | 없음 | 그림자 효과 추가 |
-| 하단 구분선 | 1px | 2px |
-| 활성 탭 폰트 | 600 | 700 (더 굵게) |
-| 배경색 | #F5F5F5 | #F3F4F6 |
-
-#### 배포
-
-- **파일명**: SajuToday-release.apk
-- **경로**: `D:\OneDrive\코드작업\결과물\SajuToday-release.apk`
-- **설치**: ADB 무선 연결로 핸드폰 설치 완료
+> 2026-02-01, 02-02 작업 로그는 `ARCHIVE_2026_02.md`로 이동됨
 
 ---
 
@@ -1032,44 +967,11 @@ const API_KEY = process.env.KASI_API_KEY || '';
 # 5. 기존 API 키 폐기 및 재발급
 ```
 
-### 2순위: 테마 색상 오류 수정 (🟠 High)
+### ~~2순위: 테마 색상 오류 수정~~ ❌ 삭제 (2026-02-01 검증: 오류 아님)
+> `theme.ts`에 `white`, `border` 정상 정의됨. 분석 오류.
 
-```typescript
-// Navigation.tsx 수정
-import { useTheme } from '../contexts/ThemeContext';
-
-function MainTabs() {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
-  
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-        }
-      }}
-    />
-  );
-}
-```
-
-### 3순위: 자시 처리 로직 보완 (🟡 Medium)
-
-```typescript
-// SajuCalculator.ts에 추가
-private isZiShiTime(hours: number): boolean {
-  return hours >= 23 || hours < 1;
-}
-
-private getZiShiAdjustedDate(date: Date, hours: number): Date {
-  if (hours >= 23) {
-    return new Date(date.getTime() + 24 * 60 * 60 * 1000);
-  }
-  return date;
-}
-```
+### ~~3순위: 자시 처리 로직 보완~~ ❌ 삭제 (2026-02-01 검증: 오류 아님)
+> 현재 조자시(早子時) 방식 정상 구현. 한국 표준 방식.
 
 ---
 
@@ -1240,3 +1142,346 @@ const hash = (getHash(str) >>> 0); // 음수 방지
 
 **수정자**: Claude Opus 4.6
 **수정일**: 2026-02-07
+
+---
+
+## 📋 2026-02-18: 한자 제거 + 대화체 전환 + 웹 테스트베드 재구축
+
+### 완료 작업
+
+| 작업 | 대상 파일 | 내용 |
+|------|----------|------|
+| 한자 제거 | `sajuInterpretations.ts`, `SajuInterpreter.ts`, `FortuneTypeScreen.tsx`, `AdvancedAnalysisScreen.tsx`, `SajuScreen.tsx`, `FortuneTypes.ts` | 모든 한자(甲乙丙丁 등)를 한글로 대체 |
+| ~해요 대화체 전환 | 동일 파일 | 전문 용어를 일상 한국어로, 종결어미를 ~해요 대화체로 변경 |
+| 웹 테스트베드 재구축 | `web-test/index.html` | 앱과 동일 구조로 전면 재작성 (하단 탭, 운세 3탭, 사주 8섹션, 접이식 패널) |
+
+### 변경 상세
+
+**한자→한글 변환 예시:**
+- 甲木 → 갑목, 乙木 → 을목
+- 比肩 → 비견, 食神 → 식신
+- 木 → 나무, 火 → 불, 土 → 흙, 金 → 금속, 水 → 물
+
+**~해요 대화체 예시:**
+- "갑목은 큰 나무의 기운입니다" → "갑목은 큰 나무의 기운이에요"
+- "용신은 목(木)입니다" → "도움이 되는 기운은 나무(목)예요"
+- "신강한 사주입니다" → "에너지가 강한 편이에요"
+
+**웹 테스트베드 (`web-test/index.html`):**
+- 하단 탭바: "오늘의 운세" / "내 사주"
+- 운세 화면: 날짜 네비게이터 + 3탭 (요약/상세/행운)
+- 사주 화면: 8섹션 수평 스크롤 내비 + 접이식 패널
+- 앱과 동일한 색상 테마 (primary=#8B4B8B, background=#FFFEF5)
+
+---
+
+# 📋 사주투데이 앱 분석 및 개선 기획안
+
+> 작성일: 2026-02-18
+> 작성자: Roo (Kimi)
+> 목적: 앱 전체 분석 및 보완/개선/추가 기획
+
+---
+
+## 🔴 Critical - 즉시 수정 필요
+
+### 1. API 키 클라이언트 노출 (보안 취약점)
+| 항목 | 내용 |
+|------|------|
+| **위치** | `src/services/KasiService.ts:14` |
+| **문제** | `EXPO_PUBLIC_KASI_API_KEY`가 클라이언트에 노출됨 |
+| **영향** | 앱 역분석 시 API 키 탈취 가능, 과다 호출/비용 폭탄 위험 |
+| **해결 방안** | 1. 백엔드 프록시 서버 구축<br>2. API 키 서버사이드 관리<br>3. 호출량 제한 및 캐싱 로직 추가 |
+| **우선순위** | P0 |
+| **예상 소요** | 1-2주 |
+
+### ~~2. 자시(子時) 경계 처리 버그~~ ❌ 오류 아님 (2026-02-01 Opus 4.6 검증 완료)
+| 항목 | 내용 |
+|------|------|
+| **위치** | `src/services/SajuCalculator.ts:196-228` |
+| **검증 결과** | 현재 **조자시(早子時) 방식** 정상 구현됨 |
+| **설명** | 한국에서는 조자시가 표준. 23:00~23:59 → 다음날 자시, 00:00~00:59 → 당일 자시로 처리하는 것이 정상 |
+| **판정** | **버그 아님** — Roo 분석 오류 |
+| **참고** | PROGRESS.md 796-804줄 검증 기록 참조 |
+
+### 3. 입춘/절기 계산 부정확
+| 항목 | 내용 |
+|------|------|
+| **위치** | `src/services/SajuCalculator.ts:96-115` |
+| **문제** | 고정된 날짜(2월 4일) 사용, 매년 변동하는 입춘 미반영 |
+| **영향** | 입춘 전후 생일자의 년주/월주 오계산 (예: 2025년 입춘=2월 3일) |
+| **해결 방안** | KASI API 절기 정보 연동 또는 정확한 절기 테이블 구축 |
+| **우선순위** | P1 |
+| **예상 소요** | 3-5일 |
+
+---
+
+## 🟠 고도화 - 기능 개선 (사주탭)
+
+### Phase 1: 핵심 정보 시각화 (2주)
+
+| 기능 | Roo 분석 당시 | 실제 현황 (Opus 검증) | 상태 |
+|------|-------------|----------------------|------|
+| **일간 강약 분석** | 점수만 표시 | ✅ 게이지 + 5단계 해석 + 조언 구현됨 (`SajuScreen.tsx`) | **구현 완료** |
+| **오행 균형** | 4주 표시만 | ✅ 막대그래프 + 비율% + 용신/기신 마커 구현됨 | **구현 완료** |
+| **십신 분포** | 4개 기둥 | ✅ 그리드 형태 십신 분포 + 분석 구현됨 | **구현 완료** |
+| **대운 흐름** | 텍스트 리스트 | ✅ 타임라인 시각화 + 현재 대운 강조 구현됨 | **구현 완료** |
+
+**상세 UI 스펙**:
+```
+📊 일간 강약 분석 (65점 - 보통)
+
+[강약 게이지]
+약 ◀━━━━━━━●━━━━━━━━━▶ 강
+e        65%
+
+[판단 근거]
+✓ 월지(인)의 계절 기운이 일간을 도움 (+15점)
+✓ 일간 오행(목)이 사주 내에서 강함 (+15점)
+
+[성향 특징]
+• 타인의 의견을 잘 수용하며 협력적
+• 변화에 유연하게 대응
+
+[조언]
+상황에 따라 리더와 팔로워를 오가는 역할을 할 수 있습니다.
+```
+
+### Phase 2: 실용적 가이드 추가 (1주)
+
+| 기능 | 설명 | 상태 (Opus 검증) |
+|------|------|------------------|
+| **용신/기신 생활 가이드** | 색상, 방위, 숫자, 활동 추천 | ✅ **구현 완료** — `SajuScreen.tsx` 용신 섹션에 추천/주의 박스 구현됨 |
+| **일간별 맞춤 조언 카드** | 10일간별 특성 기반 조언 | ✅ **구현 완료** — `SajuInterpreter.ts`에 5단계 해석 구현됨 |
+| **계절별 운세 변화** | 봄/여름/가을/겨울 운세 팁 | ⏳ 미구현 |
+
+### Phase 3: 고급 분석 기능 (2주)
+
+| 기능 | 설명 | 상태 |
+|------|------|------|
+| **순행/역행 대운 표시** | 양/음생년별 대운 방향 구분 | 신규 |
+| **신살 상세 해석** | 천을귀인, 태귀인 등 상세 설명 | `SinsalCalculator.ts` 확장 |
+| **합충형해 분석** | 지지 간 복잡한 관계 분석 | `AdvancedSajuAnalysis.ts` 활용 |
+
+---
+
+## 🔵 리팩토링 - 중복 코드 정리
+
+### 중복 영역 및 통합 계획
+
+| # | 중복 영역 | 위치 | 통합 방안 | 우선순위 |
+|---|----------|------|----------|---------|
+| 1 | **운세 생성 로직** | `useSajuFortune.ts`, `HomeScreen.tsx` | Hook만 사용하도록 통일 | P1 |
+| 2 | **천간→오행 변환** | 3개 파일 | `saju.ts` HEAVENLY_STEMS 활용 | P2 |
+| 3 | **지지→오행 변환** | 2개 파일 | `saju.ts` EARTHLY_BRANCHES 활용 | P2 |
+| 4 | **십신 계산 로직** | 3개 파일 | `SajuCalculator.ts` 메서드 재사용 | P2 |
+| 5 | **연도→간지 계산** | 3개 파일 | 유틸리티 함수 `getYearGanji()` 통일 | P2 |
+| 6 | **운세 메시지 데이터** | 5개 파일 | 통합 데이터 파일 `fortuneData.ts` 구축 | P1 |
+| 7 | **행운 정보 계산** | 3개 파일 | `constants.ts` 기준 통일 | P2 |
+
+### 통합 데이터 구조 제안
+```typescript
+// src/data/fortuneData.ts
+export const FortuneData = {
+  // 오행 매핑 (단일 출처)
+  elements: { stems: STEM_TO_ELEMENT, branches: BRANCH_TO_ELEMENT },
+  
+  // 십신 계산 (단일 로직)
+  tenGods: { calculate: calculateTenGodRelation },
+  
+  // 운세 메시지 (통합)
+  messages: {
+    daily: DAILY_FORTUNE_MESSAGES,
+    category: CATEGORY_FORTUNE_MESSAGES,
+    rich: RICH_INTERPRETATIONS,
+  },
+  
+  // 행운 정보 (통합)
+  lucky: {
+    colors: ELEMENT_COLORS,
+    numbers: ELEMENT_NUMBERS,
+    directions: ELEMENT_DIRECTIONS,
+  }
+};
+```
+
+---
+
+## 🟡 UX/성능 개선
+
+### 1. 성능 최적화
+
+| 항목 | 현재 | 개선 | 파일 |
+|------|------|------|------|
+| **사주 계산 캐싱** | 매 렌더링마다 재계산 | `useMemo` + `useCallback` 최적화 | `useSajuFortune.ts` |
+| **이미지 최적화** | PNG 사용 | WebP 변환 + 지연 로딩 | `assets/` |
+| **번들 사이즈** | 전체 임포트 | 트리쉐이킹 적용 | 전체 |
+| **SQLite 쿼리** | 동기 처리 | 비동기 + 인덱싱 | `StorageService.ts` |
+
+### 2. 로딩/에러 상태 개선
+
+| 기능 | 구현 방안 | 예상 효과 |
+|------|----------|----------|
+| **스켈레톤 UI** | `Skeleton.tsx` 컴포넌트 전면 적용 | 로딩 체감 개선 |
+| **재시도 메커니즘** | 네트워크 오류 시 3회 자동 재시도 | 사용자 이탈 감소 |
+| **오프라인 모드** | 운세 7일 캐싱 + 오프라인 표시 | 사용성 향상 |
+| **에러 바욍더리** | `ErrorBoundary.tsx` 개선 | 크래시 방지 |
+
+### 3. 접근성 개선
+
+| 항목 | 작업 내용 | 우선순위 |
+|------|----------|---------|
+| **스크린 리더** | `accessibilityLabel` 전면 적용 | P2 |
+| **고대비 모드** | 색상 대비 4.5:1 준수 | P3 |
+| **폰트 크기** | 시스템 폰트 크기 대응 | P2 |
+| **다크모드** | 테마 전환 지원 | P3 |
+
+---
+
+## 🟢 신규 기능 로드맵
+
+### 단기 (1-2개월)
+
+| 기능 | 설명 | 기술 요구사항 | 우선순위 |
+|------|------|-------------|---------|
+| **홈 화면 위젯** | Android 위젯으로 오늘 운세 표시 | Native Module + WidgetKit | P1 |
+| **푸시 알림** | 설정 시간에 운세 알림 | `expo-notifications` 활성화 | P1 |
+| **출석 체크(스트릭)** | 연속 접속 보상 시스템 | `NotificationService.ts` 연동 | P2 |
+| **운세 공유 카드** | 이미지로 운세 공유 | `react-native-view-shot` 활용 | P2 |
+
+### 중기 (3-6개월)
+
+| 기능 | 설명 | 기술 요구사항 | 우선순위 |
+|------|------|-------------|---------|
+| **프리미엄 기능** | 상세 해석, 월간 예측 | In-App Purchase 연동 | P2 |
+| **AI 챗봇** | Claude 기반 운세 Q&A | API 연동 + 대화 컨텍스트 관리 | P3 |
+| **사주 커뮤니티** | 익명 운세 톡방 | Firebase + 실시간 채팅 | P3 |
+| **다국어 지원** | 영문, 중문 버전 | i18n 구조 적용 | P3 |
+| **가족 그룹 기능 강화** | 가족 사주 비교, 대운 분석 | `FamilyGroup.ts` 확장 | P2 |
+
+### 장기 (6개월+)
+
+| 기능 | 설명 | 비고 |
+|------|------|------|
+| **백엔드 서버 구축** | API 키 보안, 클라우드 동기화 | 현재 클라이언트 직접 호출 구조 개선 |
+| **ML 기반 운세 추천** | 사용자 피드백 기반 개인화 | 데이터 축적 후 도입 |
+| **Web 버전 출시** | React Native Web 활용 | 현재 구조에서 확장 가능 |
+
+---
+
+## 🛠️ 기술 부채 정리
+
+### 1. 타입 시스템 강화
+
+| 항목 | 현재 상태 | 목표 | 작업량 |
+|------|----------|------|--------|
+| **any 타입 제거** | Navigation, SajuScreen 등 | Strict 타입 적용 | 2-3일 |
+| **strict 모드** | 비활성화 | 활성화 | 1일 |
+| **공통 인터페이스** | 분산되어 있음 | `types/` 패키지화 | 1일 |
+
+### 2. 테스트 커버리지 확대
+
+```
+현재: src/__tests__/
+├── api.test.ts
+├── ErrorLogService.test.ts
+├── SajuCalculator.test.ts
+└── SecureStorageService.test.ts
+
+추가 필요:
+├── components/
+│   ├── FortuneCard.test.tsx
+│   ├── SajuWheel.test.tsx
+│   └── ElementChart.test.tsx
+├── screens/
+│   ├── SajuScreen.test.tsx
+│   └── DailyFortuneScreen.test.tsx
+├── services/
+│   ├── FortuneGenerator.test.ts
+│   ├── CompatibilityService.test.ts
+│   └── KasiService.test.ts
+└── e2e/
+    └── fortune-flow.test.ts (Detox)
+```
+
+### 3. 모니터링/분석 연동
+
+| 도구 | 목적 | 연동 위치 |
+|------|------|----------|
+| **Sentry** | 크래시 리포팅, 에러 추적 | `App.tsx` + `ErrorLogService.ts` |
+| **Firebase Analytics** | 사용자 행동 분석 | `AnalyticsService.ts` |
+| **Performance Monitoring** | API 응답 시간 측정 | `KasiService.ts` |
+
+---
+
+## 📊 개선 우선순위 종합
+
+```
+긴급도 ↑
+    │
+ P0 │ API노출
+    │   ●
+    │
+ P1 │ 입춘계산   위젯기능   푸시알림   중복정리
+    │   ●          ●          ●          ●
+    │
+ P2 │ 신살강화   출석체크   공유카드   타입정리   성능최적화
+    │   ●          ●          ●          ●          ●
+    │
+ P3 │ AI챗봇    커뮤니티   다국어    다크모드   백엔드
+    │   ●         ●          ●          ●          ●
+    └────────────────────────────────────────────────→ 영향도
+       낮음                                       높음
+
+※ 자시버그(P0) → 오류 아님 (조자시 방식 정상), 오행차트(P1) → 이미 구현 완료
+```
+
+---
+
+## 📅 제안 일정
+
+| 단계 | 기간 | 작업 내용 |
+|------|------|----------|
+| **Phase 0** | 1주 | Critical 버그 수정 (API 보안) ※ 자시 버그는 오류 아님으로 판정 |
+| **Phase 1** | - | ~~사주탭 시각화 개선~~ ✅ 이미 구현 완료 (오행차트, 십신차트, 대운 타임라인, 강약 게이지) |
+| **Phase 2** | 2주 | 중복 코드 리팩토링 + 타입 정리 |
+| **Phase 3** | 2주 | 신규 기능 (위젯, 알림, 출석체크) |
+| **Phase 4** | 3주 | 고급 기능 (프리미엄, AI 챗봇) |
+
+**총 예상 기간**: 10주 (2.5개월)
+
+---
+
+## ✅ 체크리스트
+
+### Critical
+- [ ] API 키 서버 프록시 구축
+- [x] ~~자시(23시) 경계 처리 수정~~ → **오류 아님** (조자시 방식 정상, 2026-02-01 검증)
+- [ ] 입춘/절기 동적 계산
+
+### 기능 개선
+- [x] 오행 균형 차트 추가 → **구현 완료** (SajuScreen.tsx 막대그래프 + 용신/기신 마커)
+- [x] 십신 분포 차트 추가 → **구현 완료** (SajuScreen.tsx 그리드 분포)
+- [x] 대운 흐름 시각화 → **구현 완료** (SajuScreen.tsx 타임라인 + 현재 대운 강조)
+- [x] 용신 생활 가이드 → **구현 완료** (SajuScreen.tsx 추천/주의 박스)
+- [x] 일간별 맞춤 조언 → **구현 완료** (SajuInterpreter.ts 5단계 해석)
+- [x] 한자 제거 + ~해요 대화체 전환 → **완료** (2026-02-18)
+
+### 리팩토링
+- [ ] 천간/지지 오행 변환 통일
+- [ ] 십신 계산 로직 통일
+- [ ] 운세 메시지 데이터 통합
+- [ ] any 타입 제거
+
+### 신규 기능
+- [ ] 홈 화면 위젯
+- [ ] 푸시 알림
+- [ ] 출석 체크
+- [ ] 운세 공유 카드
+
+---
+
+**작성자**: Roo (Kimi)
+**작성일**: 2026-02-18
+**버전**: 1.0
+**검증**: Claude Opus 4.6 (2026-02-18) — 자시 버그(오류 아님), 이미 구현된 기능(오행차트/십신/대운/용신가이드/일간해석) 정정 완료
