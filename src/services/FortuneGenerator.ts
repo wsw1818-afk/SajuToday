@@ -988,7 +988,7 @@ export function generateFortune(sajuResult: SajuResult | null, date: Date = new 
   const elementAnalysis = generateElementAnalysis(dayMasterElement, todayElement, relation);
   const branchAnalysis = generateBranchAnalysis(dayMasterBranch, todayBranch, branchRelationResult);
 
-  // 상세 운세 메시지 생성
+  // 상세 운세 메시지 생성 (날짜 시드로 메시지 다양화)
   const detailedFortunes = generateDetailedFortunes(
     dayMasterElement,
     todayElement,
@@ -998,7 +998,8 @@ export function generateFortune(sajuResult: SajuResult | null, date: Date = new 
     loveGrade,
     moneyGrade,
     workGrade,
-    healthGrade
+    healthGrade,
+    dayOfYear
   );
 
   // 운세 내용 생성
@@ -1182,7 +1183,8 @@ function generateDetailedFortunes(
   loveGrade: 'excellent' | 'good' | 'neutral' | 'caution',
   moneyGrade: 'excellent' | 'good' | 'neutral' | 'caution',
   workGrade: 'excellent' | 'good' | 'neutral' | 'caution',
-  healthGrade: 'excellent' | 'good' | 'neutral' | 'caution'
+  healthGrade: 'excellent' | 'good' | 'neutral' | 'caution',
+  daySeed: number = 0
 ): {
   overall: DetailedFortune;
   love: DetailedFortune;
@@ -1202,13 +1204,16 @@ function generateDetailedFortunes(
       .replace(/{branchReason}/g, branchRelation.description);
   };
 
+  // 시드 기반 메시지 인덱스 선택 (매일 다른 메시지)
+  const pickIdx = (arr: any[], offset: number) => arr[(daySeed + offset) % arr.length];
+
   // 종합운 상세 메시지
   type RelationType = 'generated' | 'same' | 'generate' | 'control' | 'controlled';
   const validRelations: RelationType[] = ['generated', 'same', 'generate', 'control', 'controlled'];
   const safeRelation = validRelations.includes(relation as RelationType) ? (relation as RelationType) : 'same';
   const overallTemplate = DETAILED_FORTUNE_TEMPLATES.overall[overallGrade][safeRelation];
   const overallFortune: DetailedFortune = {
-    summary: OVERALL_MESSAGES[overallGrade][0],
+    summary: pickIdx(OVERALL_MESSAGES[overallGrade], 0),
     analysis: replacePlaceholders(overallTemplate.analysis),
     reason: replacePlaceholders(overallTemplate.reason),
     advice: replacePlaceholders(overallTemplate.advice),
@@ -1218,7 +1223,7 @@ function generateDetailedFortunes(
   // 애정운 상세 메시지
   const loveTemplate = DETAILED_FORTUNE_TEMPLATES.love[loveGrade];
   const loveFortune: DetailedFortune = {
-    summary: LOVE_MESSAGES[loveGrade][0],
+    summary: pickIdx(LOVE_MESSAGES[loveGrade], 3),
     analysis: replacePlaceholders(loveTemplate.analysis),
     reason: replacePlaceholders(loveTemplate.reason),
     advice: replacePlaceholders(loveTemplate.advice),
@@ -1228,7 +1233,7 @@ function generateDetailedFortunes(
   // 금전운 상세 메시지
   const moneyTemplate = DETAILED_FORTUNE_TEMPLATES.money[moneyGrade];
   const moneyFortune: DetailedFortune = {
-    summary: MONEY_MESSAGES[moneyGrade][0],
+    summary: pickIdx(MONEY_MESSAGES[moneyGrade], 5),
     analysis: replacePlaceholders(moneyTemplate.analysis),
     reason: replacePlaceholders(moneyTemplate.reason),
     advice: replacePlaceholders(moneyTemplate.advice),
@@ -1238,7 +1243,7 @@ function generateDetailedFortunes(
   // 직장운 상세 메시지
   const workTemplate = DETAILED_FORTUNE_TEMPLATES.work[workGrade];
   const workFortune: DetailedFortune = {
-    summary: WORK_MESSAGES[workGrade][0],
+    summary: pickIdx(WORK_MESSAGES[workGrade], 7),
     analysis: replacePlaceholders(workTemplate.analysis),
     reason: replacePlaceholders(workTemplate.reason),
     advice: replacePlaceholders(workTemplate.advice),
@@ -1248,7 +1253,7 @@ function generateDetailedFortunes(
   // 건강운 상세 메시지
   const healthTemplate = DETAILED_FORTUNE_TEMPLATES.health[healthGrade];
   const healthFortune: DetailedFortune = {
-    summary: HEALTH_MESSAGES[healthGrade][0],
+    summary: pickIdx(HEALTH_MESSAGES[healthGrade], 11),
     analysis: replacePlaceholders(healthTemplate.analysis),
     reason: replacePlaceholders(healthTemplate.reason),
     advice: replacePlaceholders(healthTemplate.advice),
@@ -1458,35 +1463,40 @@ function analyzeElementRelation(userElement: Element, todayElement: Element): 'g
  * 점수 계산
  */
 function calculateScores(relation: string, date: Date, branchRelationType: string | null = null): Record<string, number> {
+  // 오행 관계별 기본 점수 (범위 축소하여 나쁜 날도 나오도록)
   const baseScore = {
-    generate: 85,    // 내가 생하는 오행 (약간 피곤하지만 좋음)
-    generated: 92,   // 나를 생하는 오행 (매우 좋음)
-    same: 78,        // 같은 오행 (보통)
-    control: 75,     // 내가 극하는 오행 (노력 필요)
-    controlled: 62,  // 나를 극하는 오행 (주의)
-  }[relation] || 75;
+    generate: 68,    // 내가 생하는 오행 (에너지 소모)
+    generated: 82,   // 나를 생하는 오행 (좋음)
+    same: 60,        // 같은 오행 (경쟁 가능)
+    control: 72,     // 내가 극하는 오행 (재물운 좋음)
+    controlled: 42,  // 나를 극하는 오행 (압박)
+  }[relation] || 60;
 
-  // 지지 관계에 따른 보정
+  // 지지 관계에 따른 보정 (흉 보정 강화)
   let branchBonus = 0;
   if (branchRelationType) {
     switch (branchRelationType) {
-      case '육합': branchBonus = 10; break;  // 매우 좋음
-      case '삼합': branchBonus = 8; break;   // 좋음
-      case '육충': branchBonus = -12; break; // 나쁨
-      case '육해': branchBonus = -8; break;  // 해로움
-      case '원진': branchBonus = -6; break;  // 불화
+      case '육합': branchBonus = 12; break;   // 매우 좋음
+      case '삼합': branchBonus = 8; break;    // 좋음
+      case '육충': branchBonus = -18; break;  // 매우 나쁨 (강화)
+      case '육해': branchBonus = -12; break;  // 해로움 (강화)
+      case '원진': branchBonus = -10; break;  // 불화 (강화)
     }
   }
 
-  // 날짜 기반 변동 (-8 ~ +8)
-  const dayVariation = (date.getDate() % 17) - 8;
+  // 날짜 기반 변동 — 연·월·일 모두 반영 (기존: 일만 사용)
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const dateSeed = ((y * 31 + m) * 31 + d) & 0x7FFFFFFF;
+  const dayVariation = (dateSeed % 17) - 8; // -8 ~ +8
 
-  // 각 카테고리별 점수 계산 (지지 관계가 애정운/직장운에 더 영향)
-  const overall = Math.min(100, Math.max(45, baseScore + branchBonus + dayVariation));
-  const love = Math.min(100, Math.max(45, baseScore + branchBonus * 1.5 + ((date.getDate() * 3) % 17) - 8)); // 지지 관계 영향 강화
-  const money = Math.min(100, Math.max(45, baseScore + branchBonus * 0.5 + ((date.getDate() * 5) % 17) - 8));
-  const work = Math.min(100, Math.max(45, baseScore + branchBonus * 1.2 + ((date.getDate() * 7) % 17) - 8)); // 지지 관계 영향 강화
-  const health = Math.min(100, Math.max(45, baseScore + branchBonus * 0.3 + ((date.getDate() * 11) % 17) - 8));
+  // 각 카테고리별 점수 계산 (하한 20, 상한 98)
+  const overall = Math.min(98, Math.max(20, baseScore + branchBonus + dayVariation));
+  const love = Math.min(98, Math.max(20, baseScore + Math.round(branchBonus * 1.5) + ((dateSeed * 3) % 17) - 8));
+  const money = Math.min(98, Math.max(20, baseScore + Math.round(branchBonus * 0.6) + ((dateSeed * 5) % 17) - 8));
+  const work = Math.min(98, Math.max(20, baseScore + Math.round(branchBonus * 1.3) + ((dateSeed * 7) % 17) - 8));
+  const health = Math.min(98, Math.max(20, baseScore + Math.round(branchBonus * 0.4) + ((dateSeed * 11) % 17) - 8));
 
   return { overall, love, money, work, health };
 }
@@ -1495,9 +1505,9 @@ function calculateScores(relation: string, date: Date, branchRelationType: strin
  * 등급 결정
  */
 function getGrade(score: number): 'excellent' | 'good' | 'neutral' | 'caution' {
-  if (score >= 85) return 'excellent';
-  if (score >= 70) return 'good';
-  if (score >= 55) return 'neutral';
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 45) return 'neutral';
   return 'caution';
 }
 

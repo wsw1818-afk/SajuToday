@@ -14,6 +14,7 @@ const KASI_PROXY_URL = `${PROXY_BASE_URL}/api/kasi`;
 // 직접 호출용 (프록시 미지원 기능)
 const KASI_BASE_URL = 'http://apis.data.go.kr/B090041/openapi/service';
 const SPECIAL_DAY_API_URL = `${KASI_BASE_URL}/SpcdeInfoService`;
+const LUNAR_API_URL = `${KASI_BASE_URL}/LunCalInfoService`; // 음력/간지 API
 
 // 직접 호출용 API 키 (절기, 공휴일 등 - 프록시에서 미지원 시 사용)
 // 주의: 프록시를 통해 호출하는 것이 권장됨

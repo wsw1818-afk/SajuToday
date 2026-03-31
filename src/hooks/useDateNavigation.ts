@@ -3,8 +3,8 @@
  * HomeScreen의 날짜 선택 관련 로직을 분리하여 성능 개선
  */
 
-import { useState, useMemo, useCallback } from 'react';
-import { formatLunarFromISO } from '../utils/dateFormatter';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { formatLunarFromISOAsync, formatDateISO } from '../utils/dateFormatter';
 
 interface UseDateNavigationResult {
   // 상태
@@ -62,15 +62,22 @@ export function useDateNavigation(initialDate?: Date): UseDateNavigationResult {
     return `${month}월 ${day}일 (${dayOfWeek})`;
   }, [selectedDate]);
 
-  // 음력 날짜 포맷
-  const selectedLunarStr = useMemo(() => {
-    try {
-      return formatLunarFromISO(selectedDate.toISOString());
-    } catch {
-      const month = selectedDate.getMonth() + 1;
-      const day = selectedDate.getDate();
-      return `음력 ${month}월 ${day}일 (추정)`;
-    }
+  // 음력 날짜 포맷 (비동기 API 호출)
+  const [selectedLunarStr, setSelectedLunarStr] = useState('음력 정보 불러오는 중...');
+  useEffect(() => {
+    let cancelled = false;
+    const isoDate = formatDateISO(selectedDate);
+    formatLunarFromISOAsync(isoDate).then(result => {
+      if (cancelled) return;
+      if (result) {
+        setSelectedLunarStr(result);
+      } else {
+        const month = selectedDate.getMonth() + 1;
+        const day = selectedDate.getDate();
+        setSelectedLunarStr(`음력 ${month}월 ${day}일 (추정)`);
+      }
+    });
+    return () => { cancelled = true; };
   }, [selectedDate]);
 
   // 이전 날짜로 이동

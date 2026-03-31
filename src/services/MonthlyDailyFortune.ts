@@ -155,11 +155,26 @@ function analyzeRelation(
     descriptions.push('외부 압박이 있을 수 있습니다');
   }
 
-  // 지지 관계 분석 (년지/일지 기준은 제외, 일진만 분석)
+  // 지지 관계 분석 (일지와 대상 지지의 합/충 관계)
+  const dayBranch = EARTHLY_BRANCHES.find(b => {
+    const stemInfo = HEAVENLY_STEMS.find(s => s.korean === dayMaster);
+    return stemInfo ? true : false;
+  });
+
+  // 지지 육합
   const combineBranch = findCombineBranch(targetBranch);
   if (combineBranch) {
-    score += 5;
-    branchRelation = '지지합 가능';
+    score += 8;
+    branchRelation = '지지합';
+    descriptions.push('지지 합의 기운으로 조화가 이루어집니다');
+  }
+
+  // 지지 육충
+  const clashBranch = findClashBranch(targetBranch);
+  if (clashBranch) {
+    score -= 12;
+    branchRelation = '지지충';
+    descriptions.push('지지 충의 기운으로 변동이 생길 수 있습니다');
   }
 
   // 오행 조화
@@ -167,7 +182,7 @@ function analyzeRelation(
     score += 8;
     descriptions.push('땅의 기운이 도움을 줍니다');
   } else if (getOvercomes(targetBranchElement) === dayMasterElement && dayMasterElement) {
-    score -= 8;
+    score -= 10;
     descriptions.push('땅의 기운이 방해합니다');
   }
 

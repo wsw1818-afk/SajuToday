@@ -41,7 +41,7 @@ const WEB_FORTUNE_HISTORY_KEY = '@fortune_history_web';
  * 스토리지 서비스
  */
 export class StorageService {
-  private static db: any = null; // SQLite.SQLiteDatabase | null
+  private static db: import('expo-sqlite').SQLiteDatabase | null = null;
   private static isWeb = Platform.OS === 'web';
 
   // 동시성 제어를 위한 Promise 체인

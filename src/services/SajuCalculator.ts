@@ -14,6 +14,7 @@ import {
   EARTHLY_BRANCHES,
   SEXAGENARY_CYCLE,
   SOLAR_TERMS,
+  SOLAR_TERM_DATES,
   SIX_COMBINES,
   SIX_CLASHES,
   FIVE_ELEMENTS,
@@ -150,19 +151,14 @@ export class SajuCalculator {
 
   /**
    * 연도별 입춘(立春) 날짜 반환
-   * 1900-2100년 범위의 주요 연도들
-   * 정확한 값은 KASI API에서 조회 권장
+   * 출처: uncle.tools (NASA DE441 + 한국천문연구원 데이터 기반)
    */
   private getIpChunDay(year: number): number {
-    // 주요 연도별 입춘 날짜 (2월 X일)
-    const ipChunDates: Record<number, number> = {
-      2020: 4, 2021: 3, 2022: 4, 2023: 4, 2024: 4,
-      2025: 3, 2026: 4, 2027: 4, 2028: 4, 2029: 3,
-      2030: 4, 2031: 4, 2032: 4, 2033: 3, 2034: 4,
-    };
-    
-    // 알려진 연도면 해당 값 사용, 아니면 기본값 4
-    return ipChunDates[year] || 4;
+    // SOLAR_TERM_DATES 테이블에서 월 2(입춘) 날짜를 가져옴
+    const dates = SOLAR_TERM_DATES[year];
+    if (dates) return dates[2];
+    // 범위 밖이면 기본값 4
+    return 4;
   }
 
   /**
@@ -171,11 +167,12 @@ export class SajuCalculator {
    * - 년간에 따른 월간 계산
    */
   private calculateMonthPillar(yearStem: string): Pillar {
+    const year = this.birthDate.getFullYear();
     const month = this.birthDate.getMonth() + 1;
     const day = this.birthDate.getDate();
 
-    // 절기 기준 월 결정 (간략화된 버전)
-    let monthIndex = this.getMonthIndexBySolarTerm(month, day);
+    // 절기 기준 월 결정 (연도별 정확한 날짜 사용)
+    let monthIndex = this.getMonthIndexBySolarTerm(year, month, day);
 
     // 월지 (인월=1월(음력), 묘월=2월, ...)
     const branchIndex = (monthIndex + 2) % 12; // 인(寅)부터 시작
@@ -193,29 +190,20 @@ export class SajuCalculator {
 
   /**
    * 절기 기준 월 인덱스 (0 = 인월, 1 = 묘월, ...)
-   * - 절기는 천문 현상이므로 매년 미세하게 변동됨
-   * - 정확한 계산을 위해 KASI API 연동 권장
+   * - SOLAR_TERM_DATES 테이블에서 연도별 정확한 날짜 사용
+   * - 테이블 범위(2020~2040) 밖이면 근사값 폴백
    */
-  private getMonthIndexBySolarTerm(month: number, day: number): number {
-    // 절기 시작일 (대략적인 날짜)
-    // 참고: 실제 절기는 매년 ±1일 정도 변동
-    const solarTermDays: Record<number, number> = {
-      1: 6,   // 소한 (1월 5-7일)
-      2: 4,   // 입춘 (2월 3-5일)
-      3: 6,   // 경칩 (3월 5-7일)
-      4: 5,   // 청명 (4월 4-6일)
-      5: 6,   // 입하 (5월 5-7일)
-      6: 6,   // 망종 (6월 5-7일)
-      7: 7,   // 소서 (7월 6-8일)
-      8: 8,   // 입추 (8월 7-9일)
-      9: 8,   // 백로 (9월 7-9일)
-      10: 8,  // 한로 (10월 8-9일)
-      11: 7,  // 입동 (11월 7-8일)
-      12: 7,  // 대설 (12월 6-8일)
+  private getMonthIndexBySolarTerm(year: number, month: number, day: number): number {
+    // 연도별 정확한 절기일 조회, 없으면 근사값 폴백
+    const yearDates = SOLAR_TERM_DATES[year];
+    const fallback: Record<number, number> = {
+      1: 6, 2: 4, 3: 6, 4: 5, 5: 6, 6: 6,
+      7: 7, 8: 8, 9: 8, 10: 8, 11: 7, 12: 7,
     };
+    const solarTermDays = yearDates ?? fallback;
 
     // 절기 이전이면 전월
-    const termDay = solarTermDays[month] || 6;
+    const termDay = solarTermDays[month] ?? fallback[month] ?? 6;
     let adjustedMonth = month;
     if (day < termDay) {
       adjustedMonth = month === 1 ? 12 : month - 1;
@@ -463,12 +451,15 @@ export class SajuCalculator {
 }
 
 /**
- * 오늘 간지 계산
+ * 오늘 간지 계산 (JDN 기반)
  */
 export function getTodayGanji(date: Date = new Date()): Pillar {
-  const diffTime = date.getTime() - BASE_DATE.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const index = ((diffDays + BASE_GANJI_INDEX) % 60 + 60) % 60;
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  const jdn = getJulianDayNumber(year, month, day);
+  const index = ((jdn % 60) + JDN_GANJI_OFFSET + 60) % 60;
   const cycle = SEXAGENARY_CYCLE[index];
 
   return {
@@ -529,8 +520,19 @@ export function getTodayRelation(dayMaster: string, todayStem: string): string {
   return '';
 }
 
+// 사주 계산 결과 캐시 (메모리 기반)
+const sajuCache = new Map<string, SajuResult>();
+
+/**
+ * 캐시 키 생성
+ */
+function getCacheKey(birthDate: string, birthTime: string | null): string {
+  return `${birthDate}_${birthTime || 'unknown'}`;
+}
+
 /**
  * 사주 계산 헬퍼 함수 (SavedPeopleScreen 등에서 사용)
+ * 캐싱을 적용하여 동일한 입력에 대한 중복 계산 방지
  * @param birthDate 생년월일 (YYYY-MM-DD)
  * @param birthTime 시간 (HH:mm or null)
  * @param calendar 달력 유형 ('solar' | 'lunar') - 현재 양력만 지원
@@ -542,6 +544,25 @@ export function calculateSaju(
   calendar?: 'solar' | 'lunar',
   isLeapMonth?: boolean
 ): SajuResult {
+  const cacheKey = getCacheKey(birthDate, birthTime);
+  
+  // 캐시된 결과가 있으면 반환
+  const cached = sajuCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  
+  // 새로 계산 후 캐시에 저장
   const calculator = new SajuCalculator(birthDate, birthTime);
-  return calculator.calculate();
+  const result = calculator.calculate();
+  sajuCache.set(cacheKey, result);
+  
+  return result;
+}
+
+/**
+ * 사주 계산 캐시 초기화 (필요 시 사용)
+ */
+export function clearSajuCache(): void {
+  sajuCache.clear();
 }

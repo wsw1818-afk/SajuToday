@@ -570,10 +570,10 @@ export const SCORE_MESSAGES = {
 
 // 점수 등급 계산
 export function getScoreLevel(score: number): 'excellent' | 'good' | 'average' | 'caution' | 'warning' {
-  if (score >= 85) return 'excellent';
-  if (score >= 70) return 'good';
-  if (score >= 55) return 'average';
-  if (score >= 40) return 'caution';
+  if (score >= 80) return 'excellent';
+  if (score >= 60) return 'good';
+  if (score >= 45) return 'average';
+  if (score >= 30) return 'caution';
   return 'warning';
 }
 
@@ -588,18 +588,18 @@ export function getScoreMessage(
 
 // 점수 바 색상 가져오기
 export function getScoreColor(score: number): string {
-  if (score >= 85) return '#10B981';
-  if (score >= 70) return '#3B82F6';
-  if (score >= 55) return '#F59E0B';
-  if (score >= 40) return '#F97316';
+  if (score >= 80) return '#10B981';
+  if (score >= 60) return '#3B82F6';
+  if (score >= 45) return '#F59E0B';
+  if (score >= 30) return '#F97316';
   return '#EF4444';
 }
 
 // 점수 레이블 가져오기
 export function getScoreLabel(score: number): string {
-  if (score >= 85) return '최고';
-  if (score >= 70) return '좋음';
-  if (score >= 55) return '보통';
-  if (score >= 40) return '주의';
-  return '조심';
+  if (score >= 80) return '대길';
+  if (score >= 60) return '길';
+  if (score >= 45) return '보통';
+  if (score >= 30) return '주의';
+  return '흉';
 }

@@ -1,12 +1,123 @@
-# PROGRESS.md - 중복 없는 오늘 운세 시스템 기획안
+# PROGRESS.md - SajuToday 개발 진행 로그
 
 > 프로젝트: SajuToday (사주 투데이)
-> 작성일: 2026-02-01
-> 목적: 다른 AI가 구현할 수 있도록 상세 기획서 제공
+> 최종 업데이트: 2026-03-02
 
 ---
 
-## 🎯 프로젝트 목표
+## 📋 2026-03-02: Phase 1-2 버그 수정 (BUG-002, BUG-001, NEW-004, BUG-008)
+
+### BUG-002: 월주 절기 동적 조회 (Critical → 해결)
+- **문제**: `getMonthIndexBySolarTerm()`이 고정 날짜 사용 (매년 ±1일 변동)
+- **해결**:
+  - `src/data/saju.ts`에 `SOLAR_TERM_DATES` 추가 (2020~2040년, 21개 연도 × 12절기)
+  - `SajuCalculator.ts`의 `getMonthIndexBySolarTerm()`에 year 파라미터 추가
+  - 연도별 정확한 절기 날짜 참조, 범위 밖은 근사값 폴백
+- **출처**: uncle.tools (NASA DE441 + 한국천문연구원)
+
+### BUG-001: 입춘 경계 2034년 이후 확장 → 해결
+- **문제**: `getIpChunDay()`가 2020~2034년만 지원
+- **해결**: `SOLAR_TERM_DATES[year][2]`로 통합, 2040년까지 자동 확장
+
+### NEW-004: formatLunarFromISO 동기 함수 비동기 전환
+- **문제**: `useDateNavigation.ts`에서 동기 `formatLunarFromISO()` 사용 → "음력 정보 (변환 필요)" 고정값 반환
+- **해결**: `formatLunarFromISOAsync()` + `useEffect` 패턴으로 전환, KASI API 실제 음력 변환
+
+### BUG-008: 사주 계산 캐싱 → 이미 구현 확인
+- `calculateSaju()` 함수에 `Map` 기반 캐시 이미 구현됨 (536-573줄)
+- 기획안에서 미반영 항목 → 해결 완료로 표기
+
+### 테스트 결과
+```
+Tests: 60 passed, 60 total (0.697s)
+TypeScript: 0 errors
+```
+
+---
+
+## 📋 2026-03-02: 종합 개선 기획안 및 Phase 1 버그 수정
+
+### 기획안 작성
+- **파일**: [`plans/improvement_plan_2026_03.md`](plans/improvement_plan_2026_03.md)
+- **내용**: 버그 수정 10개, 기능 개선 7개, 신규 기능 7개, 기술 개선 3개
+- **코드 대조 검증**: Opus 4.6 분석으로 실제 코드와 1:1 검증 완료
+
+### Phase 1 버그 수정 완료
+
+#### NEW-001: LUNAR_API_URL 미정의 수정
+- **파일**: [`KasiService.ts:17`](src/services/KasiService.ts:17)
+- **내용**: `LUNAR_API_URL` 상수 추가
+```typescript
+const LUNAR_API_URL = `${KASI_BASE_URL}/LunCalInfoService`;
+```
+
+#### BUG-006: SQLite any 타입 수정
+- **파일**: [`StorageService.ts:44`](src/services/StorageService.ts:44)
+- **내용**: `any` → `import('expo-sqlite').SQLiteDatabase | null` 타입 명시
+```typescript
+private static db: import('expo-sqlite').SQLiteDatabase | null = null;
+```
+
+#### NEW-002: TaekilCalculator JDN 기반 일진 계산 전환
+- **파일**: [`TaekilCalculator.ts:50-77`](src/services/TaekilCalculator.ts:50)
+- **내용**: 기존 Date 기반 계산 → JDN(Julian Day Number) 기반으로 변경
+- SajuCalculator, MonthlyDailyFortune과 동일한 방식 적용
+
+#### getTodayGanji JDN 전환
+- **파일**: [`SajuCalculator.ts:465-481`](src/services/SajuCalculator.ts:465)
+- **내용**: `BASE_DATE`, `BASE_GANJI_INDEX` 의존 제거 → JDN 기반으로 변경
+
+### 테스트 결과
+```
+PASS src/__tests__/SajuCalculator.test.ts
+  SajuCalculator
+    calculate()
+      ✓ 생년월일로 4주(사주)를 계산해야 한다
+      ✓ 출생시간 없이도 3주(년월일)를 계산해야 한다
+      ✓ 일주(일간)가 정확해야 한다
+      ✓ 오행 분포를 계산해야 한다
+      ✓ 음양 분포를 계산해야 한다
+      ✓ 일주 특성 정보를 포함해야 한다
+    입춘 경계 처리
+      ✓ 입춘(2월 4일경) 이전 출생은 전년도 년주를 사용해야 한다
+    시간대 처리
+      ✓ UTC 시간대 문제 없이 날짜를 정확히 처리해야 한다
+  getTodayGanji
+    ✓ 주어진 날짜의 일진(日辰)을 반환해야 한다
+    ✓ 60갑자가 60일 주기로 반복되어야 한다
+
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+```
+
+### Phase 2 추가 완료 (2026-03-02)
+
+#### NEW-004: 음력 변환 함수 구현
+- **파일**: [`dateFormatter.ts:42-100`](src/utils/dateFormatter.ts:42)
+- **내용**: KasiService 연동 음력 변환 함수 구현
+  - `formatLunarFromISOAsync()`: 비동기 음력 변환 (KASI API)
+  - `formatLunarFromSolar()`: 양력→음력 변환
+  - 윤달(윤월) 표시 지원
+
+#### BUG-008: 사주 계산 캐싱
+- **파일**: [`SajuCalculator.ts:535-580`](src/services/SajuCalculator.ts:535)
+- **내용**: 메모리 기반 캐싱으로 중복 계산 방지
+```typescript
+const sajuCache = new Map<string, SajuResult>();
+export function calculateSaju(...) { ... } // 캐시 활용
+export function clearSajuCache(): void { ... } // 캐시 초기화
+```
+
+#### IMP-001/IMP-002: 이미 구현됨 확인
+- 일간 강약 분석 상세화: SajuScreen.tsx에 reasons, dos/donts 표시 확인
+- 오행 균형 섹션: elementBalance 섹션 및 ElementChart 컴포넌트 확인
+
+### 진행 중인 작업
+- **BUG-002**: 월주 절기 동적 조회 (KasiService 연동 필요, 복잡한 작업)
+
+---
+
+## 🎯 프로젝트 목표 (2026-02-01)
 
 **"매일 새로운 운세를 영구적으로 제공하는 시스템 구축"**
 

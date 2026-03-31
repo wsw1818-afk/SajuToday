@@ -4,6 +4,7 @@
  */
 
 import { DAYS_OF_WEEK } from '../data/constants';
+import { KasiService } from '../services/KasiService';
 
 /**
  * 날짜를 "M월 D일 (요일)" 형식으로 변환
@@ -39,29 +40,60 @@ export function formatDateISO(date: Date): string {
 }
 
 /**
- * ISO 날짜 문자열에서 음력 날짜 문자열 생성
- * 주의: 이 함수는 실제 음력 변환을 수행하지 않으며, 
-       KASI API를 통해 변환된 결과를 표시하는 용도로 사용해야 함
- * @example formatLunarFromISO("2024-01-15") // "음력 변환 필요"
+ * ISO 날짜 문자열에서 음력 날짜 문자열 생성 (비동기 버전)
+ * KASI API를 통해 실제 음력 변환을 수행
+ * @param isoDate "YYYY-MM-DD" 형식의 양력 날짜
+ * @returns "음력 X월 X일" 형식의 문자열 (변환 실패 시 null)
+ * @example const lunar = await formatLunarFromISO("2024-01-15") // "음력 12월 5일"
+ */
+export async function formatLunarFromISOAsync(isoDate: string): Promise<string | null> {
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return null;
+
+  try {
+    const lunarInfo = await KasiService.solarToLunar(isoDate);
+    if (lunarInfo) {
+      const leapPrefix = lunarInfo.isLeapMonth ? '윤' : '';
+      return `음력 ${leapPrefix}${lunarInfo.lunMonth}월 ${lunarInfo.lunDay}일`;
+    }
+    return null;
+  } catch (error) {
+    console.error('formatLunarFromISOAsync error:', error);
+    return null;
+  }
+}
+
+/**
+ * ISO 날짜 문자열에서 음력 날짜 문자열 생성 (동기 버전 - 폴백용)
+ * 주의: 이 함수는 실제 음력 변환을 수행하지 않음
+ * @deprecated formatLunarFromISOAsync 사용 권장
+ * @example formatLunarFromISO("2024-01-15") // "음력 정보 (변환 필요)"
  */
 export function formatLunarFromISO(isoDate: string): string {
   const parts = isoDate.split('-');
   if (parts.length !== 3) return '음력 정보 없음';
 
-  // TODO: KASI API를 통해 실제 음력 변환 수행
-  // 현재는 표시만 하고 실제 변환은 하지 않음
+  // 동기 버전은 실제 변환 불가 - 안내 메시지 반환
   return `음력 정보 (변환 필요)`;
 }
 
 /**
- * 양력 날짜를 음력으로 변환 (KASI API 연동 필요)
+ * 양력 날짜를 음력으로 변환 (KASI API 연동)
  * @param solarDate "YYYY-MM-DD" 형식의 양력 날짜
  * @returns "음력 X월 X일" 형식의 문자열 (또는 null)
  */
 export async function formatLunarFromSolar(solarDate: string): Promise<string | null> {
-  // KasiService.solarToLunar를 통해 실제 변환 수행
-  // 이 함수는 비동기이므로 호출하는 곳에서 await 사용 필요
-  return null; // TODO: KASI API 연동
+  try {
+    const lunarInfo = await KasiService.solarToLunar(solarDate);
+    if (lunarInfo) {
+      const leapPrefix = lunarInfo.isLeapMonth ? '윤' : '';
+      return `음력 ${leapPrefix}${lunarInfo.lunMonth}월 ${lunarInfo.lunDay}일`;
+    }
+    return null;
+  } catch (error) {
+    console.error('formatLunarFromSolar error:', error);
+    return null;
+  }
 }
 
 /**

@@ -47,12 +47,34 @@ function getMonthGeneralDirection(month: number): string {
   return directions[(month - 1) % 12];
 }
 
-// 일진 계산
+/**
+ * 줄리안 데이 넘버(JDN) 기반 일진 계산
+ * SajuCalculator, MonthlyDailyFortune와 동일한 방식 사용
+ * 검증: 2026-02-07 = 임자(壬子) = index 48
+ */
+function getJulianDayNumber(year: number, month: number, day: number): number {
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  return day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+}
+
+// JDN 기준 60갑자 오프셋: JDN % 60 과 실제 간지 index의 차이
+// 검증: 2026-02-07 JDN=2461744, 실제 일진=임자(壬자)=index 48
+// 2461744 % 60 = 44, 실제 index=48, 오프셋=48-44=4
+const JDN_GANJI_OFFSET = 4;
+
+// 일진 계산 (JDN 기반)
 function getDayGanJi(date: Date): { gan: string; ji: string; ganJi: string } {
-  const baseDate = new Date(1900, 0, 1);
-  const diffDays = Math.floor((date.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
-  const ganIndex = (diffDays + 9) % 10; // 1900년 1월 1일은 경자일
-  const jiIndex = (diffDays + 11) % 12;
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  const jdn = getJulianDayNumber(year, month, day);
+  const ganjiIndex = ((jdn % 60) + JDN_GANJI_OFFSET + 60) % 60;
+  
+  const ganIndex = ganjiIndex % 10;
+  const jiIndex = ganjiIndex % 12;
 
   return {
     gan: STEMS[ganIndex],
