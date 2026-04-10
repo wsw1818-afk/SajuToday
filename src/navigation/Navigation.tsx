@@ -14,7 +14,6 @@ import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MyScreen from '../screens/MyScreen';
 import FortuneDetailScreen from '../screens/FortuneDetailScreen';
-import FortuneMenuScreen from '../screens/FortuneMenuScreen';
 import FortuneTypeScreen from '../screens/FortuneTypeScreen';
 import CompatibilityInputScreen from '../screens/CompatibilityInputScreen';
 import CompatibilityResultScreen from '../screens/CompatibilityResultScreen';
@@ -52,7 +51,6 @@ function TabIcon({ name, focused }: { name: string; focused: boolean }) {
   const icons: Record<string, string> = {
     Daily: '📅',
     Saju: '☯',
-    FortuneMenu: '🔮',
     Compatibility: '💕',
     My: '👤',
   };
@@ -97,11 +95,6 @@ function MainTabs() {
         options={{ tabBarLabel: '사주' }}
       />
       <Tab.Screen
-        name="FortuneMenu"
-        component={FortuneMenuScreen}
-        options={{ tabBarLabel: '운세' }}
-      />
-      <Tab.Screen
         name="Compatibility"
         component={CompatibilityScreen}
         options={{ tabBarLabel: '궁합' }}
@@ -143,7 +136,6 @@ export default function Navigation() {
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
             <Stack.Screen name="FortuneDetail" component={FortuneDetailScreen} />
-            <Stack.Screen name="FortuneMenu" component={FortuneMenuScreen} />
             <Stack.Screen name="FortuneType" component={FortuneTypeScreen} />
             <Stack.Screen name="CompatibilityInput" component={CompatibilityInputScreen} />
             <Stack.Screen name="CompatibilityResult" component={CompatibilityResultScreen} />

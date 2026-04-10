@@ -314,7 +314,6 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: undefined;
   FortuneDetail: { category: string };
-  FortuneMenu: undefined;
   FortuneType: { type: string };
   CompatibilityInput: undefined;
   CompatibilityResult: { personA: SavedPerson; personB: SavedPerson };

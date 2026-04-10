@@ -98,19 +98,11 @@ const FortuneCard: React.FC<FortuneCardProps> = ({ category, score, description,
           <View style={styles.detailSection}>
             <View style={styles.detailHeader}>
               <Zap size={16} color="#F59E0B" />
-              <Text style={[styles.detailTitle, { color: '#F59E0B' }]}>명리학적 근거</Text>
+              <Text style={[styles.detailTitle, { color: '#F59E0B' }]}>왜 이런 운세인가요?</Text>
             </View>
             <Text style={styles.detailText}>{detailedFortune.reason}</Text>
           </View>
 
-          {/* 실천 조언 */}
-          <View style={styles.detailSection}>
-            <View style={styles.detailHeader}>
-              <AlertCircle size={16} color="#10B981" />
-              <Text style={[styles.detailTitle, { color: '#10B981' }]}>실천 조언</Text>
-            </View>
-            <Text style={styles.detailText}>{detailedFortune.advice}</Text>
-          </View>
 
           {/* 키워드 */}
           <View style={styles.detailKeywords}>
@@ -192,16 +184,16 @@ export default function FortuneDetailScreen() {
             <View style={styles.analysisCard}>
               <View style={styles.analysisRow}>
                 <View style={styles.analysisItem}>
-                  <Text style={styles.analysisLabel}>나의 일간</Text>
+                  <Text style={styles.analysisLabel}>나의 기운</Text>
                   <Text style={styles.analysisValue}>
-                    {fortune.userDayMaster?.stem} ({fortune.userDayMaster?.elementName})
+                    {fortune.userDayMaster?.elementName}
                   </Text>
                 </View>
                 <View style={styles.analysisArrow}>
                   <Text style={styles.analysisArrowText}>{fortune.elementAnalysis.relationName}</Text>
                 </View>
                 <View style={styles.analysisItem}>
-                  <Text style={styles.analysisLabel}>오늘의 간지</Text>
+                  <Text style={styles.analysisLabel}>오늘의 기운</Text>
                   <Text style={styles.analysisValue}>
                     {fortune.todayGanji?.fullName}
                   </Text>
@@ -227,7 +219,14 @@ export default function FortuneDetailScreen() {
                       ? styles.branchBadgeGood
                       : styles.branchBadgeCaution
                   ]}>
-                    <Text style={styles.branchBadgeText}>{fortune.branchAnalysis.relation}</Text>
+                    <Text style={styles.branchBadgeText}>
+                    {fortune.branchAnalysis.relation === '육합' ? '조화' :
+                     fortune.branchAnalysis.relation === '삼합' ? '시너지' :
+                     fortune.branchAnalysis.relation === '육충' ? '충돌' :
+                     fortune.branchAnalysis.relation === '육해' ? '손실' :
+                     fortune.branchAnalysis.relation === '원진' ? '불화' :
+                     fortune.branchAnalysis.relation || ''}
+                  </Text>
                   </View>
                 </View>
                 {/* 쉬운 설명 (하이라이트) */}
@@ -284,17 +283,6 @@ export default function FortuneDetailScreen() {
           detailedFortune={fortune.detailedFortunes?.health}
         />
 
-        {/* Do & Don't */}
-        <View style={styles.dosDontsContainer}>
-          <View style={[styles.dosDontsCard, styles.doCard]}>
-            <Text style={styles.dosDontsLabel}>오늘 하면 좋은 것</Text>
-            <Text style={styles.dosDontsText}>{fortune.do}</Text>
-          </View>
-          <View style={[styles.dosDontsCard, styles.dontCard]}>
-            <Text style={styles.dosDontsLabel}>오늘 피할 것</Text>
-            <Text style={styles.dosDontsText}>{fortune.dont}</Text>
-          </View>
-        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
