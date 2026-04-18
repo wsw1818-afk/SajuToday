@@ -493,6 +493,42 @@ export function analyzeDayMasterStrength(pillars: FourPillars, elements: Record<
 // 용신/기신 분석
 // ========================================
 
+/**
+ * 조후용신(調候用神) 보정 — 월지 기준 계절별 부족한 오행 (Phase 4-1)
+ * 한겨울(자월)/한여름(오월) 등 극단 계절에는 조후가 억부보다 우선
+ *
+ * 원칙:
+ * - 자축월 (한겨울): 화(따뜻함) 시급
+ * - 인묘월 (이른봄): 화(자라게)
+ * - 사오미월 (한여름): 수(시원함) 시급
+ * - 신유술월 (가을): 화(차가움 누름)
+ * - 진술축미 (사계 토왕): 균형
+ */
+const CHOHU_TABLE: Record<string, { primary: Element; secondary?: Element; isExtreme: boolean }> = {
+  // 한겨울 — 화 시급
+  '자': { primary: 'fire', secondary: 'wood', isExtreme: true },
+  '축': { primary: 'fire', secondary: 'wood', isExtreme: true },
+  // 봄
+  '인': { primary: 'fire', secondary: 'water', isExtreme: false },
+  '묘': { primary: 'fire', secondary: 'water', isExtreme: false },
+  // 환절
+  '진': { primary: 'water', secondary: 'wood', isExtreme: false },
+  // 한여름 — 수 시급
+  '사': { primary: 'water', secondary: 'metal', isExtreme: true },
+  '오': { primary: 'water', secondary: 'metal', isExtreme: true },
+  '미': { primary: 'water', secondary: 'metal', isExtreme: true },
+  // 가을 — 화/목
+  '신': { primary: 'fire', secondary: 'wood', isExtreme: false },
+  '유': { primary: 'fire', secondary: 'wood', isExtreme: false },
+  '술': { primary: 'water', secondary: 'wood', isExtreme: false },
+  // 환절(토왕) — 균형
+  '해': { primary: 'fire', secondary: 'wood', isExtreme: true },
+};
+
+export function getChohuYongsin(monthBranch: string): { primary: Element; secondary?: Element; isExtreme: boolean } | null {
+  return CHOHU_TABLE[monthBranch] || null;
+}
+
 export function analyzeYongsin(
   pillars: FourPillars,
   elements: Record<Element, number>,
@@ -592,6 +628,31 @@ export function analyzeYongsin(
   } else {
     recommendations.advice.push('균형 잡힌 사주로 다양한 분야에서 활동할 수 있습니다');
     recommendations.advice.push('부족한 기운을 보충하면 더욱 좋습니다');
+  }
+
+  // ===== 조후용신 보정 (Phase 4-1) =====
+  // 한겨울/한여름 같은 극단 계절에는 조후가 억부보다 우선
+  const monthBranch = pillars.month?.branch;
+  if (monthBranch) {
+    const chohu = getChohuYongsin(monthBranch);
+    if (chohu) {
+      // 극단 계절(한겨울/한여름/한가을 등)이면 조후를 용신에 강제 추가
+      if (chohu.isExtreme && !yongsin.includes(chohu.primary)) {
+        // 기존 yongsin 앞에 조후를 추가 (우선순위 높임)
+        yongsin.unshift(chohu.primary);
+        // 만약 기신에 들어있으면 제거 (충돌 해소)
+        const gishinIdx = gishin.indexOf(chohu.primary);
+        if (gishinIdx >= 0) gishin.splice(gishinIdx, 1);
+      }
+      // 평범한 계절이면 희신으로 추가
+      else if (!chohu.isExtreme && !yongsin.includes(chohu.primary) && !heeshin.includes(chohu.primary)) {
+        heeshin.push(chohu.primary);
+      }
+      // 보조 조후도 희신
+      if (chohu.secondary && !yongsin.includes(chohu.secondary) && !heeshin.includes(chohu.secondary)) {
+        heeshin.push(chohu.secondary);
+      }
+    }
   }
 
   const yongsinNames = yongsin.map(e => FIVE_ELEMENTS[e].korean).join(', ');

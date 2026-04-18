@@ -335,9 +335,57 @@ export default function OnboardingScreen() {
               />
             </View>
 
+            {/* 양력/음력 선택 — 생년월일 입력 전에 먼저 결정 (음력 사용자가 양력 기본값으로 잘못된 사주 보는 함정 방지) */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>달력 종류 <Text style={styles.required}>*</Text></Text>
+              <Text style={styles.inputHint}>생년월일을 입력하기 전에 먼저 선택해주세요</Text>
+              <View style={styles.toggleContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleButton,
+                    calendar === 'solar' && styles.toggleButtonActive,
+                  ]}
+                  onPress={() => setCalendar('solar')}
+                >
+                  <Text style={[
+                    styles.toggleText,
+                    calendar === 'solar' && styles.toggleTextActive,
+                  ]}>양력</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleButton,
+                    calendar === 'lunar' && styles.toggleButtonActive,
+                  ]}
+                  onPress={() => setCalendar('lunar')}
+                >
+                  <Text style={[
+                    styles.toggleText,
+                    calendar === 'lunar' && styles.toggleTextActive,
+                  ]}>음력</Text>
+                </TouchableOpacity>
+              </View>
+              {calendar === 'lunar' && (
+                <TouchableOpacity
+                  style={styles.checkboxRow}
+                  onPress={() => setIsLeapMonth(!isLeapMonth)}
+                >
+                  <View style={[styles.checkbox, isLeapMonth && styles.checkboxChecked]}>
+                    {isLeapMonth && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxLabel}>윤달</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             {/* 생년월일 입력 - 드롭다운 방식 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>생년월일 <Text style={styles.required}>*</Text></Text>
+              <Text style={styles.inputLabel}>
+                생년월일 <Text style={styles.required}>*</Text>
+                <Text style={styles.inputLabelSuffix}>
+                  {' '}({calendar === 'solar' ? '양력 기준' : '음력 기준'})
+                </Text>
+              </Text>
               <View style={styles.dropdownRow}>
                 {/* 년도 선택 */}
                 <TouchableOpacity
@@ -407,48 +455,6 @@ export default function OnboardingScreen() {
                 onSelect={(value) => setBirthDay(value as number)}
                 title="일 선택"
               />
-            </View>
-
-            {/* 양력/음력 선택 */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>달력 종류</Text>
-              <View style={styles.toggleContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    calendar === 'solar' && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => setCalendar('solar')}
-                >
-                  <Text style={[
-                    styles.toggleText,
-                    calendar === 'solar' && styles.toggleTextActive,
-                  ]}>양력</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.toggleButton,
-                    calendar === 'lunar' && styles.toggleButtonActive,
-                  ]}
-                  onPress={() => setCalendar('lunar')}
-                >
-                  <Text style={[
-                    styles.toggleText,
-                    calendar === 'lunar' && styles.toggleTextActive,
-                  ]}>음력</Text>
-                </TouchableOpacity>
-              </View>
-              {calendar === 'lunar' && (
-                <TouchableOpacity
-                  style={styles.checkboxRow}
-                  onPress={() => setIsLeapMonth(!isLeapMonth)}
-                >
-                  <View style={[styles.checkbox, isLeapMonth && styles.checkboxChecked]}>
-                    {isLeapMonth && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <Text style={styles.checkboxLabel}>윤달</Text>
-                </TouchableOpacity>
-              )}
             </View>
 
             {/* 태어난 시간 입력 */}
@@ -593,6 +599,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.textSecondary,
     marginBottom: SPACING.sm,
+  },
+  inputLabelSuffix: {
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '400',
+    color: COLORS.textLight,
+  },
+  inputHint: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.primary,
+    marginBottom: SPACING.sm,
+    marginTop: -SPACING.xs,
   },
   required: {
     color: COLORS.error,

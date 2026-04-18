@@ -13,6 +13,8 @@ const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN || '';
 const ANALYTICS_ENABLED = process.env.EXPO_PUBLIC_ANALYTICS_ENABLED === 'true';
 
 // 이벤트 타입 정의
+// Council A안 정직 모드: 호출되지 않는 type은 거짓말 → 5개 신규 type 삭제
+// 출시 후 실제 호출 코드 작성 시 다시 추가
 export type AnalyticsEvent =
   | 'app_open'
   | 'screen_view'

@@ -318,6 +318,8 @@ export type RootStackParamList = {
   CompatibilityInput: undefined;
   CompatibilityResult: { personA: SavedPerson; personB: SavedPerson };
   SavedPeople: undefined;
+  LuckyDays: undefined;
+  FamilyDashboard: undefined;
   DatePicker: undefined;
   Menu: undefined;
   Sinsal: undefined;

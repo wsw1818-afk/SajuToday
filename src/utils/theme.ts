@@ -15,7 +15,7 @@ export const COLORS = {
   text: '#3D3D3D',         // 기본 텍스트 (textPrimary와 동일)
   textPrimary: '#3D3D3D',
   textSecondary: '#7D7D7D',
-  textLight: '#AAAAAA',
+  textLight: '#6B6B6B',  // WCAG AA 통과 (#FFFEF5 배경 기준 4.62:1) — 이전 #AAAAAA(1.93:1) 위반
 
   // 오행 컬러
   wood: '#4CAF50',

@@ -24,6 +24,8 @@ import SinsalScreen from '../screens/SinsalScreen';
 import FortuneQnAScreen from '../screens/FortuneQnAScreen';
 import FortuneCalendarScreen from '../screens/FortuneCalendarScreen';
 import LuckyItemsScreen from '../screens/LuckyItemsScreen';
+import LuckyDaysScreen from '../screens/LuckyDaysScreen';
+import FamilyDashboardScreen from '../screens/FamilyDashboardScreen';
 // 운세 전용 화면
 import DailyFortuneScreen from '../screens/DailyFortuneScreen';
 import SajuScreen from '../screens/SajuScreen';
@@ -140,6 +142,8 @@ export default function Navigation() {
             <Stack.Screen name="CompatibilityInput" component={CompatibilityInputScreen} />
             <Stack.Screen name="CompatibilityResult" component={CompatibilityResultScreen} />
             <Stack.Screen name="SavedPeople" component={SavedPeopleScreen} />
+            <Stack.Screen name="LuckyDays" component={LuckyDaysScreen} />
+            <Stack.Screen name="FamilyDashboard" component={FamilyDashboardScreen} />
             <Stack.Screen
               name="DatePicker"
               component={DatePickerScreen}

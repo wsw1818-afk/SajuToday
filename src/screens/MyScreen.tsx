@@ -56,6 +56,27 @@ export default function MyScreen() {
 
   const menuItems = [
     {
+      icon: '🌳',
+      title: '인생 대운 타임라인',
+      desc: '내 인생 흐름과 현재 위치',
+      screen: 'Daeun',
+      color: '#7C3AED',
+    },
+    {
+      icon: '🌟',
+      title: '길일 D-day',
+      desc: '앞으로 14일 + 이벤트별 길일',
+      screen: 'LuckyDays',
+      color: '#E67E22',
+    },
+    {
+      icon: '👨‍👩‍👧‍👦',
+      title: '가족 운세 대시보드',
+      desc: '가족 모두의 오늘 운세',
+      screen: 'FamilyDashboard',
+      color: '#EF4444',
+    },
+    {
       icon: '⭐',
       title: '저장한 운세',
       desc: '북마크한 운세 모아보기',

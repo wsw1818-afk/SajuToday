@@ -8,6 +8,10 @@ import { useTodayFortune } from '../hooks/useTodayFortune';
 import { SajuCalculator } from '../services/SajuCalculator';
 import { StorageService } from '../services/StorageService';
 import { SavedPerson } from '../types';
+import { calculateLuckyDays } from '../services/LuckyDayCalculator';
+// ConcernService는 향후 재도입 가능 (PROGRESS.md 참고). 현재는 미사용.
+import { DailyShareModal } from '../components/DailyShareModal';
+import { useTheme } from '../contexts/ThemeContext';
 
 
 export default function DailyFortuneScreen() {
@@ -15,6 +19,7 @@ export default function DailyFortuneScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { sajuResult, profile } = useApp();
+  const { isDark } = useTheme();
 
   // 선택된 날짜 상태
   const [selectedDate, setSelectedDate] = useState(() => new Date());
@@ -22,6 +27,8 @@ export default function DailyFortuneScreen() {
   const [savedPeople, setSavedPeople] = useState<SavedPerson[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<SavedPerson | null>(null);
   const [showPeoplePicker, setShowPeoplePicker] = useState(false);
+  // 공유 모달 (Phase 2-1)
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // 저장된 사람 목록 로드 (화면 포커스 시 갱신)
   useFocusEffect(
@@ -62,6 +69,17 @@ export default function DailyFortuneScreen() {
 
   // 현재 표시되는 이름
   const activeName = selectedPerson ? selectedPerson.name : (profile?.name || '나');
+
+  // 다음 길일 계산 (Phase 1-2)
+  const luckyData = useMemo(() => {
+    if (!activeSajuResult) return null;
+    try {
+      return calculateLuckyDays(activeSajuResult);
+    } catch (e) {
+      console.warn('길일 계산 실패:', e);
+      return null;
+    }
+  }, [activeSajuResult]);
 
   // DatePickerScreen에서 돌아왔을 때 날짜 업데이트
   useFocusEffect(
@@ -118,14 +136,16 @@ export default function DailyFortuneScreen() {
     return '흉';
   };
 
-  // 기본값 처리
-  const summary = todayFortune.overall?.summary || '오늘의 운세를 확인하세요.';
-  const detail = todayFortune.overall?.detail || '오늘은 평온한 하루가 될 것입니다.';
-  const advice = todayFortune.overall?.advice || '차분하게 하루를 보내세요.';
-  const wealth = todayFortune.wealth?.advice || '평온한 재물운입니다.';
-  const love = todayFortune.love?.advice || '평온한 연애운입니다.';
-  const work = todayFortune.work?.advice || '평온한 직장운입니다.';
-  const health = todayFortune.health?.advice || '건강에 유의하세요.';
+  // 기본값 처리 — 폴백은 정상 운세 생성 실패 시에만 노출되어야 함
+  // QA 검수 후 (2026-04-18): 폴백 텍스트가 정상 흐름에 섞이지 않도록 비어있을 때만 폴백 사용
+  // 빈 문자열도 폴백 트리거에 포함 (?? 대신 || 유지)
+  const summary = todayFortune.overall?.summary?.trim() || '오늘의 운세를 확인하세요.';
+  const detail = todayFortune.overall?.detail?.trim() || '오늘은 평온한 하루가 될 것입니다.';
+  const advice = todayFortune.overall?.advice?.trim() || '차분하게 하루를 보내세요.';
+  const wealth = todayFortune.wealth?.advice?.trim() || '평온한 재물운입니다.';
+  const love = todayFortune.love?.advice?.trim() || '평온한 연애운입니다.';
+  const work = todayFortune.work?.advice?.trim() || '평온한 직장운입니다.';
+  const health = todayFortune.health?.advice?.trim() || '건강에 유의하세요.';
   const color = todayFortune.luckyPoints?.color || '흰색';
   const number = todayFortune.luckyPoints?.number || '3, 7';
   const direction = todayFortune.luckyPoints?.direction || '남쪽';
@@ -133,17 +153,58 @@ export default function DailyFortuneScreen() {
   const goodActivities = todayFortune.activities?.good || ['일상 업무', '정리 정돈'];
   const cautions = todayFortune.caution || ['급한 결정은 피하세요'];
 
-  // 종합 풀이 (카테고리를 하나의 서술형으로 통합)
+  // 종합 풀이 압축 — 날짜별 길이 편차 최소화 (핑퐁 방지)
+  // 목표값(target) ± 15% 범위에 안정적으로 수렴하도록 종결어미 단위 절단
+  //
+  // 알고리즘:
+  // 1. 한국어 종결("요./어요./죠./네요./예요." + "다.") + 마침표 단위로 분리
+  // 2. 누적 길이가 target 근처 도달할 때까지 문장 추가
+  // 3. 다음 문장 추가 시 max 초과면 멈춤 (target 미달이어도 OK)
+  // 4. 첫 문장조차 max 초과하면 어절 단위 부드러운 절단
+  const trimByTarget = (text: string, target: number, max: number): string => {
+    if (!text) return '';
+    if (text.length <= max) return text;
+
+    // 한국어 종결 + 영문 마침표 모두 인식
+    const sentences = text
+      .split(/(?<=[요죠다요예네까]\.|[.!?])\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    let result = '';
+    for (const s of sentences) {
+      const next = result ? `${result} ${s}` : s;
+      if (next.length <= max) {
+        result = next;
+        // target 도달했고 max 여유가 적으면 멈춤
+        if (result.length >= target * 0.85) break;
+      } else {
+        // 추가하면 max 초과 → 멈춤
+        if (result) break;
+        // 첫 문장조차 max 초과 → 어절 단위 절단
+        const words = s.split(' ');
+        let acc = '';
+        for (const w of words) {
+          if ((acc + ' ' + w).length > max) break;
+          acc = acc ? `${acc} ${w}` : w;
+        }
+        result = acc + '…';
+        break;
+      }
+    }
+    return result || text.slice(0, max) + '…';
+  };
+
   const comprehensiveReading = [
-    detail,
+    trimByTarget(detail, 220, 280),
     '',
-    wealth,
+    `💰 재물운\n${trimByTarget(wealth, 90, 120)}`,
     '',
-    love,
+    `💕 연애·대인운\n${trimByTarget(love, 90, 120)}`,
     '',
-    work,
+    `💼 직장·일운\n${trimByTarget(work, 90, 120)}`,
     '',
-    health,
+    `🏃 건강운\n${trimByTarget(health, 90, 120)}`,
   ].join('\n');
 
   // 날짜 포맷
@@ -229,6 +290,26 @@ export default function DailyFortuneScreen() {
         </TouchableOpacity>
       </Modal>
 
+      {/* 다음 길일 D-day 배너 (Phase 1-2) */}
+      {luckyData?.nextBestDay && luckyData.nextBestDday > 0 && (
+        <TouchableOpacity
+          style={styles.luckyBanner}
+          onPress={() => navigation.navigate('LuckyDays')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.luckyBannerEmoji}>🌟</Text>
+          <View style={styles.luckyBannerContent}>
+            <Text style={styles.luckyBannerTitle}>
+              다음 길일 D-{luckyData.nextBestDday}
+            </Text>
+            <Text style={styles.luckyBannerDesc}>
+              {luckyData.nextBestDay.dateStr} · {luckyData.nextBestDay.reason}
+            </Text>
+          </View>
+          <Text style={styles.luckyBannerArrow}>▶</Text>
+        </TouchableOpacity>
+      )}
+
       {/* 날짜 선택 네비게이터 */}
       <View style={styles.dateNavigator}>
         <TouchableOpacity
@@ -296,10 +377,48 @@ export default function DailyFortuneScreen() {
         {/* 종합 운세 풀이 */}
         <View style={styles.section}>
           <View style={styles.detailCard}>
+            {/* 명리학 근거 한 줄 (Council 합의: 사용자 신뢰 회복) */}
+            {todayFortune.dayGanji && todayFortune.tenGod && (
+              <Text style={styles.myeongriBasis}>
+                📖 일주 {activeSajuResult?.pillars.day.stem}{activeSajuResult?.pillars.day.branch}
+                {' · '}오늘 {todayFortune.dayGanji.stem}{todayFortune.dayGanji.branch}
+                {' · '}{todayFortune.tenGod}
+                {summary?.includes('의 날') ? ` · ${summary.replace('의 날', '')}` : ''}
+              </Text>
+            )}
             <Text style={styles.detailText}>{comprehensiveReading}</Text>
+            {/* AI 생성 정직 공개 (Devils 강력 권고) */}
+            <Text style={styles.aiDisclosure}>
+              ※ 사주 계산은 명리학(60갑자·십신·12운성)에 따르며, 풀이 본문은 AI가 그 결과를 바탕으로 작성합니다.
+            </Text>
           </View>
         </View>
+
+        {/* 공유 버튼 (Phase 2-1) */}
+        <TouchableOpacity
+          style={styles.shareBtn}
+          onPress={() => setShowShareModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.shareBtnText}>📤 친구에게 공유하기</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* 공유 모달 */}
+      <DailyShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        cardData={{
+          name: activeName,
+          dateStr: selectedDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }),
+          score: todayFortune.score || 60,
+          grade: getScoreLabel(todayFortune.score || 60),
+          stageName: summary || '평온의 날',
+          summary: detail.split('\n')[0]?.slice(0, 60) || '오늘의 운세',
+          topCategoryEmoji: '✨',
+          topCategoryText: wealth?.slice(0, 80) || '',
+        }}
+      />
     </View>
   );
 }
@@ -421,6 +540,52 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '600',
   },
+  // 길일 배너 (Phase 1-2)
+  luckyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8F0',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0D8B8',
+  },
+  luckyBannerEmoji: {
+    fontSize: 22,
+    marginRight: 10,
+  },
+  luckyBannerContent: {
+    flex: 1,
+  },
+  luckyBannerTitle: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '700',
+    color: '#E67E22',
+  },
+  luckyBannerDesc: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  luckyBannerArrow: {
+    fontSize: 14,
+    color: '#E67E22',
+    marginLeft: 8,
+  },
+  // 공유 버튼 (Phase 2-1)
+  shareBtn: {
+    marginTop: 16,
+    marginHorizontal: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#E67E22',
+    alignItems: 'center',
+  },
+  shareBtnText: {
+    color: '#FFF',
+    fontSize: FONT_SIZES.md,
+    fontWeight: '700',
+  },
   header: {
     alignItems: 'center',
     marginBottom: 20,
@@ -509,6 +674,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     flex: 1,
     flexWrap: 'wrap',
+  },
+  // 명리학 근거 한 줄 (Council 합의: 사주 신뢰 회복)
+  myeongriBasis: {
+    fontSize: FONT_SIZES.sm,
+    color: '#8B4B8B',
+    fontWeight: '600',
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0E6F0',
+  },
+  // AI 생성 정직 공개 (Devils 권고)
+  aiDisclosure: {
+    fontSize: 11,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    lineHeight: 16,
   },
   // 날짜 선택 네비게이터 스타일
   dateNavigator: {

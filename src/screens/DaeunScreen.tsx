@@ -1,6 +1,6 @@
 /**
- * 대운/세운 분석 화면
- * 10년 단위 운세 흐름과 연간 운세를 보여줍니다.
+ * 인생 대운 타임라인 화면 (Phase 1-1)
+ * Council 합의: 인생 90년 가로 스와이프 + 현재 위치 강조 + 클릭 시 상세
  */
 
 import React, { useMemo, useState } from 'react';
@@ -12,400 +12,264 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS } from '../utils/theme';
 import { useApp } from '../contexts/AppContext';
-import {
-  analyzeDaeunSeun,
-  getDaeunTransition,
-  Daeun,
-  Seun,
-} from '../services/DaeunCalculator';
+import { analyzeDaeunSeun, Daeun } from '../services/DaeunCalculator';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type TabType = 'daeun' | 'seun' | 'graph';
+// 대운별 키워드/이모지 (역술인 + 무당 합의)
+const TENGOD_INFO: Record<string, { keyword: string; emoji: string; virtue: string }> = {
+  '비견': { keyword: '독립과 동료', emoji: '🤝', virtue: '협력' },
+  '겁재': { keyword: '경쟁과 분투', emoji: '⚔️', virtue: '절제' },
+  '식신': { keyword: '풍요와 즐거움', emoji: '🌸', virtue: '나눔' },
+  '상관': { keyword: '재능과 표현', emoji: '🎨', virtue: '겸손' },
+  '편재': { keyword: '기회와 횡재', emoji: '💎', virtue: '성실' },
+  '정재': { keyword: '안정과 결실', emoji: '⭐', virtue: '근면' },
+  '편관': { keyword: '시련과 성장', emoji: '⚡', virtue: '인내' },
+  '정관': { keyword: '명예와 책임', emoji: '🏛️', virtue: '정직' },
+  '편인': { keyword: '직관과 학문', emoji: '🌙', virtue: '통찰' },
+  '정인': { keyword: '지혜와 도움', emoji: '📚', virtue: '학습' },
+};
+
+const SEASON_EMOJI = ['🌱', '🌿', '🌳', '🌸', '☀️', '🍀', '🌻', '🍂', '🍁', '❄️'];
+
+interface DaeunCardProps {
+  daeun: Daeun;
+  isSelected: boolean;
+  isCurrent: boolean;
+  onPress: () => void;
+  cardWidth: number;
+}
+
+function DaeunCard({ daeun, isSelected, isCurrent, onPress, cardWidth }: DaeunCardProps) {
+  const info = TENGOD_INFO[daeun.tenGod] || { keyword: daeun.keyword, emoji: '✨', virtue: '수양' };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        styles.daeunCard,
+        { width: cardWidth },
+        isCurrent && styles.daeunCardCurrent,
+        isSelected && styles.daeunCardSelected,
+      ]}
+      activeOpacity={0.7}
+    >
+      {isCurrent && (
+        <View style={styles.currentBadge}>
+          <Text style={styles.currentBadgeText}>📍 지금</Text>
+        </View>
+      )}
+      <Text style={styles.daeunAge}>{daeun.startAge}~{daeun.endAge}세</Text>
+      <Text style={styles.daeunEmoji}>{info.emoji}</Text>
+      <Text style={styles.daeunGanji}>{daeun.ganJi}</Text>
+      <Text style={styles.daeunTenGod}>{daeun.tenGod}</Text>
+      <Text style={styles.daeunKeyword}>{info.keyword}</Text>
+      <View style={[styles.daeunScoreBar, { backgroundColor: getScoreColor(daeun.score) }]}>
+        <Text style={styles.daeunScoreText}>{daeun.score}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return '#4CAF50';
+  if (score >= 65) return '#8BC34A';
+  if (score >= 50) return '#FFC107';
+  if (score >= 35) return '#FF9800';
+  return '#F44336';
+}
+
+function calculateDday(targetAge: number, currentAge: number, currentDate: Date = new Date()): number {
+  const yearsLeft = targetAge - currentAge;
+  if (yearsLeft <= 0) return 0;
+  const daysLeft = Math.floor(yearsLeft * 365.25);
+  return daysLeft;
+}
 
 export default function DaeunScreen() {
   const navigation = useNavigation<any>();
-  const { profile } = useApp();
-  const [activeTab, setActiveTab] = useState<TabType>('daeun');
+  const insets = useSafeAreaInsets();
+  const { profile, sajuResult } = useApp();
   const [selectedDaeun, setSelectedDaeun] = useState<Daeun | null>(null);
 
-  // 사주 정보 추출
-  const birthInfo = useMemo(() => {
-    if (!profile?.birthDate) return null;
-    const [year, month, day] = profile.birthDate.split('-').map(Number);
-    const hour = profile.birthTime ? parseInt(profile.birthTime.split(':')[0]) : null;
-    return { year, month, day, hour };
-  }, [profile]);
-
-  // 대운/세운 분석
   const analysis = useMemo(() => {
-    if (!birthInfo || !profile?.gender) return null;
+    if (!profile?.birthDate || !sajuResult) return null;
+    try {
+      const [year, month, day] = profile.birthDate.split('-').map(Number);
+      const hour = profile.birthTime ? parseInt(profile.birthTime.split(':')[0], 10) : null;
+      return analyzeDaeunSeun(
+        year, month, day, hour,
+        profile.gender || 'male',
+        sajuResult.dayMaster,
+        sajuResult.pillars.month.stem,
+        sajuResult.pillars.month.branch
+      );
+    } catch (e) {
+      console.warn('대운 분석 실패:', e);
+      return null;
+    }
+  }, [profile?.birthDate, profile?.birthTime, profile?.gender, sajuResult]);
 
-    // 월간, 일간 계산 (간략화)
-    const stemIndex = (birthInfo.year - 4) % 10;
-    const branchIndex = (birthInfo.year - 4) % 12;
-    const STEMS = ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
-    const BRANCHES = ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
-
-    // 월간 계산 (년간 기준)
-    const monthStemBase = (stemIndex * 2 + birthInfo.month) % 10;
-    const monthBranchIndex = (birthInfo.month + 1) % 12;
-
-    // 일간 계산 (간략화된 공식)
-    const dayCount = Math.floor((birthInfo.year - 1900) * 365.25 + (birthInfo.month - 1) * 30.44 + birthInfo.day);
-    const dayStemIndex = (dayCount + 9) % 10;
-
-    const dayGan = STEMS[dayStemIndex];
-    const monthGan = STEMS[monthStemBase];
-    const monthJi = BRANCHES[monthBranchIndex];
-
-    return analyzeDaeunSeun(
-      birthInfo.year,
-      birthInfo.month,
-      birthInfo.day,
-      birthInfo.hour,
-      profile.gender as 'male' | 'female',
-      dayGan,
-      monthGan,
-      monthJi
-    );
-  }, [birthInfo, profile?.gender]);
-
-  // 대운 전환 정보
-  const transition = useMemo(() => {
-    if (!analysis) return null;
-    const currentAge = new Date().getFullYear() - (birthInfo?.year || 2000) + 1;
-    return getDaeunTransition(analysis.daeunList, currentAge);
-  }, [analysis, birthInfo]);
-
-  if (!profile || !analysis) {
+  if (!profile || !sajuResult || !analysis) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>{'<'}</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.backBtn}>◀</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>대운/세운 분석</Text>
-          <View style={{ width: 40 }} />
+          <Text style={styles.title}>인생 대운</Text>
+          <View style={{ width: 30 }} />
         </View>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>📊</Text>
-          <Text style={styles.emptyText}>프로필 정보가 필요합니다</Text>
-          <Text style={styles.emptySubtext}>생년월일과 성별을 설정해주세요</Text>
-        </View>
-      </SafeAreaView>
+        <Text style={styles.empty}>사주 정보를 불러오는 중...</Text>
+      </View>
     );
   }
 
-  const tabs = [
-    { key: 'daeun' as TabType, label: '대운', emoji: '🌊' },
-    { key: 'seun' as TabType, label: '세운', emoji: '📅' },
-    { key: 'graph' as TabType, label: '인생그래프', emoji: '📈' },
-  ];
+  const currentAge = new Date().getFullYear() - parseInt(profile.birthDate.split('-')[0], 10) + 1;
+  const current = analysis.currentDaeun;
+  const next = analysis.nextDaeun;
+  const dday = next ? calculateDday(next.startAge, currentAge) : 0;
+  const selected = selectedDaeun || current;
+  const selectedInfo = selected ? TENGOD_INFO[selected.tenGod] : null;
 
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return '#10B981';
-    if (score >= 50) return '#F59E0B';
-    return '#EF4444';
-  };
+  // 80세 이전 대운만 표시 (비판자 권고)
+  const visibleDaeun = analysis.daeunList.filter(d => d.startAge < 80);
 
-  const getScoreEmoji = (score: number) => {
-    if (score >= 80) return '🌟';
-    if (score >= 70) return '😊';
-    if (score >= 55) return '😐';
-    if (score >= 40) return '😓';
-    return '💪';
-  };
+  const cardWidth = SCREEN_WIDTH * 0.35;
 
-  const renderDaeunTab = () => (
-    <View style={styles.tabContent}>
-      {/* 현재 대운 요약 */}
-      {analysis.currentDaeun && (
-        <View style={styles.currentCard}>
-          <View style={styles.currentHeader}>
-            <Text style={styles.currentLabel}>현재 대운</Text>
-            <View style={[styles.scoreBadge, { backgroundColor: getScoreColor(analysis.currentDaeun.score) }]}>
-              <Text style={styles.scoreText}>{analysis.currentDaeun.score}점</Text>
-            </View>
-          </View>
-          <Text style={styles.currentGanji}>{analysis.currentDaeun.ganJi} 대운</Text>
-          <Text style={styles.currentAge}>
-            {analysis.currentDaeun.startAge}~{analysis.currentDaeun.endAge}세
-          </Text>
-          <View style={styles.currentInfo}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>십신</Text>
-              <Text style={styles.infoValue}>{analysis.currentDaeun.tenGod}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>오행</Text>
-              <Text style={styles.infoValue}>{analysis.currentDaeun.element}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>키워드</Text>
-              <Text style={styles.infoValue}>{analysis.currentDaeun.keyword}</Text>
-            </View>
-          </View>
-          <Text style={styles.currentDesc}>{analysis.currentDaeun.description}</Text>
-        </View>
-      )}
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.backBtn}>◀</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>인생 대운 타임라인</Text>
+        <View style={{ width: 30 }} />
+      </View>
 
-      {/* 대운 전환 알림 */}
-      {transition?.isTransitioning && (
-        <View style={styles.transitionCard}>
-          <Text style={styles.transitionEmoji}>⚡</Text>
-          <Text style={styles.transitionTitle}>대운 전환기</Text>
-          <Text style={styles.transitionText}>{transition.message}</Text>
-        </View>
-      )}
-
-      {/* 대운 목록 */}
-      <Text style={styles.sectionTitle}>전체 대운 흐름</Text>
-      {analysis.daeunList.map((daeun) => (
-        <TouchableOpacity
-          key={daeun.order}
-          style={[
-            styles.daeunCard,
-            daeun.isCurrent && styles.daeunCardCurrent,
-            selectedDaeun?.order === daeun.order && styles.daeunCardSelected,
-          ]}
-          onPress={() => setSelectedDaeun(selectedDaeun?.order === daeun.order ? null : daeun)}
-        >
-          <View style={styles.daeunHeader}>
-            <View style={styles.daeunLeft}>
-              <Text style={styles.daeunOrder}>{daeun.order}운</Text>
-              <Text style={styles.daeunGanji}>{daeun.ganJi}</Text>
-              <Text style={styles.daeunAge}>{daeun.startAge}~{daeun.endAge}세</Text>
-            </View>
-            <View style={styles.daeunRight}>
-              <Text style={styles.daeunEmoji}>{getScoreEmoji(daeun.score)}</Text>
-              <View style={[styles.daeunScoreBar, { width: `${daeun.score}%`, backgroundColor: getScoreColor(daeun.score) }]} />
-              <Text style={[styles.daeunScore, { color: getScoreColor(daeun.score) }]}>{daeun.score}</Text>
-            </View>
-            {daeun.isCurrent && (
-              <View style={styles.currentBadge}>
-                <Text style={styles.currentBadgeText}>현재</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 현재 위치 요약 (5060/3040 핵심 요구) */}
+        {current && (
+          <View style={styles.currentBox}>
+            <Text style={styles.currentLabel}>📍 지금 여기 ({currentAge}세)</Text>
+            <Text style={styles.currentTitle}>
+              {current.tenGod} 대운 ({current.startAge}~{current.endAge}세)
+            </Text>
+            <Text style={styles.currentKeyword}>
+              "{TENGOD_INFO[current.tenGod]?.keyword || current.keyword}"
+            </Text>
+            {next && dday > 0 && (
+              <View style={styles.ddayBox}>
+                <Text style={styles.ddayLabel}>다음 대운까지</Text>
+                <Text style={styles.ddayValue}>D-{dday.toLocaleString()}</Text>
+                <Text style={styles.ddaySub}>
+                  {next.startAge}세에 {next.tenGod} 대운 진입
+                </Text>
               </View>
             )}
           </View>
+        )}
 
-          {selectedDaeun?.order === daeun.order && (
-            <View style={styles.daeunDetail}>
-              <Text style={styles.daeunDetailText}>{daeun.description}</Text>
-              <View style={styles.daeunDetailRow}>
-                <View style={styles.detailBox}>
-                  <Text style={styles.detailLabel}>십신</Text>
-                  <Text style={styles.detailValue}>{daeun.tenGod}</Text>
-                </View>
-                <View style={styles.detailBox}>
-                  <Text style={styles.detailLabel}>키워드</Text>
-                  <Text style={styles.detailValue}>{daeun.keyword}</Text>
-                </View>
-              </View>
-              <View style={styles.aspectsRow}>
-                <View style={styles.goodAspect}>
-                  <Text style={styles.aspectLabel}>👍 좋은 점</Text>
-                  <Text style={styles.aspectText}>{daeun.goodAspects[0]}</Text>
-                </View>
-                <View style={styles.badAspect}>
-                  <Text style={styles.aspectLabel}>⚠️ 주의</Text>
-                  <Text style={styles.aspectText}>{daeun.badAspects[0]}</Text>
-                </View>
-              </View>
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  const renderSeunTab = () => (
-    <View style={styles.tabContent}>
-      {/* 올해 세운 */}
-      {analysis.currentSeun && (
-        <View style={styles.currentCard}>
-          <View style={styles.currentHeader}>
-            <Text style={styles.currentLabel}>{analysis.currentSeun.year}년 세운</Text>
-            <View style={[styles.scoreBadge, { backgroundColor: getScoreColor(analysis.currentSeun.score) }]}>
-              <Text style={styles.scoreText}>{analysis.currentSeun.score}점</Text>
-            </View>
-          </View>
-          <Text style={styles.currentGanji}>
-            {analysis.currentSeun.ganJi}년 ({analysis.currentSeun.animal}띠 해)
-          </Text>
-          <Text style={styles.currentAge}>{analysis.currentSeun.age}세</Text>
-          <View style={styles.currentInfo}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>십신</Text>
-              <Text style={styles.infoValue}>{analysis.currentSeun.tenGod}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>키워드</Text>
-              <Text style={styles.infoValue}>{analysis.currentSeun.keyword}</Text>
-            </View>
-          </View>
-          <Text style={styles.currentDesc}>{analysis.currentSeun.description}</Text>
-          <Text style={styles.monthlyHighlight}>📌 {analysis.currentSeun.monthlyHighlight}</Text>
-        </View>
-      )}
-
-      {/* 세운 목록 */}
-      <Text style={styles.sectionTitle}>연도별 세운</Text>
-      {analysis.seunList.map((seun) => (
-        <View
-          key={seun.year}
-          style={[
-            styles.seunCard,
-            seun.isCurrent && styles.seunCardCurrent,
-          ]}
-        >
-          <View style={styles.seunLeft}>
-            <Text style={styles.seunYear}>{seun.year}</Text>
-            <Text style={styles.seunGanji}>{seun.ganJi}</Text>
-            <Text style={styles.seunAnimal}>{seun.animal}띠</Text>
-          </View>
-          <View style={styles.seunMiddle}>
-            <Text style={styles.seunAge}>{seun.age}세</Text>
-            <Text style={styles.seunTenGod}>{seun.tenGod}</Text>
-          </View>
-          <View style={styles.seunRight}>
-            <Text style={styles.seunEmoji}>{getScoreEmoji(seun.score)}</Text>
-            <Text style={[styles.seunScore, { color: getScoreColor(seun.score) }]}>
-              {seun.score}점
+        {/* 인생 타임라인 (가로 스와이프) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🌳 인생 타임라인 (가로로 넘기세요)</Text>
+          {profile.birthTime === null && (
+            <Text style={styles.warningText}>
+              ⚠️ 출생시간 미입력 — 대운 진입 시기 ±1년 오차 가능
             </Text>
-          </View>
-          {seun.isCurrent && (
-            <View style={styles.currentBadge}>
-              <Text style={styles.currentBadgeText}>올해</Text>
-            </View>
           )}
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderGraphTab = () => {
-    const maxScore = Math.max(...analysis.lifeGraph.map(p => p.score));
-    const minScore = Math.min(...analysis.lifeGraph.map(p => p.score));
-    const graphHeight = 200;
-    const currentAge = new Date().getFullYear() - (birthInfo?.year || 2000) + 1;
-
-    return (
-      <View style={styles.tabContent}>
-        <View style={styles.graphCard}>
-          <Text style={styles.graphTitle}>인생 운세 그래프</Text>
-          <Text style={styles.graphSubtitle}>대운 흐름에 따른 운세 점수 변화</Text>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.graphScroll}>
-            <View style={[styles.graphContainer, { width: Math.max(SCREEN_WIDTH - 60, analysis.lifeGraph.length * 8) }]}>
-              {/* 그래프 배경선 */}
-              <View style={[styles.graphLine, { top: 0 }]} />
-              <View style={[styles.graphLine, { top: graphHeight / 2 }]} />
-              <View style={[styles.graphLine, { top: graphHeight }]} />
-
-              {/* 점수 레이블 */}
-              <Text style={[styles.graphLabel, { top: -10 }]}>100</Text>
-              <Text style={[styles.graphLabel, { top: graphHeight / 2 - 10 }]}>50</Text>
-              <Text style={[styles.graphLabel, { top: graphHeight - 10 }]}>0</Text>
-
-              {/* 그래프 바 */}
-              <View style={styles.barsContainer}>
-                {analysis.lifeGraph.map((point, index) => {
-                  const height = (point.score / 100) * graphHeight;
-                  const isCurrent = point.age === currentAge;
-                  return (
-                    <View key={index} style={styles.barWrapper}>
-                      <View
-                        style={[
-                          styles.bar,
-                          {
-                            height,
-                            backgroundColor: isCurrent ? '#8B5CF6' : getScoreColor(point.score),
-                          },
-                        ]}
-                      />
-                      {point.age % 10 === 0 && (
-                        <Text style={styles.barLabel}>{point.age}세</Text>
-                      )}
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          </ScrollView>
-
-          {/* 범례 */}
-          <View style={styles.legendContainer}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-              <Text style={styles.legendText}>좋음 (70+)</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>보통 (50-69)</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
-              <Text style={styles.legendText}>주의 (50-)</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#8B5CF6' }]} />
-              <Text style={styles.legendText}>현재</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 요약 */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>📋 종합 분석</Text>
-          <Text style={styles.summaryText}>{analysis.summary}</Text>
-        </View>
-
-        <View style={styles.adviceCard}>
-          <Text style={styles.adviceTitle}>💡 조언</Text>
-          <Text style={styles.adviceText}>{analysis.advice}</Text>
-        </View>
-      </View>
-    );
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>{'<'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>대운/세운 분석</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      {/* 탭 */}
-      <View style={styles.tabBar}>
-        {tabs.map(tab => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.activeTab]}
-            onPress={() => setActiveTab(tab.key)}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.timelineScroll}
           >
-            <Text style={styles.tabEmoji}>{tab.emoji}</Text>
-            <Text style={[styles.tabLabel, activeTab === tab.key && styles.activeTabLabel]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+            {visibleDaeun.map((daeun, idx) => (
+              <DaeunCard
+                key={daeun.order}
+                daeun={daeun}
+                isSelected={selected?.order === daeun.order}
+                isCurrent={current?.order === daeun.order}
+                onPress={() => setSelectedDaeun(daeun)}
+                cardWidth={cardWidth}
+              />
+            ))}
+          </ScrollView>
+        </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {activeTab === 'daeun' && renderDaeunTab()}
-        {activeTab === 'seun' && renderSeunTab()}
-        {activeTab === 'graph' && renderGraphTab()}
-        <View style={styles.bottomPadding} />
+        {/* 선택한 대운 상세 */}
+        {selected && selectedInfo && (
+          <View style={styles.detailBox}>
+            <Text style={styles.detailHeader}>
+              {selectedInfo.emoji} {selected.tenGod} 대운 상세
+            </Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>시기</Text>
+              <Text style={styles.detailValue}>
+                {selected.startAge}세 ~ {selected.endAge}세
+                {selected.order === current?.order && ' (현재)'}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>핵심 키워드</Text>
+              <Text style={styles.detailValue}>{selectedInfo.keyword}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>운세 점수</Text>
+              <Text style={[styles.detailValue, { color: getScoreColor(selected.score), fontWeight: '700' }]}>
+                {selected.score}점
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>천간/지지</Text>
+              <Text style={styles.detailValue}>{selected.ganJi}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.detailSection}>📖 풀이</Text>
+            <Text style={styles.detailText}>{selected.description}</Text>
+
+            {selected.goodAspects && selected.goodAspects.length > 0 && (
+              <>
+                <Text style={styles.detailSection}>✨ 좋은 점</Text>
+                {selected.goodAspects.map((aspect, idx) => (
+                  <Text key={idx} style={styles.detailListItem}>• {aspect}</Text>
+                ))}
+              </>
+            )}
+
+            {selected.badAspects && selected.badAspects.length > 0 && (
+              <>
+                <Text style={styles.detailSection}>⚠️ 주의할 점</Text>
+                {selected.badAspects.map((aspect, idx) => (
+                  <Text key={idx} style={styles.detailListItem}>• {aspect}</Text>
+                ))}
+              </>
+            )}
+
+            <View style={styles.divider} />
+
+            <Text style={styles.virtueBox}>
+              📜 이 시기에 닦아야 할 덕목: <Text style={styles.virtueText}>{selectedInfo.virtue}</Text>
+            </Text>
+          </View>
+        )}
+
+        {/* 종합 한 줄 (무당 권고: 따뜻한 마무리) */}
+        <View style={styles.bottomNote}>
+          <Text style={styles.bottomNoteText}>
+            🌿 인생은 봄·여름·가을·겨울이 순환합니다. 지금이 어떤 계절이든, 그 계절만의 의미가 있어요.
+          </Text>
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -416,496 +280,244 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  backButton: {
-    padding: SPACING.xs,
-    width: 40,
+  backBtn: {
+    fontSize: FONT_SIZES.lg,
+    color: COLORS.text,
+    width: 30,
   },
-  backButtonText: {
-    fontSize: FONT_SIZES.xl,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  headerTitle: {
+  title: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.text,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: SPACING.xl,
-  },
-  emptyEmoji: {
-    fontSize: 64,
-    marginBottom: SPACING.md,
-  },
-  emptyText: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  emptySubtext: {
-    fontSize: FONT_SIZES.sm,
+  empty: {
+    textAlign: 'center',
+    marginTop: 100,
+    fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
   },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.border,
-    gap: 8,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  activeTab: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  tabEmoji: {
-    fontSize: 20,
-    marginBottom: 4,
-  },
-  tabLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  activeTabLabel: {
-    color: COLORS.white,
-    fontWeight: '700',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  tabContent: {
+  content: {
     padding: SPACING.md,
+    paddingBottom: 32,
   },
-  currentCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
+  // 현재 위치 박스
+  currentBox: {
+    backgroundColor: '#FFF8F0',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
     borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  currentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
+    borderColor: '#E67E22',
   },
   currentLabel: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  scoreBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.full,
-  },
-  scoreText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.white,
+    color: '#E67E22',
     fontWeight: '700',
+    marginBottom: 6,
   },
-  currentGanji: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: '800',
+  currentTitle: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: '700',
     color: COLORS.text,
+    marginBottom: 4,
   },
-  currentAge: {
+  currentKeyword: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
-  currentInfo: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginBottom: SPACING.sm,
-  },
-  infoItem: {
+  ddayBox: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 12,
     alignItems: 'center',
   },
-  infoLabel: {
+  ddayLabel: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textSecondary,
   },
-  infoValue: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.text,
+  ddayValue: {
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: '900',
+    color: '#E67E22',
+    marginVertical: 4,
   },
-  currentDesc: {
+  ddaySub: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.text,
-    lineHeight: 20,
-    flex: 1,
-    flexWrap: 'wrap',
   },
-  monthlyHighlight: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
-    marginTop: SPACING.sm,
-    fontWeight: '500',
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  transitionCard: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    alignItems: 'center',
-  },
-  transitionEmoji: {
-    fontSize: 32,
-    marginBottom: SPACING.xs,
-  },
-  transitionTitle: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
-    color: '#92400E',
-    marginBottom: SPACING.xs,
-  },
-  transitionText: {
-    fontSize: FONT_SIZES.sm,
-    color: '#78350F',
-    textAlign: 'center',
-    lineHeight: 20,
-    flex: 1,
-    flexWrap: 'wrap',
+  // 섹션
+  section: {
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.lg,
+    fontSize: FONT_SIZES.md,
     fontWeight: '700',
     color: COLORS.text,
-    marginBottom: SPACING.md,
-    marginTop: SPACING.sm,
+    marginBottom: 8,
   },
+  warningText: {
+    fontSize: FONT_SIZES.xs,
+    color: '#FF9800',
+    marginBottom: 8,
+  },
+  timelineScroll: {
+    paddingVertical: 8,
+    paddingRight: 16,
+  },
+  // 대운 카드
   daeunCard: {
     backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   daeunCardCurrent: {
+    borderColor: '#E67E22',
     borderWidth: 2,
-    borderColor: '#8B5CF6',
+    backgroundColor: '#FFF8F0',
   },
   daeunCardSelected: {
-    backgroundColor: '#F5F3FF',
+    borderColor: '#3B82F6',
+    borderWidth: 2,
   },
-  daeunHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  currentBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -4,
+    backgroundColor: '#E67E22',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
-  daeunLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    flex: 1,
+  currentBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: '700',
   },
-  daeunOrder: {
+  daeunAge: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  daeunEmoji: {
+    fontSize: 32,
+    marginVertical: 6,
   },
   daeunGanji: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.text,
   },
-  daeunAge: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  daeunRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-  },
-  daeunEmoji: {
-    fontSize: 20,
-  },
-  daeunScoreBar: {
-    height: 8,
-    borderRadius: 4,
-    maxWidth: 60,
-  },
-  daeunScore: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
-    width: 30,
-    textAlign: 'right',
-  },
-  currentBadge: {
-    backgroundColor: '#8B5CF6',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS.full,
-    marginLeft: SPACING.sm,
-  },
-  currentBadgeText: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.white,
-    fontWeight: '600',
-  },
-  daeunDetail: {
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  daeunDetailText: {
+  daeunTenGod: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.text,
-    lineHeight: 20,
-    marginBottom: SPACING.sm,
-    flex: 1,
-    flexWrap: 'wrap',
+    fontWeight: '600',
+    marginTop: 2,
   },
-  daeunDetailRow: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginBottom: SPACING.sm,
+  daeunKeyword: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+    textAlign: 'center',
   },
+  daeunScoreBar: {
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  daeunScoreText: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '700',
+  },
+  // 상세 박스
   detailBox: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.sm,
-    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  detailHeader: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
   },
   detailLabel: {
-    fontSize: FONT_SIZES.xs,
+    fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
   },
   detailValue: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  aspectsRow: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-  },
-  goodAspect: {
-    flex: 1,
-    backgroundColor: '#ECFDF5',
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.sm,
-  },
-  badAspect: {
-    flex: 1,
-    backgroundColor: '#FEF2F2',
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.sm,
-  },
-  aspectLabel: {
-    fontSize: FONT_SIZES.xs,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  aspectText: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.text,
-    lineHeight: 16,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  seunCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  seunCardCurrent: {
-    borderWidth: 2,
-    borderColor: '#8B5CF6',
-  },
-  seunLeft: {
-    flex: 1,
-  },
-  seunYear: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  seunGanji: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
-  },
-  seunAnimal: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-  },
-  seunMiddle: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  seunAge: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
     color: COLORS.text,
+    fontWeight: '500',
   },
-  seunTenGod: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  seunRight: {
-    alignItems: 'center',
-  },
-  seunEmoji: {
-    fontSize: 24,
-  },
-  seunScore: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
-  },
-  graphCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  graphTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
-  },
-  graphSubtitle: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.md,
-  },
-  graphScroll: {
-    marginBottom: SPACING.md,
-  },
-  graphContainer: {
-    height: 250,
-    position: 'relative',
-    paddingLeft: 30,
-  },
-  graphLine: {
-    position: 'absolute',
-    left: 30,
-    right: 0,
+  divider: {
     height: 1,
     backgroundColor: COLORS.border,
+    marginVertical: 12,
   },
-  graphLabel: {
-    position: 'absolute',
-    left: 0,
-    fontSize: FONT_SIZES.xs,
+  detailSection: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  detailText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.text,
+    lineHeight: 22,
+  },
+  detailListItem: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.text,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  virtueBox: {
+    fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
-  },
-  barsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 200,
-    marginTop: 10,
-  },
-  barWrapper: {
-    alignItems: 'center',
-    width: 8,
-    marginRight: 2,
-  },
-  bar: {
-    width: 6,
-    borderRadius: 3,
-  },
-  barLabel: {
-    fontSize: 8,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    width: 30,
+    fontStyle: 'italic',
     textAlign: 'center',
   },
-  legendContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.md,
-    justifyContent: 'center',
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-  },
-  summaryCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  summaryTitle: {
-    fontSize: FONT_SIZES.md,
+  virtueText: {
+    color: '#7C3AED',
     fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.sm,
   },
-  summaryText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.text,
-    lineHeight: 22,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  adviceCard: {
+  // 마무리 노트
+  bottomNote: {
     backgroundColor: '#F0F9FF',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
   },
-  adviceTitle: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
-    color: '#0369A1',
-    marginBottom: SPACING.sm,
-  },
-  adviceText: {
+  bottomNoteText: {
     fontSize: FONT_SIZES.sm,
-    color: '#0C4A6E',
+    color: COLORS.text,
     lineHeight: 22,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  bottomPadding: {
-    height: 40,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

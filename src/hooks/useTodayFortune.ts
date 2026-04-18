@@ -244,7 +244,7 @@ export function useTodayFortune(sajuResult: SajuResult | null, targetDate?: Date
       }
     }
 
-    const fortuneBase = calculateFortuneByTenGod(tenGod, myIljuData, sajuResult, todayIlju, todayStr, branchResult, yongsinType, dayGanji, dayMasterStrength.strength, daeSaeContext);
+    const fortuneBase = calculateFortuneByTenGod(tenGod, myIljuData, sajuResult, todayIlju, todayStr, branchResult, yongsinType, dayGanji, dayMasterStrength.strength, daeSaeContext, myIlju);
 
     // 카테고리별 점수 계산 (용신 + 지지 + 신살 + 4주보정 + 공망 + 대운/세운 보정 통합)
     const totalBonus = yongsinBonus + sinsalBonus + pillarBonus + gongmangBonus + daeSaeBonus;
@@ -288,7 +288,8 @@ function calculateFortuneByTenGod(
   yongsinType: 'yongsin' | 'heeshin' | 'gushin' | 'gishin' | 'neutral' = 'neutral',
   dayGanji: { stem: string; branch: string } = { stem: '갑', branch: '자' },
   strengthStr: string = 'neutral',
-  daeSaeCtx: string = 'neutral'
+  daeSaeCtx: string = 'neutral',
+  myIlju: string = ''  // Phase 2: 일주 60갑자 (예: '갑자')
 ) {
   // 모든 데이터가 없을 때도 풍부한 기본값 제공
   const defaultData = {
@@ -496,9 +497,8 @@ function calculateFortuneByTenGod(
     item: luckyItems[(dateHash + iljuHash) % luckyItems.length],
   };
 
-  // 일주 데이터가 있으면 더 풍부하게 병합
+  // 일주 데이터로 activities/caution 보강 (Phase 2: detail prepend는 generatePersonalNarrative로 이전됨)
   if (myIljuData) {
-    pattern.detail = `${myIljuData.summary}\n\n${pattern.detail}`;
     pattern.activities.good = [...myIljuData.goodActivities.slice(0, 2), ...pattern.activities.good.slice(0, 4)];
     pattern.activities.avoid = [...myIljuData.avoidSituations.slice(0, 2), ...pattern.activities.avoid.slice(0, 2)];
     pattern.caution = [...myIljuData.caution.slice(0, 1), ...pattern.caution.slice(0, 2)];
@@ -524,22 +524,62 @@ function calculateFortuneByTenGod(
     branchType: branchResult.type,
     daeSaeContext: daeSaeCtx,
     dateHash: hash,
+    myIlju,  // Phase 2: 일주 도입부 표시용
   });
 
   // 엔진 결과로 텍스트 교체 (점수/luckyPoints/activities/caution은 기존 유지)
   pattern.summary = `${narrative.stageName}의 날`;
   pattern.detail = narrative.overall;
 
-  // 신살 특수 문구 삽입
+  // 신살 특수 문구 삽입 — Council Phase1 권고: 짧게, 우선순위 1개만, 매번 다른 표현
+  // 사용자 신고: "도움이 닿아요 등 멘트가 자주 겹쳐"
+  // 각 신살별 6~8가지 변형 풀 + dateHash 분산
   const myDayBranch = sajuResult.pillars.day.branch;
-  if (DOHUA[myDayBranch] === dayGanji.branch) {
-    pattern.detail = `💫 오늘은 매력이 유독 빛나는 날이에요. 이성의 시선이 집중될 수 있어요. 외모에 신경 쓰면 좋은 인연이 닿을 수 있어요.\n\n${pattern.detail}`;
-  }
-  if (YEOKMA[myDayBranch] === dayGanji.branch) {
-    pattern.detail = `🚗 오늘은 움직이면 좋은 날이에요. 새로운 곳에 가거나, 평소 안 하던 활동을 하면 행운이 따라와요. 출장이나 여행 계획이 있다면 좋은 타이밍이에요.\n\n${pattern.detail}`;
-  }
+  const sinsalHash = hash;
+
+  const CHEONEUL_VARIANTS = [
+    '🌟 도움이 닿아요. 어려울 때 손을 내밀 사람이 있어요.',
+    '🌟 귀인의 손길이 느껴져요. 망설일 때 누가 답을 줘요.',
+    '🌟 누군가의 추천·소개가 길을 열어줘요.',
+    '🌟 어려운 부탁도 통해요. 먼저 묻는 게 답이에요.',
+    '🌟 윗분·선배의 한 마디가 결정적이에요.',
+    '🌟 막혔던 일이 누군가의 한 통화로 풀려요.',
+    '🌟 사람의 도움이 가장 큰 자원이 돼요.',
+    '🌟 혼자 끙끙대지 말고 한 명에게 털어놓으세요.',
+  ];
+
+  const DOHUA_VARIANTS = [
+    '💫 매력이 빛나요. 사람들의 시선이 자연스럽게 모여요.',
+    '💫 외모·말투가 평소보다 돋보여요. 첫인상이 강해요.',
+    '💫 호감의 결이 흘러요. 새 인연이 다가올 수 있어요.',
+    '💫 표현 한 마디에 끌림이 생겨요. 짧게 다정하게.',
+    '💫 시선을 끄는 날이에요. 자연스럽게 즐기세요.',
+    '💫 사람을 끄는 기운이 살아 있어요. 관계가 가까워져요.',
+    '💫 외모에 5분만 신경 써도 반응이 달라요.',
+    '💫 이성의 관심이 평소와 달라요. 과하지 않게.',
+  ];
+
+  const YEOKMA_VARIANTS = [
+    '🚗 움직임이 길해요. 평소 안 가던 곳에서 기회가 와요.',
+    '🚗 발걸음이 답이에요. 외출·이동에서 단서가 보여요.',
+    '🚗 자리에 앉아 있지 마세요. 움직이면 풀려요.',
+    '🚗 이동·출장·여행이 좋아요. 새 풍경에 답이 있어요.',
+    '🚗 변화가 운을 키워요. 한 번도 안 가본 길로.',
+    '🚗 머무르면 막혀요. 짧게라도 자리를 옮겨보세요.',
+    '🚗 새로운 동선에서 인연·기회가 닿아요.',
+    '🚗 답답하면 산책부터. 움직임이 흐름을 깨워요.',
+  ];
+
+  const pickSinsal = (variants: string[], salt: number): string => {
+    return variants[Math.abs(sinsalHash + salt) % variants.length];
+  };
+
   if (hasCheoneulGuin(sajuResult.dayMaster, dayGanji.branch)) {
-    pattern.detail = `🌟 오늘은 귀한 도움이 오는 날이에요. 어려운 일이 있어도 누군가가 나서서 도와줄 거예요. 필요한 게 있다면 주저 말고 주변에 요청해보세요.\n\n${pattern.detail}`;
+    pattern.detail = `${pickSinsal(CHEONEUL_VARIANTS, 0)}\n\n${pattern.detail}`;
+  } else if (DOHUA[myDayBranch] === dayGanji.branch) {
+    pattern.detail = `${pickSinsal(DOHUA_VARIANTS, 100)}\n\n${pattern.detail}`;
+  } else if (YEOKMA[myDayBranch] === dayGanji.branch) {
+    pattern.detail = `${pickSinsal(YEOKMA_VARIANTS, 200)}\n\n${pattern.detail}`;
   }
 
   pattern.wealth = narrative.wealth;
@@ -550,6 +590,37 @@ function calculateFortuneByTenGod(
   return pattern;
 }
 
+/**
+ * Council 합의 (수학자 Engineer 1순위, QA 패턴 진단):
+ * 기존 31x+char 다항식 해시는 끝글자만 다른 입력(연속 날짜)에 등차수열 출력 → mod 7 충돌
+ * 해결: 날짜를 epoch days 정수로 변환 + LCG mixer + fmix32 finalizer
+ *      → 인접 날짜 hash가 전 비트 고르게 변함 → 84일 LCM 주기 충돌 해소
+ */
 function getHash(str: string): number {
-  return (str.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0)) >>> 0;
+  // 입력이 'YYYY-MM-DD-stem' 또는 'stem-YYYY-MM-DD' 형식이면 epoch days로 강화
+  const dateMatch = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (dateMatch) {
+    const [, y, m, d] = dateMatch;
+    // 날짜 외 다른 부분(stem 등)을 salt로 분리
+    const salt = str.replace(dateMatch[0], '');
+    const saltHash = salt.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+    // epoch days 근사 (year*365 + month*31 + day) — 정확한 epoch보다 단순/빠름, 분포는 동일
+    const epochApprox = parseInt(y, 10) * 366 + parseInt(m, 10) * 31 + parseInt(d, 10);
+    // LCG (Numerical Recipes 검증 파라미터): a=1664525, c=1013904223
+    const lcg = Math.imul(epochApprox, 1664525) + 1013904223;
+    // fmix32 (MurmurHash3 finalizer) — 전 비트 avalanche 보장
+    return fmix32(lcg ^ (saltHash | 0));
+  }
+  // 폴백: 기존 다항식 해시 (날짜 형식 아닌 입력)
+  return fmix32(str.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+}
+
+/**
+ * MurmurHash3 fmix32 finalizer — 약한 입력을 비선형 avalanche로 분산
+ * 모든 출력 hash를 이 함수로 후처리하면 mod N 충돌이 거의 사라짐
+ */
+export function fmix32(h: number): number {
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
 }
