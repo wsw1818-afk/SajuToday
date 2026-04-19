@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../../utils/theme';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface AdviceCardProps {
@@ -24,7 +25,7 @@ const AdviceCard: React.FC<AdviceCardProps> = ({ mainText, subText, title = '오
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   mainText: {
     fontSize: 15,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../../utils/theme';
 import { View, Text, StyleSheet } from 'react-native';
 import CircularProgress from './CircularProgress';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -19,7 +20,7 @@ const LuckCard: React.FC<LuckCardProps> = ({ label, emoji, color, value, score }
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? colors.surface : '#FFFFFF',
+          backgroundColor: isDark ? colors.surface : COLORS.card,
           borderColor: isDark ? colors.border : '#F5F5F4',
         },
       ]}
@@ -28,10 +29,10 @@ const LuckCard: React.FC<LuckCardProps> = ({ label, emoji, color, value, score }
       accessibilityRole="text"
     >
       <CircularProgress score={score} color={color} emoji={emoji} />
-      <Text style={[styles.label, { color: isDark ? colors.textSecondary : '#57534E', fontSize: scaledFontSize(12) }]}>
+      <Text style={[styles.label, { color: isDark ? colors.textSecondary : COLORS.textSecondary, fontSize: scaledFontSize(12) }]}>
         {label}
       </Text>
-      <Text style={[styles.value, { color: isDark ? colors.text : '#1C1917', fontSize: scaledFontSize(14) }]}>
+      <Text style={[styles.value, { color: isDark ? colors.text : COLORS.text, fontSize: scaledFontSize(14) }]}>
         {value}
       </Text>
     </View>

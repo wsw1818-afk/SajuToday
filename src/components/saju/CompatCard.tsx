@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../../utils/theme';
 import { View, Text, StyleSheet } from 'react-native';
 
 interface CompatCardProps {
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   divider: {
     width: 1,

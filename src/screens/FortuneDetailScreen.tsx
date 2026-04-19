@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -27,11 +28,11 @@ const CATEGORY_ICONS = {
 };
 
 const CATEGORY_COLORS = {
-  overall: '#F59E0B',
+  overall: COLORS.warning,
   love: '#F43F5E',
-  money: '#10B981',
-  work: '#3B82F6',
-  health: '#8B5CF6',
+  money: COLORS.success,
+  work: COLORS.info,
+  health: COLORS.primary,
 };
 
 const CATEGORY_NAMES = {
@@ -98,7 +99,7 @@ const FortuneCard: React.FC<FortuneCardProps> = ({ category, score, description,
           <View style={styles.detailSection}>
             <View style={styles.detailHeader}>
               <Zap size={16} color="#F59E0B" />
-              <Text style={[styles.detailTitle, { color: '#F59E0B' }]}>왜 이런 운세인가요?</Text>
+              <Text style={[styles.detailTitle, { color: COLORS.warning }]}>왜 이런 운세인가요?</Text>
             </View>
             <Text style={styles.detailText}>{detailedFortune.reason}</Text>
           </View>
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   placeholder: {
     width: 40,
@@ -328,12 +329,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
     marginBottom: 12,
   },
   summaryText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.card,
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   },
   keywordText: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '500',
   },
   content: {
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   fortuneCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
   dosDontsText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   // 확장 버튼
   expandButton: {
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E7E5E4',
+    borderTopColor: COLORS.border,
   },
   detailSection: {
     marginBottom: 16,
@@ -491,11 +492,11 @@ const styles = StyleSheet.create({
   analysisSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
     marginBottom: 12,
   },
   analysisCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -523,7 +524,7 @@ const styles = StyleSheet.create({
   analysisValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
     textAlign: 'center',
   },
   analysisArrow: {
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
   // 지지 관계 카드
   branchCard: {
     borderWidth: 1,
-    borderColor: '#E7E5E4',
+    borderColor: COLORS.border,
   },
   branchHeader: {
     flexDirection: 'row',
@@ -559,7 +560,7 @@ const styles = StyleSheet.create({
   branchRelationType: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   branchBadge: {
     paddingHorizontal: 10,
@@ -575,7 +576,7 @@ const styles = StyleSheet.create({
   branchBadgeText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   branchDescription: {
     fontSize: 13,
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: COLORS.warning,
   },
   simpleExplanationText: {
     fontSize: 14,
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
   cardSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
     marginBottom: 4,
   },
   cardSectionHint: {

@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -75,13 +76,13 @@ function DropdownPicker({ visible, onClose, options, selectedValue, onSelect, ti
       >
         <View style={[
           dropdownStyles.modalContent,
-          { backgroundColor: isDark ? '#27272A' : '#FFFFFF' }
+          { backgroundColor: isDark ? '#27272A' : COLORS.card }
         ]}>
           <View style={[
             dropdownStyles.modalHeader,
-            { borderBottomColor: isDark ? '#3F3F46' : '#E5E7EB' }
+            { borderBottomColor: isDark ? '#3F3F46' : COLORS.border }
           ]}>
-            <Text style={[dropdownStyles.modalTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+            <Text style={[dropdownStyles.modalTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
               {title}
             </Text>
             <TouchableOpacity onPress={onClose}>
@@ -296,11 +297,11 @@ export default function CompatibilityScreen() {
       key={index}
       style={[
         styles.detailCard,
-        { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : '#FFFFFF' }
+        { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : COLORS.card }
       ]}
     >
       <View style={styles.detailHeader}>
-        <Text style={[styles.detailTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+        <Text style={[styles.detailTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
           {detail.title}
         </Text>
         <View style={[styles.detailScoreBadge, { backgroundColor: getScoreColor(detail.score) + '20' }]}>
@@ -310,11 +311,11 @@ export default function CompatibilityScreen() {
         </View>
       </View>
       <View style={[styles.detailGradeBadge, { backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)' }]}>
-        <Text style={[styles.detailGrade, { color: isDark ? '#A5B4FC' : '#6366F1' }]}>
+        <Text style={[styles.detailGrade, { color: isDark ? '#A5B4FC' : COLORS.primary }]}>
           {detail.grade}
         </Text>
       </View>
-      <Text style={[styles.detailAnalysis, { color: isDark ? '#A1A1AA' : '#57534E' }]}>
+      <Text style={[styles.detailAnalysis, { color: isDark ? '#A1A1AA' : COLORS.textSecondary }]}>
         {detail.analysis}
       </Text>
       {detail.details.map((d, i) => (
@@ -328,11 +329,11 @@ export default function CompatibilityScreen() {
   // 결과 화면
   if (showResult && result) {
     return (
-      <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]}>
+      <View style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]}>
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => setShowResult(false)} style={styles.backButton}>
-              <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>← 다시 검색</Text>
+              <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>← 다시 검색</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -359,13 +360,13 @@ export default function CompatibilityScreen() {
           </LinearGradient>
 
           {/* 일주 정보 */}
-          <View style={[styles.pillarSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
+          <View style={[styles.pillarSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
             <View style={styles.pillarRow}>
               <View style={styles.pillarItem}>
                 <Text style={[styles.pillarLabel, { color: isDark ? '#A1A1AA' : '#78716C' }]}>
                   {profile?.name || '나'}의 일주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
                   {mySaju?.pillars.day.stem}{mySaju?.pillars.day.branch}
                 </Text>
               </View>
@@ -374,7 +375,7 @@ export default function CompatibilityScreen() {
                 <Text style={[styles.pillarLabel, { color: isDark ? '#A1A1AA' : '#78716C' }]}>
                   {partnerName}의 일주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
                   {partnerSaju?.pillars.day.stem}{partnerSaju?.pillars.day.branch}
                 </Text>
               </View>
@@ -397,8 +398,8 @@ export default function CompatibilityScreen() {
           )}
 
           {/* 점수 요약 */}
-          <View style={[styles.scoresSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+          <View style={[styles.scoresSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
               궁합 점수 분석
             </Text>
             <View style={styles.scoreRow}>
@@ -424,8 +425,8 @@ export default function CompatibilityScreen() {
           </View>
 
           {/* 분석 텍스트 */}
-          <View style={[styles.analysisSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+          <View style={[styles.analysisSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
               상세 분석
             </Text>
             <Text style={[styles.analysisText, { color: isDark ? '#D4D4D8' : '#44403C' }]}>
@@ -441,7 +442,7 @@ export default function CompatibilityScreen() {
 
           {/* 세부 궁합 */}
           <View style={styles.detailsSection}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917', marginBottom: 16 }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text, marginBottom: 16 }]}>
               세부 궁합
             </Text>
             {renderDetailCard(result.detailedCompatibilities.intimacy, 0)}
@@ -453,8 +454,8 @@ export default function CompatibilityScreen() {
           </View>
 
           {/* 조언 */}
-          <View style={[styles.adviceSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+          <View style={[styles.adviceSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
               💡 궁합 조언
             </Text>
             {result.advice.map((advice, index) => (
@@ -466,7 +467,7 @@ export default function CompatibilityScreen() {
 
           {/* 공유 버튼 */}
           <TouchableOpacity
-            style={[styles.shareButton, { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' }]}
+            style={[styles.shareButton, { backgroundColor: isDark ? COLORS.primary : COLORS.primary }]}
             onPress={() => {
               Alert.alert('공유', '궁합 결과를 공유합니다! (추후 구현)');
             }}
@@ -480,13 +481,13 @@ export default function CompatibilityScreen() {
 
   // 입력 화면
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]}>
       <SafeAreaView edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>← 뒤로</Text>
+            <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>← 뒤로</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>
             사주 궁합
           </Text>
           <View style={{ width: 60 }} />
@@ -495,13 +496,13 @@ export default function CompatibilityScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* 내 정보 */}
-        <View style={[styles.inputSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+        <View style={[styles.inputSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
             👤 내 정보
           </Text>
           {profile ? (
             <View style={styles.myInfoBox}>
-              <Text style={[styles.myInfoName, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+              <Text style={[styles.myInfoName, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
                 {profile.name}
               </Text>
               <Text style={[styles.myInfoDetail, { color: isDark ? '#A1A1AA' : '#78716C' }]}>
@@ -510,10 +511,10 @@ export default function CompatibilityScreen() {
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.setupButton, { borderColor: isDark ? '#6366F1' : '#8B5CF6' }]}
+              style={[styles.setupButton, { borderColor: isDark ? COLORS.primary : COLORS.primary }]}
               onPress={() => navigation.navigate('Profile')}
             >
-              <Text style={[styles.setupButtonText, { color: isDark ? '#6366F1' : '#8B5CF6' }]}>
+              <Text style={[styles.setupButtonText, { color: isDark ? COLORS.primary : COLORS.primary }]}>
                 프로필 설정하기
               </Text>
             </TouchableOpacity>
@@ -521,8 +522,8 @@ export default function CompatibilityScreen() {
         </View>
 
         {/* 상대방 정보 입력 */}
-        <View style={[styles.inputSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+        <View style={[styles.inputSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
             💑 상대방 정보
           </Text>
 
@@ -532,8 +533,8 @@ export default function CompatibilityScreen() {
               styles.textInput,
               {
                 backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                color: isDark ? '#E4E4E7' : '#1C1917',
-                borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                color: isDark ? '#E4E4E7' : COLORS.text,
+                borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border,
               }
             ]}
             placeholder="상대방 이름"
@@ -550,14 +551,14 @@ export default function CompatibilityScreen() {
               style={[
                 styles.calendarToggleButton,
                 partnerCalendar === 'solar' && styles.calendarToggleButtonActive,
-                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4' }
+                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border }
               ]}
               onPress={() => setPartnerCalendar('solar')}
             >
               <Text style={[
                 styles.calendarToggleText,
                 partnerCalendar === 'solar' && styles.calendarToggleTextActive,
-                { color: partnerCalendar === 'solar' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#78716C') }
+                { color: partnerCalendar === 'solar' ? COLORS.card : (isDark ? '#A1A1AA' : '#78716C') }
               ]}>
                 ☀️ 양력
               </Text>
@@ -566,14 +567,14 @@ export default function CompatibilityScreen() {
               style={[
                 styles.calendarToggleButton,
                 partnerCalendar === 'lunar' && styles.calendarToggleButtonActive,
-                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4' }
+                { borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border }
               ]}
               onPress={() => setPartnerCalendar('lunar')}
             >
               <Text style={[
                 styles.calendarToggleText,
                 partnerCalendar === 'lunar' && styles.calendarToggleTextActive,
-                { color: partnerCalendar === 'lunar' ? '#FFFFFF' : (isDark ? '#A1A1AA' : '#78716C') }
+                { color: partnerCalendar === 'lunar' ? COLORS.card : (isDark ? '#A1A1AA' : '#78716C') }
               ]}>
                 🌙 음력
               </Text>
@@ -603,14 +604,14 @@ export default function CompatibilityScreen() {
                 styles.datePickerButton,
                 {
                   backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border,
                 }
               ]}
               onPress={() => setShowYearPicker(true)}
             >
               <Text style={[
                 styles.datePickerButtonText,
-                { color: partnerBirthYear ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+                { color: partnerBirthYear ? (isDark ? '#E4E4E7' : COLORS.text) : (isDark ? '#71717A' : '#A8A29E') }
               ]}>
                 {partnerBirthYear ? `${partnerBirthYear}년` : '년도'}
               </Text>
@@ -623,14 +624,14 @@ export default function CompatibilityScreen() {
                 styles.datePickerButton,
                 {
                   backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border,
                 }
               ]}
               onPress={() => setShowMonthPicker(true)}
             >
               <Text style={[
                 styles.datePickerButtonText,
-                { color: partnerBirthMonth ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+                { color: partnerBirthMonth ? (isDark ? '#E4E4E7' : COLORS.text) : (isDark ? '#71717A' : '#A8A29E') }
               ]}>
                 {partnerBirthMonth ? `${partnerBirthMonth}월` : '월'}
               </Text>
@@ -643,14 +644,14 @@ export default function CompatibilityScreen() {
                 styles.datePickerButton,
                 {
                   backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                  borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border,
                 }
               ]}
               onPress={() => setShowDayPicker(true)}
             >
               <Text style={[
                 styles.datePickerButtonText,
-                { color: partnerBirthDay ? (isDark ? '#E4E4E7' : '#1C1917') : (isDark ? '#71717A' : '#A8A29E') }
+                { color: partnerBirthDay ? (isDark ? '#E4E4E7' : COLORS.text) : (isDark ? '#71717A' : '#A8A29E') }
               ]}>
                 {partnerBirthDay ? `${partnerBirthDay}일` : '일'}
               </Text>
@@ -664,12 +665,12 @@ export default function CompatibilityScreen() {
               styles.timePickerButton,
               {
                 backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : '#F5F5F4',
-                borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : '#E7E5E4',
+                borderColor: isDark ? 'rgba(82, 82, 91, 0.5)' : COLORS.border,
               }
             ]}
             onPress={() => setShowTimePicker(true)}
           >
-            <Text style={[styles.timePickerButtonText, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+            <Text style={[styles.timePickerButtonText, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
               {selectedTimeLabel}
             </Text>
             <Text style={styles.dropdownArrow}>▼</Text>
@@ -718,7 +719,7 @@ export default function CompatibilityScreen() {
         <TouchableOpacity
           style={[
             styles.analyzeButton,
-            { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' },
+            { backgroundColor: isDark ? COLORS.primary : COLORS.primary },
             (!profile || !partnerName.trim() || !partnerBirthYear || !partnerBirthMonth || !partnerBirthDay || isCalculating) && styles.analyzeButtonDisabled
           ]}
           onPress={analyzeCompatibility}
@@ -833,15 +834,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   calendarToggleButtonActive: {
-    backgroundColor: '#6366F1',
-    borderColor: '#6366F1',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   calendarToggleText: {
     fontSize: 14,
     fontWeight: '500',
   },
   calendarToggleTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '600',
   },
   leapMonthButton: {
@@ -855,7 +856,7 @@ const styles = StyleSheet.create({
   },
   leapMonthText: {
     fontSize: 13,
-    color: '#6366F1',
+    color: COLORS.primary,
     fontWeight: '500',
   },
   leapMonthTextActive: {
@@ -871,7 +872,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   analyzeButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -898,7 +899,7 @@ const styles = StyleSheet.create({
   resultNames: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
     marginBottom: 16,
   },
   resultScoreCircle: {
@@ -915,7 +916,7 @@ const styles = StyleSheet.create({
   resultScoreNumber: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   resultScoreUnit: {
     fontSize: 14,
@@ -924,7 +925,7 @@ const styles = StyleSheet.create({
   },
   resultSummary: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.card,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -953,7 +954,7 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#6366F1',
+    color: COLORS.primary,
     marginHorizontal: 16,
   },
   stemComboCard: {
@@ -1070,7 +1071,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   shareButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: 'bold',
   },

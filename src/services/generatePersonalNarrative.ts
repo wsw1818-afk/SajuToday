@@ -264,12 +264,64 @@ export function generatePersonalNarrative(params: NarrativeParams): NarrativeRes
   let aiOverall: string | undefined;
   if (AI_SLOTS?.overall_slots?.[groupKey]) {
     // 단락 셔플 (신 방식)
+    // Council 5명 만장일치 (2026-04-19): userSalt XOR + 7일 dedupe로 도입부 반복 차단
+    // Why: 풀 8개 + 같은 dateHash 기반 → 7일 시뮬에서 4/20=4/21 연속 같은 문장 발생
+    // userSalt: 사용자 사주 기반 고정 시드 → 사용자 A/B가 같은 날 다른 도입부 (수평 다양성)
+    // dedupe: 최근 7일 dateHash로 후보 인덱스 미리 계산 → 충돌 시 다음 슬롯으로 시프트 (수직 다양성)
     const pools = AI_SLOTS.overall_slots[groupKey];
-    const slot0Hash = fmix32Local(dateHash ^ 0x12345678);
-    const slot1Hash = fmix32Local(dateHash ^ 0x87654321);
-    const slot2Hash = fmix32Local(dateHash ^ 0xabcdef01);
-    const slot3Hash = fmix32Local(dateHash ^ 0xfedcba98);
-    const s0 = pools.slot0[slot0Hash % pools.slot0.length] || '';
+
+    // userSalt: 사용자별 고정 분리 시드 (사주 정보 기반)
+    const iljuChar = (params.myIlju || params.myStem).charCodeAt(0);
+    const userSalt = fmix32Local(
+      ((params.myStem.charCodeAt(0) * 31) ^
+        (params.myElement.charCodeAt(0) * 17) ^
+        (iljuChar * 7)) >>> 0
+    );
+
+    // 슬롯별 해시 (userSalt 합산)
+    const slot0Hash = fmix32Local(((dateHash ^ 0x12345678) + userSalt) >>> 0);
+    const slot1Hash = fmix32Local(((dateHash ^ 0x87654321) + userSalt * 3) >>> 0);
+    const slot2Hash = fmix32Local(((dateHash ^ 0xabcdef01) + userSalt * 7) >>> 0);
+    const slot3Hash = fmix32Local(((dateHash ^ 0xfedcba98) + userSalt * 13) >>> 0);
+
+    // 7일 무중복 dedupe (slot0만 — 사용자가 가장 먼저 인지하는 도입부)
+    // 알고리즘: 결정적 LCG (Linear Congruential Generator) 인덱스 회피
+    //   - 직전 N-1일 인덱스를 결정적으로 재계산
+    //   - 현재 슬롯이 그 집합에 있으면 풀 안에서 시프트
+    //   - 풀 크기 N → 최대 N-1일까지 무중복 보장
+    let s0Idx: number;
+    const N = pools.slot0.length;
+    if (N > 1) {
+      // 1. 사용자 고유 dateStep 산출 (날짜별로 강하게 분산)
+      //    fmix32(dateHash + userSalt + dayOffset) 패턴 사용
+      const computeIdx = (dh: number): number =>
+        fmix32Local(((dh ^ 0x12345678) + userSalt) >>> 0) % N;
+
+      const todayIdx = computeIdx(dateHash);
+
+      // 2. 과거 N-1일 (혹은 6일 중 작은 값) 인덱스 집합
+      //    가짜 과거 dateHash = fmix32(dateHash - dayOffset * userSalt)
+      const recentIndices = new Set<number>();
+      const lookback = Math.min(N - 1, 6);
+      for (let dayOffset = 1; dayOffset <= lookback; dayOffset++) {
+        const pastDateHash = fmix32Local(
+          ((dateHash + dayOffset * 0x9e3779b1 + userSalt) >>> 0)
+        );
+        recentIndices.add(computeIdx(pastDateHash));
+      }
+
+      // 3. 충돌 시 풀 안 시프트 (최대 N회)
+      s0Idx = todayIdx;
+      let tries = 0;
+      while (recentIndices.has(s0Idx) && tries < N) {
+        s0Idx = (s0Idx + 1) % N;
+        tries++;
+      }
+    } else {
+      s0Idx = 0;
+    }
+
+    const s0 = pools.slot0[s0Idx] || '';
     const s1 = pools.slot1[slot1Hash % pools.slot1.length] || '';
     const s2 = pools.slot2[slot2Hash % pools.slot2.length] || '';
     const s3 = pools.slot3[slot3Hash % pools.slot3.length] || '';

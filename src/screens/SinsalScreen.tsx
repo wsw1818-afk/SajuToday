@@ -347,10 +347,10 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.full,
   },
   goodBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.success,
   },
   badBadge: {
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.error,
   },
   badgeText: {
     fontSize: FONT_SIZES.xs,

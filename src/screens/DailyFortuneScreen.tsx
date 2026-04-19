@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackground } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useApp } from '../contexts/AppContext';
-import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS } from '../utils/theme';
+import { COLORS, FONT_SIZES, SPACING, BORDER_RADIUS, FONTS, SHADOWS, getScoreColor as scoreColor, getScoreLabel as scoreLabel } from '../utils/theme';
+import { BujeokSeal } from '../components/common/BujeokSeal';
 import { useTodayFortune } from '../hooks/useTodayFortune';
 import { SajuCalculator } from '../services/SajuCalculator';
 import { StorageService } from '../services/StorageService';
@@ -122,19 +123,10 @@ export default function DailyFortuneScreen() {
     );
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return '#4CAF50';
-    if (score >= 60) return '#FFC107';
-    if (score >= 40) return '#FF9800';
-    return '#F44336';
-  };
-
-  const getScoreLabel = (score: number) => {
-    if (score >= 80) return '대길';
-    if (score >= 60) return '길';
-    if (score >= 40) return '평';
-    return '흉';
-  };
+  // DESIGN.md BUJEOK 부적 컨셉: theme.ts의 토큰 함수 사용 (2026-04-18)
+  // 부적 적색 4단계 + 한자 라벨 (大吉/吉/平/凶)
+  const getScoreColor = scoreColor;
+  const getScoreLabel = scoreLabel;
 
   // 기본값 처리 — 폴백은 정상 운세 생성 실패 시에만 노출되어야 함
   // QA 검수 후 (2026-04-18): 폴백 텍스트가 정상 흐름에 섞이지 않도록 비어있을 때만 폴백 사용
@@ -195,17 +187,16 @@ export default function DailyFortuneScreen() {
     return result || text.slice(0, max) + '…';
   };
 
-  const comprehensiveReading = [
-    trimByTarget(detail, 220, 280),
-    '',
-    `💰 재물운\n${trimByTarget(wealth, 90, 120)}`,
-    '',
-    `💕 연애·대인운\n${trimByTarget(love, 90, 120)}`,
-    '',
-    `💼 직장·일운\n${trimByTarget(work, 90, 120)}`,
-    '',
-    `🏃 건강운\n${trimByTarget(health, 90, 120)}`,
-  ].join('\n');
+  // BUJEOK: 본문은 detail만 (카테고리는 별도 부적 도장 카드로 분리됨)
+  const comprehensiveReading = trimByTarget(detail, 220, 280);
+
+  // 부적 카테고리 4종 — 한자(장식) + 한글(메인 정보, 시안 일치)
+  const bujeokCategories = [
+    { hanja: '財', label: '재물', score: todayFortune.wealth?.score, advice: trimByTarget(wealth, 50, 70) },
+    { hanja: '愛', label: '애정', score: todayFortune.love?.score, advice: trimByTarget(love, 50, 70) },
+    { hanja: '職', label: '직업', score: todayFortune.work?.score, advice: trimByTarget(work, 50, 70) },
+    { hanja: '健', label: '건강', score: todayFortune.health?.score, advice: trimByTarget(health, 50, 70) },
+  ];
 
   // 날짜 포맷
   const shortDateStr = (() => {
@@ -216,7 +207,12 @@ export default function DailyFortuneScreen() {
   })();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <ImageBackground
+      source={require('../../assets/images/hanji-bg.jpg')}
+      style={[styles.container, { paddingTop: insets.top }]}
+      imageStyle={styles.hanjiBgImage}
+      resizeMode="cover"
+    >
       {/* 사람 전환 버튼 */}
       <TouchableOpacity
         style={styles.personSelector}
@@ -366,12 +362,37 @@ export default function DailyFortuneScreen() {
           })}</Text>
         </View>
 
-        {/* 종합 운세 점수 */}
-        <View style={[styles.scoreCard, { backgroundColor: getScoreColor(todayFortune.score || 60) }]}>
-          <Text style={styles.scoreLabel}>{activeName}님의 오늘 운세</Text>
-          <Text style={styles.scoreValue}>{todayFortune.score || 60}점</Text>
-          <Text style={styles.scoreGrade}>{getScoreLabel(todayFortune.score || 60)}</Text>
-          <Text style={styles.scoreDesc}>{summary}</Text>
+        {/* 종합 운세 점수 — 부적 인장 스타일 (DESIGN.md BUJEOK) */}
+        <View style={styles.bujeokScoreContainer}>
+          {/* 큰 한자 인장 (大吉/吉/平/凶) */}
+          <BujeokSeal
+            hanja={getScoreLabel(todayFortune.score || 60)}
+            size={120}
+            color={getScoreColor(todayFortune.score || 60)}
+            variant="brush"
+            style={styles.bujeokMainSeal}
+          />
+          {/* 우측 작은 인장 (사주명) */}
+          <BujeokSeal
+            hanja="運勢"
+            size={56}
+            color={COLORS.primary}
+            style={styles.bujeokSubSeal}
+          />
+          {/* 부적 구분선 (天 ◆ 地) */}
+          <View style={styles.bujeokDivider}>
+            <View style={styles.bujeokDividerLine} />
+            <Text style={styles.bujeokDividerText}>天 ◆ 地</Text>
+            <View style={styles.bujeokDividerLine} />
+          </View>
+          {/* 점수 + 사람 이름 */}
+          <View style={styles.bujeokScoreInfo}>
+            <Text style={styles.bujeokScoreLabel}>{activeName}님의 오늘 운세</Text>
+            <Text style={[styles.bujeokScoreValue, { color: getScoreColor(todayFortune.score || 60) }]}>
+              {todayFortune.score || 60}점
+            </Text>
+            <Text style={styles.bujeokScoreDesc}>{summary}</Text>
+          </View>
         </View>
 
         {/* 종합 운세 풀이 */}
@@ -392,6 +413,32 @@ export default function DailyFortuneScreen() {
               ※ 사주 계산은 명리학(60갑자·십신·12운성)에 따르며, 풀이 본문은 AI가 그 결과를 바탕으로 작성합니다.
             </Text>
           </View>
+        </View>
+
+        {/* BUJEOK 부적 구분선 (人 ◆ 道) */}
+        <View style={styles.bujeokDivider}>
+          <View style={styles.bujeokDividerLine} />
+          <Text style={styles.bujeokDividerText}>人 ◆ 道</Text>
+          <View style={styles.bujeokDividerLine} />
+        </View>
+
+        {/* BUJEOK: 카테고리 4개 부적 도장 카드 (시안 일치 — 한글 메인, 한자 장식) */}
+        <View style={styles.bujeokCategoryGrid}>
+          {bujeokCategories.map((cat) => (
+            <View key={cat.hanja} style={styles.bujeokCategoryCard}>
+              {/* 부적 인장 (한자 + 한글) */}
+              <View style={styles.bujeokCategorySeal}>
+                <Text style={styles.bujeokCategoryHanja}>{cat.hanja}</Text>
+                <Text style={styles.bujeokCategoryHangul}>{cat.label}</Text>
+              </View>
+              {/* 빨간 점수 도장 */}
+              {cat.score !== undefined && (
+                <View style={styles.bujeokScoreStamp}>
+                  <Text style={styles.bujeokScoreStampText}>{cat.score}</Text>
+                </View>
+              )}
+            </View>
+          ))}
         </View>
 
         {/* 공유 버튼 (Phase 2-1) */}
@@ -419,14 +466,14 @@ export default function DailyFortuneScreen() {
           topCategoryText: wealth?.slice(0, 80) || '',
         }}
       />
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.background,  // ImageBackground 로딩 전 fallback
   },
   content: {
     padding: 16,
@@ -445,9 +492,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: COLORS.surface || '#FFFFFF',
+    backgroundColor: COLORS.surface || COLORS.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: COLORS.border,
   },
   personIcon: {
     fontSize: 18,
@@ -472,7 +519,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     marginHorizontal: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     paddingVertical: 16,
     maxHeight: 400,
@@ -491,7 +538,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: COLORS.divider,
   },
   personItemActive: {
     backgroundColor: '#FFF8F0',
@@ -532,12 +579,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: COLORS.divider,
     marginTop: 4,
   },
   addPersonText: {
     fontSize: FONT_SIZES.md,
-    color: '#3B82F6',
+    color: COLORS.info,
     fontWeight: '600',
   },
   // 길일 배너 (Phase 1-2)
@@ -606,6 +653,130 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '600',
   },
+  // ===== 한지 배경 =====
+  hanjiBgImage: {
+    opacity: 0.85,
+  },
+  // ===== BUJEOK 부적 점수 인장 (DESIGN.md) =====
+  bujeokScoreContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    paddingVertical: SPACING.xl,
+    marginBottom: SPACING.xl,
+  },
+  bujeokMainSeal: {
+    marginBottom: SPACING.md,
+  },
+  bujeokSubSeal: {
+    position: 'absolute',
+    top: SPACING.lg,
+    right: SPACING.lg,
+  },
+  bujeokScoreInfo: {
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  bujeokScoreLabel: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    fontFamily: FONTS.serif,
+    marginBottom: SPACING.xs,
+  },
+  bujeokScoreValue: {
+    fontSize: 36,
+    fontFamily: FONTS.serifBold,
+    fontWeight: '800',
+    marginBottom: SPACING.xs,
+  },
+  bujeokScoreDesc: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.text,
+    fontFamily: FONTS.serif,
+    textAlign: 'center',
+    lineHeight: FONT_SIZES.sm * 1.7,
+    paddingHorizontal: SPACING.lg,
+  },
+  // ===== BUJEOK 부적 구분선 (天 ◆ 地, 人 ◆ 道) =====
+  bujeokDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: SPACING.lg,
+    gap: SPACING.md,
+  },
+  bujeokDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.border,
+  },
+  bujeokDividerText: {
+    fontFamily: FONTS.serifBold,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '900',
+    color: COLORS.primary,
+    letterSpacing: 4,
+    opacity: 0.6,
+  },
+  // ===== BUJEOK 카테고리 부적 도장 4개 (시안 일치 — 한글 메인, 한자 장식) =====
+  bujeokCategoryGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  bujeokCategoryCard: {
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 140,
+    gap: SPACING.sm,
+    ...SHADOWS.sm,
+  },
+  bujeokCategorySeal: {
+    width: 64,
+    height: 64,
+    borderWidth: 3,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.xs,
+  },
+  bujeokCategoryHanja: {
+    fontFamily: FONTS.brush,
+    fontSize: 24,
+    color: COLORS.textSecondary,
+    opacity: 0.7,
+    fontWeight: '900',
+    lineHeight: 24,
+  },
+  bujeokCategoryHangul: {
+    fontFamily: FONTS.serifBold,
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  bujeokScoreStamp: {
+    width: 44,
+    height: 22,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 2,
+  },
+  bujeokScoreStampText: {
+    fontFamily: FONTS.serifBold,
+    fontSize: 13,
+    color: COLORS.white,
+    fontWeight: '700',
+  },
+  // ===== 기존 scoreCard (dead code, 추후 정리) =====
   scoreCard: {
     borderRadius: 20,
     padding: 24,
@@ -675,15 +846,15 @@ const styles = StyleSheet.create({
     flex: 1,
     flexWrap: 'wrap',
   },
-  // 명리학 근거 한 줄 (Council 합의: 사주 신뢰 회복)
+  // 명리학 근거 한 줄 (Council 합의: 사주 신뢰 회복) — 부적 컴러
   myeongriBasis: {
     fontSize: FONT_SIZES.sm,
-    color: '#8B4B8B',
+    color: COLORS.primary,         // 부적 적색
     fontWeight: '600',
     marginBottom: 12,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0E6F0',
+    borderBottomColor: COLORS.border,
   },
   // AI 생성 정직 공개 (Devils 권고)
   aiDisclosure: {
@@ -693,7 +864,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: COLORS.divider,
     lineHeight: 16,
   },
   // 날짜 선택 네비게이터 스타일

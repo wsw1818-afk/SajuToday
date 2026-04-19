@@ -46,19 +46,19 @@ const FORTUNE_CONFIG: Record<string, {
   daily: {
     title: '오늘의 운세',
     icon: Sun,
-    color: '#F59E0B',
+    color: COLORS.warning,
     source: '명리학 일진론',
   },
   yearly: {
     title: `${currentYear}년 ${yearGanji}년 신년운세`,
     icon: Sparkles,
-    color: '#8B5CF6',
+    color: COLORS.primary,
     source: '명리학 대운/세운론',
   },
   animal: {
     title: '띠 운세',
     icon: Rabbit,
-    color: '#10B981',
+    color: COLORS.success,
     source: '12지신 운세론',
   },
   tojeong: {
@@ -70,19 +70,19 @@ const FORTUNE_CONFIG: Record<string, {
   zodiac: {
     title: '별자리 운세',
     icon: Star,
-    color: '#3B82F6',
+    color: COLORS.info,
     source: '서양 점성술',
   },
   luckyInfo: {
     title: '오늘의 길운',
     icon: Gift,
-    color: '#F97316',
+    color: COLORS.warning,
     source: '명리학 용신론',
   },
   dream: {
     title: '꿈풀이',
     icon: Moon,
-    color: '#6366F1',
+    color: COLORS.primary,
     source: '전통 해몽서/주공해몽',
   },
   fiveSpirits: {
@@ -330,8 +330,8 @@ export default function FortuneTypeScreen() {
                       <Text style={styles.monthLabel}>{month.month}월</Text>
                       <View style={[
                         styles.monthBadge,
-                        { backgroundColor: month.luck === 'good' ? '#10B981' :
-                          month.luck === 'bad' ? '#EF4444' : '#F59E0B' }
+                        { backgroundColor: month.luck === 'good' ? COLORS.success :
+                          month.luck === 'bad' ? COLORS.error : COLORS.warning }
                       ]}>
                         <Text style={styles.monthBadgeText}>
                           {month.luck === 'good' ? '길' : month.luck === 'bad' ? '흉' : '평'}

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -169,8 +170,8 @@ export default function DatePickerTest() {
                   key={d}
                   style={[
                     styles.weekDay,
-                    i === 0 && { color: '#EF4444' },
-                    i === 6 && { color: '#3B82F6' },
+                    i === 0 && { color: COLORS.error },
+                    i === 6 && { color: COLORS.info },
                   ]}
                 >
                   {d}
@@ -197,8 +198,8 @@ export default function DatePickerTest() {
                     style={[
                       styles.dayText,
                       item.isSelected && styles.dayTextSelected,
-                      item.dayOfWeek === 0 && !item.isSelected && { color: '#EF4444' },
-                      item.dayOfWeek === 6 && !item.isSelected && { color: '#3B82F6' },
+                      item.dayOfWeek === 0 && !item.isSelected && { color: COLORS.error },
+                      item.dayOfWeek === 6 && !item.isSelected && { color: COLORS.info },
                     ]}
                   >
                     {item.day}
@@ -230,7 +231,7 @@ export default function DatePickerTest() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.card,
     padding: 20,
   },
   title: {
@@ -240,14 +241,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   dateButton: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
     padding: 20,
     borderRadius: 16,
     alignItems: 'center',
     marginBottom: 20,
   },
   dateButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -257,13 +258,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   logContainer: {
-    backgroundColor: '#1C1917',
+    backgroundColor: COLORS.text,
     padding: 12,
     borderRadius: 8,
     flex: 1,
   },
   logTitle: {
-    color: '#10B981',
+    color: COLORS.success,
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 20,
     padding: 20,
     width: width - 40,
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: COLORS.border,
   },
   weekDay: {
     width: 40,
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   daySelected: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
   },
   dayToday: {
     backgroundColor: 'rgba(139, 92, 246, 0.15)',
@@ -350,18 +351,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   dayTextSelected: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '700',
   },
   todayButton: {
     marginTop: 16,
-    backgroundColor: '#F59E0B',
+    backgroundColor: COLORS.warning,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
   },
   todayButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 14,
     fontWeight: '700',
   },

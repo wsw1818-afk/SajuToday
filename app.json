@@ -27,6 +27,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/NotoSerifKR-Regular.ttf",
+            "./assets/fonts/NotoSerifKR-Bold.ttf",
+            "./assets/fonts/NanumBrushScript-Regular.ttf"
+          ]
+        }
+      ]
+    ]
   }
 }

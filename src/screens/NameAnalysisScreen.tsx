@@ -19,11 +19,11 @@ import { useApp } from '../contexts/AppContext';
 import { analyzeName, NameAnalysis } from '../services/NameAnalyzer';
 
 const ELEMENT_COLORS: Record<string, string> = {
-  '목': '#22C55E',
-  '화': '#EF4444',
-  '토': '#F59E0B',
+  '목': COLORS.success,
+  '화': COLORS.error,
+  '토': COLORS.warning,
   '금': '#A1A1AA',
-  '수': '#3B82F6',
+  '수': COLORS.info,
 };
 
 const ELEMENT_EMOJI: Record<string, string> = {
@@ -54,9 +54,9 @@ export default function NameAnalysisScreen() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981';
-    if (score >= 60) return '#F59E0B';
-    return '#EF4444';
+    if (score >= 80) return COLORS.success;
+    if (score >= 60) return COLORS.warning;
+    return COLORS.error;
   };
 
   const renderElementBar = (element: string, count: number, maxCount: number) => {
@@ -161,7 +161,7 @@ export default function NameAnalysisScreen() {
                 <Text style={styles.strokeNumber}>총 {analysis.totalStrokes}획</Text>
                 <View style={[
                   styles.fortuneBadge,
-                  { backgroundColor: analysis.strokeFortune.fortune === '길' ? '#DCFCE7' : analysis.strokeFortune.fortune === '흉' ? '#FEE2E2' : '#F3F4F6' }
+                  { backgroundColor: analysis.strokeFortune.fortune === '길' ? '#DCFCE7' : analysis.strokeFortune.fortune === '흉' ? '#FEE2E2' : COLORS.divider }
                 ]}>
                   <Text style={[
                     styles.fortuneText,
@@ -213,7 +213,7 @@ export default function NameAnalysisScreen() {
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryItemLabel}>획수 운</Text>
-                    <Text style={[styles.summaryItemValue, { color: analysis.strokeFortune.fortune === '길' ? '#10B981' : '#EF4444' }]}>
+                    <Text style={[styles.summaryItemValue, { color: analysis.strokeFortune.fortune === '길' ? COLORS.success : COLORS.error }]}>
                       {analysis.strokeFortune.fortune}
                     </Text>
                   </View>

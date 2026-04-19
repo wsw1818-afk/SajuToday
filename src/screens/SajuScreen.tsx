@@ -147,7 +147,7 @@ const collapsibleStyles = StyleSheet.create({
     padding: 16,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: COLORS.divider,
   },
 });
 
@@ -223,9 +223,9 @@ export default function SajuScreen() {
 
   const getElementColor = (element: string) => {
     const colors: Record<string, string> = {
-      wood: '#4CAF50',
-      fire: '#F44336',
-      earth: '#FFC107',
+      wood: COLORS.scoreExcellent,
+      fire: COLORS.scoreBad,
+      earth: COLORS.scoreGood,
       metal: '#9E9E9E',
       water: '#2196F3',
     };
@@ -626,7 +626,7 @@ export default function SajuScreen() {
           <View style={styles.storySection}>
             <Text style={styles.storySectionTitle}>💪 나의 강점과 약점</Text>
             <View style={styles.storyContent}>
-              <Text style={[styles.storyParagraph, { fontWeight: '600', color: '#4CAF50' }]}>
+              <Text style={[styles.storyParagraph, { fontWeight: '600', color: COLORS.scoreExcellent }]}>
                 ✅ 이런 점이 정말 멋져요
               </Text>
               {dayMasterInterpretation.strengths.map((s, idx) => (
@@ -634,7 +634,7 @@ export default function SajuScreen() {
                   • {s}
                 </Text>
               ))}
-              <Text style={[styles.storyParagraph, { fontWeight: '600', color: '#FF9800', marginTop: 12 }]}>
+              <Text style={[styles.storyParagraph, { fontWeight: '600', color: COLORS.scoreNeutral, marginTop: 12 }]}>
                 ⚠️ 이런 부분은 조심하면 좋아요
               </Text>
               {dayMasterInterpretation.weaknesses.map((w, idx) => (
@@ -1068,7 +1068,7 @@ export default function SajuScreen() {
           <View style={styles.gaugeHeader}>
             <Text style={styles.gaugeLabel}>나의 기본 에너지</Text>
             <Text style={[styles.gaugeValue, { 
-              color: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336' 
+              color: strengthAnalysis.score >= 70 ? COLORS.scoreExcellent : strengthAnalysis.score >= 45 ? COLORS.scoreGood : COLORS.scoreBad 
             }]}>
               {strengthAnalysis.strength} ({strengthAnalysis.score}점)
             </Text>
@@ -1076,7 +1076,7 @@ export default function SajuScreen() {
           <View style={styles.gaugeBar}>
             <View style={[styles.gaugeFill, { 
               width: `${strengthAnalysis.score}%`,
-              backgroundColor: strengthAnalysis.score >= 70 ? '#4CAF50' : strengthAnalysis.score >= 45 ? '#FFC107' : '#F44336'
+              backgroundColor: strengthAnalysis.score >= 70 ? COLORS.scoreExcellent : strengthAnalysis.score >= 45 ? COLORS.scoreGood : COLORS.scoreBad
             }]} />
           </View>
           <View style={styles.gaugeLabels}>
@@ -1134,15 +1134,15 @@ export default function SajuScreen() {
           <Text style={styles.elementExplainTitle}>🌿 다섯 기운의 의미</Text>
           <View style={styles.elementExplainGrid}>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#4CAF50' }]}>나무</Text>
+              <Text style={[styles.elementExplainName, { color: COLORS.scoreExcellent }]}>나무</Text>
               <Text style={styles.elementExplainText}>성장, 시작{'\n'}인자함, 창의력</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#F44336' }]}>불</Text>
+              <Text style={[styles.elementExplainName, { color: COLORS.scoreBad }]}>불</Text>
               <Text style={styles.elementExplainText}>열정, 표현{'\n'}예절, 명예</Text>
             </View>
             <View style={styles.elementExplainItem}>
-              <Text style={[styles.elementExplainName, { color: '#FFC107' }]}>흙</Text>
+              <Text style={[styles.elementExplainName, { color: COLORS.scoreGood }]}>흙</Text>
               <Text style={styles.elementExplainText}>중심, 안정{'\n'}신뢰, 포용</Text>
             </View>
             <View style={styles.elementExplainItem}>
@@ -1359,8 +1359,8 @@ export default function SajuScreen() {
           <Text style={styles.combineInfoText}>
             특별한 기운 조합은 세 글자가 합쳐져 하나의 기운을 극대화하는 현상이에요.{'\n\n'}
             • <Text style={{ color: '#2196F3', fontWeight: '600' }}>신·자·진</Text> → 물 기운 극대화{'\n'}
-            • <Text style={{ color: '#4CAF50', fontWeight: '600' }}>해·묘·미</Text> → 나무 기운 극대화{'\n'}
-            • <Text style={{ color: '#F44336', fontWeight: '600' }}>인·오·술</Text> → 불 기운 극대화{'\n'}
+            • <Text style={{ color: COLORS.scoreExcellent, fontWeight: '600' }}>해·묘·미</Text> → 나무 기운 극대화{'\n'}
+            • <Text style={{ color: COLORS.scoreBad, fontWeight: '600' }}>인·오·술</Text> → 불 기운 극대화{'\n'}
             • <Text style={{ color: '#9E9E9E', fontWeight: '600' }}>사·유·축</Text> → 쇠 기운 극대화
           </Text>
         </CollapsibleSection>
@@ -1544,10 +1544,10 @@ export default function SajuScreen() {
             const generates: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };
             const controls: Record<string, string> = { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' };
 
-            if (generates[dayElement] === daeunElement) return { type: '표현운', desc: '표현력과 창의력이 높아지는 시기입니다. 새로운 시도나 창작 활동에 유리해요.', color: '#FF9800' };
+            if (generates[dayElement] === daeunElement) return { type: '표현운', desc: '표현력과 창의력이 높아지는 시기입니다. 새로운 시도나 창작 활동에 유리해요.', color: COLORS.scoreNeutral };
             if (generates[daeunElement] === dayElement) return { type: '배움운', desc: '배움과 성장에 유리한 시기입니다. 공부, 자격증, 전문가의 조언이 도움이 돼요.', color: '#2196F3' };
-            if (controls[dayElement] === daeunElement) return { type: '재물운', desc: '재물운이 활발한 시기입니다. 수입이 늘거나 투자 기회가 올 수 있어요.', color: '#4CAF50' };
-            if (controls[daeunElement] === dayElement) return { type: '성취운', desc: '직장, 승진, 시험에 유리한 시기입니다. 사회적으로 인정받을 수 있어요.', color: '#F44336' };
+            if (controls[dayElement] === daeunElement) return { type: '재물운', desc: '재물운이 활발한 시기입니다. 수입이 늘거나 투자 기회가 올 수 있어요.', color: COLORS.scoreExcellent };
+            if (controls[daeunElement] === dayElement) return { type: '성취운', desc: '직장, 승진, 시험에 유리한 시기입니다. 사회적으로 인정받을 수 있어요.', color: COLORS.scoreBad };
             return { type: '전환운', desc: '다양한 기운이 작용하는 변화의 시기입니다.', color: '#607D8B' };
           };
 
@@ -1656,9 +1656,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   navItemActive: {
     backgroundColor: COLORS.primary,
@@ -1727,21 +1727,21 @@ const styles = StyleSheet.create({
   },
   pillarTable: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.border,
     borderRadius: 8,
     overflow: 'hidden',
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.border,
   },
   tableCell: {
     flex: 1,
     padding: 12,
     alignItems: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#E0E0E0',
+    borderRightColor: COLORS.border,
   },
   tableHeader: {
     fontSize: FONT_SIZES.sm,
@@ -1794,7 +1794,7 @@ const styles = StyleSheet.create({
   },
   gaugeBar: {
     height: 12,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.border,
     borderRadius: 6,
     marginBottom: 8,
   },
@@ -1818,7 +1818,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reasonsBox: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 8,
     padding: 12,
   },
@@ -1862,7 +1862,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   recommendBox: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 8,
     padding: 12,
   },
@@ -1897,7 +1897,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#FF9800',
+    borderLeftColor: COLORS.scoreNeutral,
   },
   cautionTitle: {
     fontSize: FONT_SIZES.md,
@@ -1928,7 +1928,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   hiddenStemCard: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
@@ -1970,7 +1970,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   combineCard: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
@@ -2097,7 +2097,7 @@ const styles = StyleSheet.create({
   daeunItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -2112,7 +2112,7 @@ const styles = StyleSheet.create({
   },
   daeunCurrent: {
     fontSize: FONT_SIZES.xs,
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -2156,7 +2156,7 @@ const styles = StyleSheet.create({
   storyCard: {
     backgroundColor: '#FFFDE7',
     borderWidth: 2,
-    borderColor: '#FFC107',
+    borderColor: COLORS.scoreGood,
   },
   storyTitle: {
     fontSize: FONT_SIZES.xl + 2,
@@ -2200,7 +2200,7 @@ const styles = StyleSheet.create({
   storyQuoteBox: {
     backgroundColor: '#FFF8E1',
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
+    borderLeftColor: COLORS.scoreGood,
     padding: 12,
     marginTop: 8,
     borderRadius: 8,
@@ -2230,7 +2230,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   storyAdviceBox: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 10,
     padding: 14,
     marginBottom: 12,
@@ -2457,7 +2457,7 @@ const styles = StyleSheet.create({
   pillarMeanings: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 12,
   },
   pillarMeaningItem: {
@@ -2466,7 +2466,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.border,
   },
   pillarMeaningLabel: {
     fontSize: FONT_SIZES.sm,
@@ -2556,7 +2556,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
+    borderLeftColor: COLORS.scoreGood,
   },
   metaphorText: {
     fontSize: FONT_SIZES.md,
@@ -2673,7 +2673,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.scoreExcellent,
   },
   elementBarHeader: {
     flexDirection: 'row',
@@ -2691,7 +2691,7 @@ const styles = StyleSheet.create({
   },
   yongsinStar: {
     fontSize: FONT_SIZES.xs,
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
     fontWeight: '700',
     marginLeft: 8,
     backgroundColor: '#E8F5E9',
@@ -2709,7 +2709,7 @@ const styles = StyleSheet.create({
   },
   elementBarBg: {
     height: 16,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.border,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -2719,7 +2719,7 @@ const styles = StyleSheet.create({
     minWidth: 8,
   },
   elementExplain: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -2791,7 +2791,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: COLORS.border,
   },
   tenGodCategoryTitle: {
     fontSize: FONT_SIZES.sm,
@@ -2825,12 +2825,12 @@ const styles = StyleSheet.create({
   },
   daeunItemCurrent: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.scoreExcellent,
     backgroundColor: '#E8F5E9',
   },
   daeunItemPast: {
     opacity: 0.7,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.divider,
   },
   daeunAgePast: {
     color: COLORS.textSecondary,
@@ -2848,7 +2848,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   daeunCurrentBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.scoreExcellent,
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 2,

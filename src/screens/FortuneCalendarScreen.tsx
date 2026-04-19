@@ -90,11 +90,11 @@ export default function FortuneCalendarScreen() {
   // 날짜 색상
   const getDayColor = (category: CalendarDay['category']) => {
     switch (category) {
-      case 'excellent': return '#10B981';
-      case 'good': return '#3B82F6';
+      case 'excellent': return COLORS.success;
+      case 'good': return COLORS.info;
       case 'normal': return COLORS.textSecondary;
-      case 'caution': return '#F59E0B';
-      case 'bad': return '#EF4444';
+      case 'caution': return COLORS.warning;
+      case 'bad': return COLORS.error;
       default: return COLORS.textSecondary;
     }
   };
@@ -155,9 +155,9 @@ export default function FortuneCalendarScreen() {
             <View style={styles.monthSummaryHeader}>
               <Text style={styles.monthSummaryTitle}>이번 달 운세</Text>
               <View style={[styles.monthScoreBadge, {
-                backgroundColor: monthlyFortune.score >= 70 ? '#10B981' :
-                                monthlyFortune.score >= 50 ? '#3B82F6' :
-                                monthlyFortune.score >= 35 ? '#F59E0B' : '#EF4444'
+                backgroundColor: monthlyFortune.score >= 70 ? COLORS.success :
+                                monthlyFortune.score >= 50 ? COLORS.info :
+                                monthlyFortune.score >= 35 ? COLORS.warning : COLORS.error
               }]}>
                 <Text style={styles.monthScoreText}>{monthlyFortune.score}점</Text>
               </View>
@@ -189,11 +189,11 @@ export default function FortuneCalendarScreen() {
         {/* 범례 */}
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.success }]} />
             <Text style={styles.legendText}>대길</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.info }]} />
             <Text style={styles.legendText}>길</Text>
           </View>
           <View style={styles.legendItem}>
@@ -201,11 +201,11 @@ export default function FortuneCalendarScreen() {
             <Text style={styles.legendText}>보통</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.warning }]} />
             <Text style={styles.legendText}>주의</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#EF4444' }]} />
+            <View style={[styles.legendDot, { backgroundColor: COLORS.error }]} />
             <Text style={styles.legendText}>흉</Text>
           </View>
         </View>
@@ -289,9 +289,9 @@ export default function FortuneCalendarScreen() {
             <View style={styles.dayScoreRow}>
               <Text style={styles.dayScoreLabel}>운세 점수</Text>
               <Text style={[styles.dayScore, {
-                color: selectedDayFortune.score >= 70 ? '#10B981' :
-                      selectedDayFortune.score >= 50 ? '#3B82F6' :
-                      selectedDayFortune.score >= 35 ? '#F59E0B' : '#EF4444'
+                color: selectedDayFortune.score >= 70 ? COLORS.success :
+                      selectedDayFortune.score >= 50 ? COLORS.info :
+                      selectedDayFortune.score >= 35 ? COLORS.warning : COLORS.error
               }]}>
                 {selectedDayFortune.score}점 ({selectedDayFortune.category})
               </Text>
@@ -508,10 +508,10 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   sundayText: {
-    color: '#EF4444',
+    color: COLORS.error,
   },
   saturdayText: {
-    color: '#3B82F6',
+    color: COLORS.info,
   },
   daysGrid: {
     flexDirection: 'row',

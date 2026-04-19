@@ -4,6 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
+import { COLORS } from '../utils/theme';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FortuneCardData, getScoreEmoji, getScoreGrade } from '../services/FortuneCardService';
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   dayPillar: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   scoreNumber: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   scoreUnit: {
     fontSize: 14,
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   gradeText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   commentSection: {
     alignItems: 'center',
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
     textAlign: 'center',
   },
   adviceSection: {
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   },
   adviceText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: COLORS.card,
     lineHeight: 20,
   },
   keywordsSection: {
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
   },
   keywordText: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '500',
   },
   luckySection: {
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   luckyValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   luckyDivider: {
     width: 1,

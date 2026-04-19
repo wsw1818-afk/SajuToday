@@ -188,7 +188,15 @@ export default function CompatibilityInputScreen() {
         if (solarDate) {
           birthDateStr = solarDate;
         } else {
-          Alert.alert('변환 실패', '음력→양력 변환에 실패했습니다. 네트워크 연결을 확인해주세요.');
+          const setPerson = personNum === 1 ? setPerson1 : setPerson2;
+          Alert.alert(
+            '음력→양력 변환 실패',
+            '인터넷 연결을 확인해주세요. 양력 생일을 아신다면 양력으로 입력하실 수 있어요.',
+            [
+              { text: '양력으로 입력하기', onPress: () => setPerson({ ...person, calendar: 'solar' }) },
+              { text: '확인' },
+            ]
+          );
           return;
         }
       }
@@ -502,7 +510,7 @@ export default function CompatibilityInputScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#E91E63" />
 
       {/* Header */}
-      <LinearGradient colors={['#E91E63', '#F06292']} style={styles.header}>
+      <LinearGradient colors={[COLORS.fire, '#F06292']} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
             <TouchableOpacity
@@ -547,7 +555,7 @@ export default function CompatibilityInputScreen() {
           activeOpacity={0.9}
         >
           <LinearGradient
-            colors={['#E91E63', '#F06292']}
+            colors={[COLORS.fire, '#F06292']}
             style={styles.checkButtonGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -810,7 +818,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   placeholder: {
     width: 40,
@@ -834,7 +842,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   personCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 20,
     padding: 20,
     ...SHADOWS.md,
@@ -853,10 +861,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   person1Icon: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: COLORS.info,
   },
   person2Icon: {
-    backgroundColor: '#E91E63',
+    backgroundColor: COLORS.fire,
   },
   personTitle: {
     fontSize: 18,
@@ -880,7 +888,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textPrimary,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   dateButton: {
     flexDirection: 'row',
@@ -890,7 +898,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     gap: 10,
   },
   dateButtonText: {
@@ -905,7 +913,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   disabledButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
   },
   disabledText: {
     color: COLORS.textLight,
@@ -916,11 +924,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   unknownButtonActive: {
-    backgroundColor: '#E91E63',
-    borderColor: '#E91E63',
+    backgroundColor: COLORS.fire,
+    borderColor: COLORS.fire,
   },
   unknownButtonText: {
     fontSize: 14,
@@ -928,7 +936,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   unknownButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   genderRow: {
     flexDirection: 'row',
@@ -940,12 +948,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     alignItems: 'center',
   },
   genderButtonActive: {
-    backgroundColor: '#E91E63',
-    borderColor: '#E91E63',
+    backgroundColor: COLORS.fire,
+    borderColor: COLORS.fire,
   },
   genderButtonText: {
     fontSize: 14,
@@ -953,7 +961,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   genderButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   // 음력/양력 선택 스타일
   calendarRow: {
@@ -966,12 +974,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     alignItems: 'center',
   },
   calendarButtonActive: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
+    backgroundColor: COLORS.info,
+    borderColor: COLORS.info,
   },
   calendarButtonText: {
     fontSize: 14,
@@ -979,7 +987,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   calendarButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   leapMonthButton: {
     paddingHorizontal: 16,
@@ -990,8 +998,8 @@ const styles = StyleSheet.create({
     borderColor: '#FCD34D',
   },
   leapMonthButtonActive: {
-    backgroundColor: '#F59E0B',
-    borderColor: '#F59E0B',
+    backgroundColor: COLORS.warning,
+    borderColor: COLORS.warning,
   },
   leapMonthButtonText: {
     fontSize: 14,
@@ -999,7 +1007,7 @@ const styles = StyleSheet.create({
     color: '#92400E',
   },
   leapMonthButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   heartContainer: {
     alignItems: 'center',
@@ -1009,7 +1017,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.md,
@@ -1030,7 +1038,7 @@ const styles = StyleSheet.create({
   checkButtonText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   // 저장/불러오기 버튼
   personActions: {
@@ -1042,7 +1050,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1053,7 +1061,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '70%',
@@ -1065,12 +1073,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: COLORS.border,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   modalBody: {
     paddingVertical: 8,
@@ -1086,7 +1094,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   manageButton: {
-    backgroundColor: '#E91E63',
+    backgroundColor: COLORS.fire,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -1094,7 +1102,7 @@ const styles = StyleSheet.create({
   manageButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   personItem: {
     flexDirection: 'row',
@@ -1102,7 +1110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: COLORS.divider,
   },
   personItemAvatar: {
     width: 44,
@@ -1116,7 +1124,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   personItemInfo: {
     flex: 1,
@@ -1124,7 +1132,7 @@ const styles = StyleSheet.create({
   personItemName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
     marginBottom: 2,
   },
   personItemDate: {
@@ -1138,11 +1146,11 @@ const styles = StyleSheet.create({
   manageLinkText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#E91E63',
+    color: COLORS.fire,
   },
   // 날짜 선택 모달 스타일
   dateModalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 24,
@@ -1151,7 +1159,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: COLORS.divider,
   },
   ageQuickLabel: {
     fontSize: 13,
@@ -1166,11 +1174,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     marginRight: 8,
   },
   ageButtonActive: {
-    backgroundColor: '#E91E63',
+    backgroundColor: COLORS.fire,
   },
   ageButtonText: {
     fontSize: 14,
@@ -1178,7 +1186,7 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   ageButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   datePickerContainer: {
     flexDirection: 'row',
@@ -1216,7 +1224,7 @@ const styles = StyleSheet.create({
   },
   pickerItemTextActive: {
     fontWeight: '700',
-    color: '#E91E63',
+    color: COLORS.fire,
   },
   datePreview: {
     flexDirection: 'row',
@@ -1224,7 +1232,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: COLORS.divider,
     marginHorizontal: 20,
     gap: 8,
   },
@@ -1240,7 +1248,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     marginHorizontal: 20,
     marginTop: 12,
-    backgroundColor: '#E91E63',
+    backgroundColor: COLORS.fire,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -1248,6 +1256,6 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
 });

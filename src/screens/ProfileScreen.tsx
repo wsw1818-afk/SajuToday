@@ -1792,9 +1792,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   profileTabActive: {
     backgroundColor: COLORS.primary,
@@ -1811,7 +1811,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   profileTabTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '700',
   },
   title: {
@@ -2136,7 +2136,7 @@ const styles = StyleSheet.create({
   adviceSection: {
     backgroundColor: '#F0FDF4',
     borderLeftWidth: 4,
-    borderLeftColor: '#22C55E',
+    borderLeftColor: COLORS.success,
     paddingLeft: SPACING.md,
     marginTop: SPACING.md,
   },
@@ -2147,7 +2147,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginBottom: SPACING.md,
     borderLeftWidth: 3,
-    borderLeftColor: '#3B82F6',
+    borderLeftColor: COLORS.info,
   },
   easyExplainTitle: {
     fontSize: FONT_SIZES.md,
@@ -2166,7 +2166,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     marginTop: SPACING.md,
     borderLeftWidth: 3,
-    borderLeftColor: '#10B981',
+    borderLeftColor: COLORS.success,
   },
   easyResultTitle: {
     fontSize: FONT_SIZES.md,
@@ -2588,7 +2588,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: COLORS.divider,
   },
   detailSectionTitle: {
     fontSize: FONT_SIZES.md,
@@ -2627,7 +2627,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     marginBottom: SPACING.sm,
     borderLeftWidth: 3,
-    borderLeftColor: '#10B981',
+    borderLeftColor: COLORS.success,
   },
   combineDetailTitle: {
     fontSize: FONT_SIZES.md,
@@ -2660,7 +2660,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     marginBottom: SPACING.sm,
     borderLeftWidth: 3,
-    borderLeftColor: '#EF4444',
+    borderLeftColor: COLORS.error,
   },
   clashDetailTitle: {
     fontSize: FONT_SIZES.md,

@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -196,8 +197,8 @@ export default function CalendarScreen() {
           styles.dayCell,
           { width: DAY_SIZE, height: DAY_SIZE },
           !day.isCurrentMonth && styles.dayCellOutside,
-          day.isToday && [styles.dayCellToday, { borderColor: isDark ? '#A78BFA' : '#8B5CF6' }],
-          isSelected && [styles.dayCellSelected, { borderColor: isDark ? '#6366F1' : '#4F46E5' }],
+          day.isToday && [styles.dayCellToday, { borderColor: isDark ? '#A78BFA' : COLORS.primary }],
+          isSelected && [styles.dayCellSelected, { borderColor: isDark ? COLORS.primary : '#4F46E5' }],
         ]}
         onPress={() => handleDayPress(day)}
         activeOpacity={0.7}
@@ -206,7 +207,7 @@ export default function CalendarScreen() {
           <Text style={[
             styles.dayText,
             { color: day.isCurrentMonth ? colors.text : (isDark ? '#52525B' : '#D4D4D8') },
-            day.isWeekend && day.isCurrentMonth && { color: day.date.getDay() === 0 ? '#EF4444' : '#3B82F6' },
+            day.isWeekend && day.isCurrentMonth && { color: day.date.getDay() === 0 ? COLORS.error : COLORS.info },
           ]}>
             {day.day}
           </Text>
@@ -220,11 +221,11 @@ export default function CalendarScreen() {
 
   if (!profile) {
     return (
-      <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]}>
+      <View style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]}>
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>← 뒤로</Text>
+              <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>← 뒤로</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -233,7 +234,7 @@ export default function CalendarScreen() {
             프로필을 먼저 등록해주세요
           </Text>
           <TouchableOpacity
-            style={[styles.setupButton, { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' }]}
+            style={[styles.setupButton, { backgroundColor: isDark ? COLORS.primary : COLORS.primary }]}
             onPress={() => navigation.navigate('Profile')}
           >
             <Text style={styles.setupButtonText}>프로필 설정하기</Text>
@@ -244,17 +245,17 @@ export default function CalendarScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]}>
       <SafeAreaView edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>← 뒤로</Text>
+            <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>← 뒤로</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>
             월간 운세
           </Text>
           <TouchableOpacity onPress={goToToday} style={styles.todayButton}>
-            <Text style={[styles.todayButtonText, { color: isDark ? '#A5B4FC' : '#6366F1' }]}>오늘</Text>
+            <Text style={[styles.todayButtonText, { color: isDark ? '#A5B4FC' : COLORS.primary }]}>오늘</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -265,7 +266,7 @@ export default function CalendarScreen() {
           <TouchableOpacity onPress={goToPrevMonth} style={styles.navButton}>
             <Text style={[styles.navButtonText, { color: isDark ? '#A1A1AA' : '#78716C' }]}>◀ 이전</Text>
           </TouchableOpacity>
-          <Text style={[styles.monthTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+          <Text style={[styles.monthTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
             {monthName}
           </Text>
           <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
@@ -280,8 +281,8 @@ export default function CalendarScreen() {
               <Text style={[
                 styles.weekdayText,
                 { color: isDark ? '#A1A1AA' : '#78716C' },
-                index === 0 && { color: '#EF4444' },
-                index === 6 && { color: '#3B82F6' },
+                index === 0 && { color: COLORS.error },
+                index === 6 && { color: COLORS.info },
               ]}>
                 {day}
               </Text>
@@ -295,8 +296,8 @@ export default function CalendarScreen() {
         </View>
 
         {/* 범례 */}
-        <View style={[styles.legendSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : '#FFFFFF' }]}>
-          <Text style={[styles.legendTitle, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>범례</Text>
+        <View style={[styles.legendSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.8)' : COLORS.card }]}>
+          <Text style={[styles.legendTitle, { color: isDark ? '#E4E4E7' : COLORS.text }]}>범례</Text>
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: isDark ? '#166534' : '#DCFCE7' }]} />
@@ -319,9 +320,9 @@ export default function CalendarScreen() {
 
         {/* 선택된 날짜 정보 */}
         {selectedDay && (
-          <View style={[styles.selectedSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : '#FFFFFF' }]}>
+          <View style={[styles.selectedSection, { backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : COLORS.card }]}>
             <View style={styles.selectedHeader}>
-              <Text style={[styles.selectedDate, { color: isDark ? '#E4E4E7' : '#1C1917' }]}>
+              <Text style={[styles.selectedDate, { color: isDark ? '#E4E4E7' : COLORS.text }]}>
                 {selectedDay.date.getMonth() + 1}월 {selectedDay.day}일
               </Text>
               <View style={[styles.selectedScoreBadge, { backgroundColor: getScoreColor(selectedDay.score, isDark).bg }]}>
@@ -331,7 +332,7 @@ export default function CalendarScreen() {
               </View>
             </View>
             <TouchableOpacity
-              style={[styles.viewFortuneButton, { backgroundColor: isDark ? '#6366F1' : '#8B5CF6' }]}
+              style={[styles.viewFortuneButton, { backgroundColor: isDark ? COLORS.primary : COLORS.primary }]}
               onPress={goToFortune}
             >
               <Text style={styles.viewFortuneText}>🔮 상세 운세 보기</Text>
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewFortuneText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 15,
     fontWeight: 'bold',
   },
@@ -597,7 +598,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   setupButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: 'bold',
   },

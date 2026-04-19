@@ -248,9 +248,19 @@ export default function OnboardingScreen() {
     try {
       const timeStr = unknownTime || !birthTimeText ? null : birthTimeText;
 
-      // 음력인 경우 KASI API로 양력 변환
+      // 음력인 경우 KASI API로 양력 변환 (Council 합의: 변환 실패 시 절대 폴백 금지)
+      // 출시 차단급 버그 수정: 변환 실패 시 음력 날짜가 양력으로 저장되던 버그
       let finalSolarBirthDate = birthDateText;
       if (calendar === 'lunar' && birthYear && birthMonth && birthDay) {
+        // Q4: 1900년 이전 출생은 KASI API 범위 밖
+        if (birthYear < 1391) {
+          Alert.alert(
+            '음력 변환 불가',
+            '1391년 이전 음력 날짜는 변환이 어려워요. 양력으로 입력해주세요.',
+            [{ text: '양력으로 다시 입력', onPress: () => setCalendar('solar') }]
+          );
+          return;
+        }
         try {
           const solarDate = await KasiService.lunarToSolar(
             birthYear,
@@ -260,13 +270,29 @@ export default function OnboardingScreen() {
           );
           if (solarDate) {
             finalSolarBirthDate = solarDate;
-            setSolarBirthDate(solarDate); // 상태 저장
-
+            setSolarBirthDate(solarDate);
           } else {
-
+            // A3: 변환 실패 시 사용자에게 두 가지 행동 선택지 제공
+            Alert.alert(
+              '음력→양력 변환 실패',
+              '지금 인터넷 연결이 없어요. 잠시 후 다시 시도하거나, 양력 생일을 아신다면 양력으로 입력하실 수 있어요.',
+              [
+                { text: '양력으로 입력하기', onPress: () => setCalendar('solar') },
+                { text: '재시도', onPress: () => handleComplete() },
+              ]
+            );
+            return; // 음력→양력 변환 실패 시 절대 진행 금지
           }
         } catch (e) {
-
+          Alert.alert(
+            '음력→양력 변환 오류',
+            '네트워크 연결을 확인해주세요. 양력 생일을 아신다면 양력으로 입력하실 수 있어요.',
+            [
+              { text: '양력으로 입력하기', onPress: () => setCalendar('solar') },
+              { text: '재시도', onPress: () => handleComplete() },
+            ]
+          );
+          return;
         }
       } else {
         // 양력이면 그대로 저장
@@ -337,8 +363,8 @@ export default function OnboardingScreen() {
 
             {/* 양력/음력 선택 — 생년월일 입력 전에 먼저 결정 (음력 사용자가 양력 기본값으로 잘못된 사주 보는 함정 방지) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>달력 종류 <Text style={styles.required}>*</Text></Text>
-              <Text style={styles.inputHint}>생년월일을 입력하기 전에 먼저 선택해주세요</Text>
+              <Text style={styles.inputLabel}>내 생일이 음력인가요, 양력인가요? <Text style={styles.required}>*</Text></Text>
+              <Text style={styles.inputHint}>모르시면 주민등록증 날짜 = 양력입니다 (선택한 기준대로 사주를 계산해요)</Text>
               <View style={styles.toggleContainer}>
                 <TouchableOpacity
                   style={[
@@ -366,15 +392,18 @@ export default function OnboardingScreen() {
                 </TouchableOpacity>
               </View>
               {calendar === 'lunar' && (
-                <TouchableOpacity
-                  style={styles.checkboxRow}
-                  onPress={() => setIsLeapMonth(!isLeapMonth)}
-                >
-                  <View style={[styles.checkbox, isLeapMonth && styles.checkboxChecked]}>
-                    {isLeapMonth && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <Text style={styles.checkboxLabel}>윤달</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    style={styles.checkboxRow}
+                    onPress={() => setIsLeapMonth(!isLeapMonth)}
+                  >
+                    <View style={[styles.checkbox, isLeapMonth && styles.checkboxChecked]}>
+                      {isLeapMonth && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.checkboxLabel}>윤달</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.inputHint}>저장 후 변경하려면 프로필 화면에서 다시 입력해주세요</Text>
+                </>
               )}
             </View>
 
@@ -460,6 +489,7 @@ export default function OnboardingScreen() {
             {/* 태어난 시간 입력 */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>태어난 시간 (선택)</Text>
+              <Text style={styles.inputHint}>한국 표준시(KST) 기준이에요. 23시 이후는 다음날 자시(子時)로 계산해요.</Text>
               <TouchableOpacity
                 style={styles.checkboxRow}
                 onPress={() => {

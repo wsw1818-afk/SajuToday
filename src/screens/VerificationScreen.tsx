@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -190,14 +191,14 @@ export default function VerificationScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>←</Text>
+            <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>←</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>
             계산 검증
           </Text>
           <View style={{ width: 44 }} />
@@ -215,8 +216,8 @@ export default function VerificationScreen() {
         </View>
 
         {/* 테스트 입력 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             검증할 날짜 입력
           </Text>
 
@@ -227,7 +228,7 @@ export default function VerificationScreen() {
             <TextInput
               style={[styles.input, {
                 backgroundColor: isDark ? colors.background : '#F5F5F4',
-                color: isDark ? colors.text : '#1C1917',
+                color: isDark ? colors.text : COLORS.text,
               }]}
               value={testDate}
               onChangeText={setTestDate}
@@ -243,7 +244,7 @@ export default function VerificationScreen() {
             <TextInput
               style={[styles.input, {
                 backgroundColor: isDark ? colors.background : '#F5F5F4',
-                color: isDark ? colors.text : '#1C1917',
+                color: isDark ? colors.text : COLORS.text,
               }]}
               value={testTime}
               onChangeText={setTestTime}
@@ -255,8 +256,8 @@ export default function VerificationScreen() {
 
         {/* 계산 결과 */}
         {testResult && (
-          <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
               계산 결과
             </Text>
 
@@ -265,7 +266,7 @@ export default function VerificationScreen() {
                 <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>
                   시주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {testResult.pillars.hour ? `${testResult.pillars.hour.stem}${testResult.pillars.hour.branch}` : '-'}
                 </Text>
               </View>
@@ -273,7 +274,7 @@ export default function VerificationScreen() {
                 <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>
                   일주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {testResult.pillars.day.stem}{testResult.pillars.day.branch}
                 </Text>
               </View>
@@ -281,7 +282,7 @@ export default function VerificationScreen() {
                 <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>
                   월주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {testResult.pillars.month.stem}{testResult.pillars.month.branch}
                 </Text>
               </View>
@@ -289,14 +290,14 @@ export default function VerificationScreen() {
                 <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>
                   년주
                 </Text>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {testResult.pillars.year.stem}{testResult.pillars.year.branch}
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity
-              style={[styles.detailsButton, { backgroundColor: isDark ? colors.primary : '#8B5CF6' }]}
+              style={[styles.detailsButton, { backgroundColor: isDark ? colors.primary : COLORS.primary }]}
               onPress={() => setShowDetails(!showDetails)}
             >
               <Text style={styles.detailsButtonText}>
@@ -308,8 +309,8 @@ export default function VerificationScreen() {
 
         {/* 계산 과정 상세 */}
         {showDetails && calculationDetails && (
-          <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-            <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+            <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
               📐 계산 과정 상세
             </Text>
 
@@ -397,8 +398,8 @@ export default function VerificationScreen() {
         )}
 
         {/* 검증 샘플 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             📋 검증 샘플로 테스트
           </Text>
           <Text style={[styles.sampleNote, { color: isDark ? colors.textSecondary : '#78716C' }]}>
@@ -412,7 +413,7 @@ export default function VerificationScreen() {
               onPress={() => runSampleTest(sample)}
             >
               <View style={styles.sampleHeader}>
-                <Text style={[styles.sampleName, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.sampleName, { color: isDark ? colors.text : COLORS.text }]}>
                   {sample.name}
                 </Text>
                 <Text style={[styles.sampleDate, { color: isDark ? colors.textSecondary : '#78716C' }]}>
@@ -422,7 +423,7 @@ export default function VerificationScreen() {
               <Text style={[styles.sampleExpected, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
                 예상: {sample.expected.year} {sample.expected.month} {sample.expected.day}
               </Text>
-              <Text style={[styles.sampleNoteText, { color: isDark ? colors.primary : '#8B5CF6' }]}>
+              <Text style={[styles.sampleNoteText, { color: isDark ? colors.primary : COLORS.primary }]}>
                 💡 {sample.note}
               </Text>
             </TouchableOpacity>
@@ -430,18 +431,18 @@ export default function VerificationScreen() {
         </View>
 
         {/* 외부 검증 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             🌐 외부 만세력과 비교
           </Text>
           <Text style={[styles.externalNote, { color: isDark ? colors.textSecondary : '#78716C' }]}>
             다른 만세력 사이트에서 직접 비교해볼 수 있습니다.
           </Text>
           <TouchableOpacity
-            style={[styles.externalButton, { borderColor: isDark ? colors.primary : '#8B5CF6' }]}
+            style={[styles.externalButton, { borderColor: isDark ? colors.primary : COLORS.primary }]}
             onPress={openExternalVerification}
           >
-            <Text style={[styles.externalButtonText, { color: isDark ? colors.primary : '#8B5CF6' }]}>
+            <Text style={[styles.externalButtonText, { color: isDark ? colors.primary : COLORS.primary }]}>
               외부 만세력 사이트 열기 →
             </Text>
           </TouchableOpacity>
@@ -560,7 +561,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailsButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 14,
     fontWeight: '600',
   },

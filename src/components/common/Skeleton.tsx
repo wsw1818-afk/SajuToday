@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
+import { COLORS } from '../../utils/theme';
 
 interface SkeletonProps {
   width?: DimensionValue;
@@ -124,10 +125,10 @@ export const HomeScreenSkeleton: React.FC = () => (
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: '#E7E5E4',
+    backgroundColor: COLORS.divider,
   },
   fortuneCardSkeleton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   },
   luckCardSkeleton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
   homeSkeletonContainer: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.background,
   },
   titleSkeleton: {
     alignItems: 'center',

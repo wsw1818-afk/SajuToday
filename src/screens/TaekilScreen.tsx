@@ -47,10 +47,10 @@ export default function TaekilScreen() {
   const purposes: DateType[] = ['marriage', 'move', 'business', 'contract', 'travel', 'surgery', 'general'];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981';
+    if (score >= 80) return COLORS.success;
     if (score >= 65) return '#34D399';
-    if (score >= 50) return '#F59E0B';
-    return '#EF4444';
+    if (score >= 50) return COLORS.warning;
+    return COLORS.error;
   };
 
   const getScoreEmoji = (score: number) => {
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
   },
   dateCardGood: {
     borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
+    borderLeftColor: COLORS.success,
   },
   dateCardLeft: {
     flexDirection: 'row',

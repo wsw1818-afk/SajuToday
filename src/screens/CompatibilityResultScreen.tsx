@@ -73,9 +73,9 @@ export default function CompatibilityResultScreen() {
 
   // 점수에 따른 색상
   const getScoreColor = (score: number) => {
-    if (score >= 80) return '#10B981';
-    if (score >= 60) return '#F59E0B';
-    return '#EF4444';
+    if (score >= 80) return COLORS.success;
+    if (score >= 60) return COLORS.warning;
+    return COLORS.error;
   };
 
   const renderScoreCard = (
@@ -211,7 +211,7 @@ export default function CompatibilityResultScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#E91E63" />
 
       {/* Header */}
-      <LinearGradient colors={['#E91E63', '#F06292']} style={styles.header}>
+      <LinearGradient colors={[COLORS.fire, '#F06292']} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
             <TouchableOpacity
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   placeholder: {
     width: 40,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   personBadgeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   totalScoreCircle: {
     flexDirection: 'row',
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   totalScoreNumber: {
     fontSize: 64,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   totalScoreUnit: {
     fontSize: 24,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   totalScoreGrade: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
     marginBottom: 8,
   },
   totalScoreSummary: {
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   scoreCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   adviceCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 20,
     marginBottom: 12,
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#E91E63',
+    backgroundColor: COLORS.fire,
     marginTop: 7,
     marginRight: 10,
   },
@@ -489,9 +489,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderWidth: 2,
-    borderColor: '#E91E63',
+    borderColor: COLORS.fire,
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   retryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#E91E63',
+    color: COLORS.fire,
   },
   // 천간합 특별 카드 스타일
   specialCard: {
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
   },
   // 세부 궁합 카드 스타일
   detailedCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -593,13 +593,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: COLORS.divider,
   },
   detailedCardDetails: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: COLORS.divider,
   },
   detailItem: {
     flexDirection: 'row',

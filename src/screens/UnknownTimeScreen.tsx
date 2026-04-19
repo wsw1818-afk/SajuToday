@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -87,21 +88,21 @@ export default function UnknownTimeScreen() {
 
   if (!profile || !sajuResult) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]}>
         <Text style={[styles.errorText, { color: colors.text }]}>프로필 정보가 없습니다.</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>←</Text>
+            <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>←</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>
             시간 모름 안내
           </Text>
           <View style={{ width: 44 }} />
@@ -109,7 +110,7 @@ export default function UnknownTimeScreen() {
 
         {/* 안내 카드 */}
         <LinearGradient
-          colors={isDark ? ['#1E3A8A', '#1E1B4B'] : ['#3B82F6', '#6366F1']}
+          colors={isDark ? ['#1E3A8A', '#1E1B4B'] : [COLORS.info, COLORS.primary]}
           style={styles.infoCard}
         >
           <Text style={styles.infoEmoji}>⏰</Text>
@@ -121,21 +122,21 @@ export default function UnknownTimeScreen() {
         </LinearGradient>
 
         {/* 현재 사주 (3주) */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             🎋 현재 확인된 사주 (3주)
           </Text>
           <View style={styles.pillarsRow}>
             <View style={styles.pillarItem}>
               <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>시주</Text>
-              <View style={[styles.pillarBox, { backgroundColor: isDark ? colors.background : '#F3F4F6' }]}>
+              <View style={[styles.pillarBox, { backgroundColor: isDark ? colors.background : COLORS.divider }]}>
                 <Text style={[styles.pillarUnknown, { color: isDark ? colors.textSecondary : '#9CA3AF' }]}>?</Text>
               </View>
             </View>
             <View style={styles.pillarItem}>
               <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>일주</Text>
               <View style={[styles.pillarBox, { backgroundColor: '#8B5CF620' }]}>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {sajuResult.pillars.day.stem}{sajuResult.pillars.day.branch}
                 </Text>
               </View>
@@ -143,7 +144,7 @@ export default function UnknownTimeScreen() {
             <View style={styles.pillarItem}>
               <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>월주</Text>
               <View style={[styles.pillarBox, { backgroundColor: '#8B5CF620' }]}>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {sajuResult.pillars.month.stem}{sajuResult.pillars.month.branch}
                 </Text>
               </View>
@@ -151,7 +152,7 @@ export default function UnknownTimeScreen() {
             <View style={styles.pillarItem}>
               <Text style={[styles.pillarLabel, { color: isDark ? colors.textSecondary : '#78716C' }]}>년주</Text>
               <View style={[styles.pillarBox, { backgroundColor: '#8B5CF620' }]}>
-                <Text style={[styles.pillarValue, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.pillarValue, { color: isDark ? colors.text : COLORS.text }]}>
                   {sajuResult.pillars.year.stem}{sajuResult.pillars.year.branch}
                 </Text>
               </View>
@@ -160,8 +161,8 @@ export default function UnknownTimeScreen() {
         </View>
 
         {/* 확인 가능한 정보 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             ✅ 시간 없이 확인 가능한 정보
           </Text>
           {unknownTimeAnalysis?.availableInfo.map((info, index) => (
@@ -173,8 +174,8 @@ export default function UnknownTimeScreen() {
         </View>
 
         {/* 제한되는 정보 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             ⚠️ 시간이 있으면 더 정확한 정보
           </Text>
           {unknownTimeAnalysis?.limitedInfo.map((info, index) => (
@@ -186,8 +187,8 @@ export default function UnknownTimeScreen() {
         </View>
 
         {/* 시간 추정 버튼 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             🔮 시간 추정 도우미
           </Text>
           <Text style={[styles.estimatorDesc, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
@@ -197,42 +198,42 @@ export default function UnknownTimeScreen() {
 
           {estimationResult ? (
             <View>
-              <Text style={[styles.resultTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+              <Text style={[styles.resultTitle, { color: isDark ? colors.text : COLORS.text }]}>
                 추정 결과
               </Text>
               {estimationResult.slice(0, 3).map((result, index) => {
                 const hourInfo = TWELVE_HOURS.find(h => h.branch === result.branch);
                 return (
                   <View key={index} style={[styles.resultItem, { backgroundColor: isDark ? colors.background : '#F3E8FF' }]}>
-                    <Text style={[styles.resultRank, { color: '#8B5CF6' }]}>
+                    <Text style={[styles.resultRank, { color: COLORS.primary }]}>
                       {index + 1}위
                     </Text>
                     <View style={styles.resultInfo}>
-                      <Text style={[styles.resultBranch, { color: isDark ? colors.text : '#1C1917' }]}>
+                      <Text style={[styles.resultBranch, { color: isDark ? colors.text : COLORS.text }]}>
                         {result.branch}시 ({hourInfo?.animal})
                       </Text>
                       <Text style={[styles.resultTime, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
                         {hourInfo?.time}
                       </Text>
                     </View>
-                    <Text style={[styles.resultScore, { color: '#8B5CF6' }]}>
+                    <Text style={[styles.resultScore, { color: COLORS.primary }]}>
                       {Math.round((result.score / answers.length) * 100)}%
                     </Text>
                   </View>
                 );
               })}
               <TouchableOpacity
-                style={[styles.resetButton, { borderColor: isDark ? colors.primary : '#8B5CF6' }]}
+                style={[styles.resetButton, { borderColor: isDark ? colors.primary : COLORS.primary }]}
                 onPress={resetEstimation}
               >
-                <Text style={[styles.resetButtonText, { color: isDark ? colors.primary : '#8B5CF6' }]}>
+                <Text style={[styles.resetButtonText, { color: isDark ? colors.primary : COLORS.primary }]}>
                   다시 추정하기
                 </Text>
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.estimatorButton, { backgroundColor: isDark ? colors.primary : '#8B5CF6' }]}
+              style={[styles.estimatorButton, { backgroundColor: isDark ? colors.primary : COLORS.primary }]}
               onPress={() => setShowEstimator(true)}
             >
               <Text style={styles.estimatorButtonText}>시간 추정 시작하기 →</Text>
@@ -241,8 +242,8 @@ export default function UnknownTimeScreen() {
         </View>
 
         {/* 12시주 미리보기 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             🕐 12시주 미리보기
           </Text>
           <Text style={[styles.previewDesc, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
@@ -255,7 +256,7 @@ export default function UnknownTimeScreen() {
                 style={[styles.hourItem, { backgroundColor: isDark ? colors.background : '#F9FAFB' }]}
                 onPress={() => setSelectedHour(hour)}
               >
-                <Text style={[styles.hourBranch, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.hourBranch, { color: isDark ? colors.text : COLORS.text }]}>
                   {hour.branch}
                 </Text>
                 <Text style={[styles.hourAnimal, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
@@ -288,8 +289,8 @@ export default function UnknownTimeScreen() {
         transparent
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-            <Text style={[styles.modalTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+            <Text style={[styles.modalTitle, { color: isDark ? colors.text : COLORS.text }]}>
               시간 추정 질문 {currentQuestion + 1}/{TIME_ESTIMATION_QUESTIONS.length}
             </Text>
 
@@ -301,7 +302,7 @@ export default function UnknownTimeScreen() {
               {TIME_ESTIMATION_QUESTIONS[currentQuestion].options.map((option, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[styles.optionButton, { backgroundColor: isDark ? colors.background : '#F3F4F6' }]}
+                  style={[styles.optionButton, { backgroundColor: isDark ? colors.background : COLORS.divider }]}
                   onPress={() => handleAnswer(option.hint)}
                 >
                   <Text style={[styles.optionText, { color: isDark ? colors.text : '#374151' }]}>
@@ -337,13 +338,13 @@ export default function UnknownTimeScreen() {
           activeOpacity={1}
           onPress={() => setSelectedHour(null)}
         >
-          <View style={[styles.hourDetailModal, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
+          <View style={[styles.hourDetailModal, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
             {selectedHour && (
               <>
-                <Text style={[styles.hourDetailTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.hourDetailTitle, { color: isDark ? colors.text : COLORS.text }]}>
                   {selectedHour.branch}시 ({selectedHour.animal}) 상세
                 </Text>
-                <Text style={[styles.hourDetailTime, { color: isDark ? colors.primary : '#8B5CF6' }]}>
+                <Text style={[styles.hourDetailTime, { color: isDark ? colors.primary : COLORS.primary }]}>
                   {selectedHour.timeRange}
                 </Text>
 
@@ -384,7 +385,7 @@ export default function UnknownTimeScreen() {
                 </View>
 
                 <TouchableOpacity
-                  style={[styles.hourDetailClose, { backgroundColor: isDark ? colors.primary : '#8B5CF6' }]}
+                  style={[styles.hourDetailClose, { backgroundColor: isDark ? colors.primary : COLORS.primary }]}
                   onPress={() => setSelectedHour(null)}
                 >
                   <Text style={styles.hourDetailCloseText}>닫기</Text>
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
     marginBottom: 8,
   },
   infoText: {
@@ -500,13 +501,13 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     fontSize: 14,
-    color: '#22C55E',
+    color: COLORS.success,
     marginRight: 10,
     fontWeight: '700',
   },
   warningIcon: {
     fontSize: 14,
-    color: '#F59E0B',
+    color: COLORS.warning,
     marginRight: 10,
     fontWeight: '700',
     width: 14,
@@ -527,7 +528,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   estimatorButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -698,7 +699,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   hourDetailCloseText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 14,
     fontWeight: '600',
   },

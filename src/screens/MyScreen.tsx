@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -74,56 +75,56 @@ export default function MyScreen() {
       title: '가족 운세 대시보드',
       desc: '가족 모두의 오늘 운세',
       screen: 'FamilyDashboard',
-      color: '#EF4444',
+      color: COLORS.error,
     },
     {
       icon: '⭐',
       title: '저장한 운세',
       desc: '북마크한 운세 모아보기',
       screen: 'Bookmark',
-      color: '#F59E0B',
+      color: COLORS.warning,
     },
     {
       icon: '✅',
       title: '계산 검증',
       desc: '사주 계산 정확도 확인',
       screen: 'Verification',
-      color: '#22C55E',
+      color: COLORS.success,
     },
     {
       icon: '⏰',
       title: '시간 모름 안내',
       desc: '출생 시간 추정 및 안내',
       screen: 'UnknownTime',
-      color: '#3B82F6',
+      color: COLORS.info,
     },
     {
       icon: '📱',
       title: '운세 위젯',
       desc: '운세 카드 미리보기 및 공유',
       screen: 'WidgetPreview',
-      color: '#EC4899',
+      color: COLORS.fire,
     },
     {
       icon: '📜',
       title: '운세 히스토리',
       desc: '지난 운세 기록 보기',
       screen: 'History',
-      color: '#8B5CF6',
+      color: COLORS.primary,
     },
     {
       icon: '📅',
       title: '월간 캘린더',
       desc: '이달의 길일/흉일 확인',
       screen: 'Calendar',
-      color: '#6366F1',
+      color: COLORS.primary,
     },
     {
       icon: '👥',
       title: '저장된 사람',
       desc: '궁합 볼 사람들 관리',
       screen: 'SavedPeople',
-      color: '#10B981',
+      color: COLORS.success,
     },
     {
       icon: '⚙️',
@@ -135,16 +136,16 @@ export default function MyScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>MY</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>MY</Text>
         </View>
 
         {/* 프로필 카드 */}
         <LinearGradient
-          colors={isDark ? ['#4C1D95', '#1E1B4B'] : ['#8B5CF6', '#6366F1']}
+          colors={isDark ? ['#4C1D95', '#1E1B4B'] : [COLORS.primary, COLORS.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.profileCard}
@@ -204,14 +205,14 @@ export default function MyScreen() {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={[styles.menuItem, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}
+              style={[styles.menuItem, { backgroundColor: isDark ? colors.card : COLORS.card }]}
               onPress={() => navigation.navigate(item.screen)}
             >
               <View style={[styles.menuIcon, { backgroundColor: `${item.color}15` }]}>
                 <Text style={styles.menuIconText}>{item.icon}</Text>
               </View>
               <View style={styles.menuContent}>
-                <Text style={[styles.menuTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+                <Text style={[styles.menuTitle, { color: isDark ? colors.text : COLORS.text }]}>
                   {item.title}
                 </Text>
                 <Text style={[styles.menuDesc, { color: isDark ? colors.textSecondary : '#78716C' }]}>
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   profileInfo: {
     marginLeft: 14,
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   profileBirth: {
     fontSize: 14,
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   sajuValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   sajuDivider: {
     width: 1,
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   streakTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   streakSub: {
     fontSize: 12,
@@ -338,11 +339,11 @@ const styles = StyleSheet.create({
   profileButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   profileButtonArrow: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: COLORS.card,
     marginLeft: 6,
   },
   menuSection: {

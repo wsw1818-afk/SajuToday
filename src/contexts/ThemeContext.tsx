@@ -21,26 +21,27 @@ const FONT_SCALE: Record<FontSizeLevel, number> = {
   xlarge: 1.3,
 };
 
-// 라이트 테마 색상
+// 라이트 테마 색상 — DESIGN.md BUJEOK 부적 컨셉 (2026-04-18 단일화)
+// theme.ts의 COLORS와 동일한 값 (인디고 #6366F1 폐기, 부적 적색 #C0392B 채택)
 export const lightColors = {
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  surfaceVariant: '#F1F5F9',
-  primary: '#6366F1',
-  primaryLight: '#818CF8',
-  secondary: '#EC4899',
-  text: '#1E293B',
-  textSecondary: '#64748B',
-  textTertiary: '#94A3B8',
-  border: '#E2E8F0',
-  error: '#EF4444',
-  success: '#10B981',
-  warning: '#F59E0B',
-  info: '#3B82F6',
-  card: '#FFFFFF',
-  cardBorder: '#E2E8F0',
-  overlay: 'rgba(0,0,0,0.5)',
-  shadow: '#000000',
+  background: '#F5E6C8',        // 한지 베이지
+  surface: '#FFFEF5',           // 밝은 한지 (카드)
+  surfaceVariant: '#E8D4A0',    // 한지 어두운 영역
+  primary: '#C0392B',           // 부적 적색 (인장/강조)
+  primaryLight: '#E8B4A8',      // 부적 적색 흐림
+  secondary: '#B8860B',         // 황금 (특별 액센트)
+  text: '#1A1A1A',              // 먹색
+  textSecondary: '#4A3B30',     // 먹색 부드러운
+  textTertiary: '#6B5D52',      // 먹색 흐림 (WCAG AA 통과)
+  border: '#D4C4A0',            // 한지 베이지 보더
+  error: '#C0392B',             // 부적 적색
+  success: '#5C7C3A',           // 한국 전통 녹색 (대나무)
+  warning: '#D4732C',           // 부적 주황
+  info: '#4A3B30',              // 먹색
+  card: '#FFFEF5',              // 밝은 한지
+  cardBorder: '#D4C4A0',        // 한지 보더
+  overlay: 'rgba(26, 26, 26, 0.5)',  // 먹색 오버레이
+  shadow: '#1A1A1A',            // 먹색
 };
 
 // 다크 테마 색상

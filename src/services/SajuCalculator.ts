@@ -161,7 +161,14 @@ export class SajuCalculator {
     // SOLAR_TERM_DATES 테이블에서 월 2(입춘) 날짜를 가져옴
     const dates = SOLAR_TERM_DATES[year];
     if (dates) return dates[2];
-    // 범위 밖이면 기본값 4
+    // 범위 밖(1970년대 이전 또는 2041년 이후): 입춘은 양력 2/3~2/5 사이를 오가므로
+    // 기본값 4를 사용하되 ±1일 오차 가능성 있음 (실측 통계: 2020~2040 중 4일=14년, 3일=6년)
+    // Council E5: 범위 밖 입력은 명시 경고 (콘솔 로그 + UI는 출시 후 추가 예약)
+    if (__DEV__) {
+      console.warn(
+        `[SajuCalculator] 입춘 데이터 범위 밖 연도 ${year} — 기본값 4일 사용 (±1일 오차 가능)`
+      );
+    }
     return 4;
   }
 

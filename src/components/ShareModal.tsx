@@ -4,6 +4,7 @@
  */
 
 import React, { useRef, useCallback, useState } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -109,10 +110,10 @@ export default function ShareModal({ visible, onClose, cardData, isDark = false 
     setPreviewMode(previewMode === type ? null : type);
   }, [previewMode]);
 
-  const bgColor = isDark ? '#1C1917' : '#FFFFFF';
-  const textColor = isDark ? '#FAFAF9' : '#1C1917';
+  const bgColor = isDark ? COLORS.text : COLORS.card;
+  const textColor = isDark ? '#FAFAF9' : COLORS.text;
   const subTextColor = isDark ? '#A8A29E' : '#78716C';
-  const borderColor = isDark ? '#3D3D3D' : '#E7E5E4';
+  const borderColor = isDark ? COLORS.text : COLORS.border;
 
   return (
     <Modal
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   optionButtonActive: {
-    borderColor: '#8B5CF6',
+    borderColor: COLORS.primary,
     borderWidth: 2,
     backgroundColor: 'rgba(139, 92, 246, 0.05)',
   },
@@ -359,14 +360,14 @@ const styles = StyleSheet.create({
     color: '#A8A29E',
   },
   shareButton: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
     marginBottom: 12,
   },
   shareButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: '700',
   },

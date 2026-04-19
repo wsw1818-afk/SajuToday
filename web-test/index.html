@@ -7,31 +7,100 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* DESIGN.md BUJEOK 부적 컬러 시스템 (2026-04-18) */
     :root {
-      --primary: #8B4B8B;
-      --primary-light: #F3E5F5;
-      --secondary: #D4AF37;
-      --bg: #FFFEF5;
-      --card: #FFFFFF;
-      --text: #3D3D3D;
-      --text-secondary: #7D7D7D;
-      --text-light: #AAAAAA;
-      --border: #E0E0E0;
-      --divider: #F0F0F0;
-      --wood: #4CAF50;
-      --fire: #F44336;
-      --earth: #FFC107;
-      --metal: #9E9E9E;
-      --water: #2196F3;
-      --success: #4CAF50;
-      --warning: #FF9800;
-      --error: #F44336;
+      --primary: #C0392B;          /* 부적 적색 (인장) */
+      --primary-light: #E8B4A8;    /* 부적 적색 흐림 */
+      --primary-dark: #8B2818;     /* 부적 적색 진함 */
+      --secondary: #B8860B;        /* 황금 */
+      --bg: #F5E6C8;               /* 한지 베이지 */
+      --card: #FFFEF5;             /* 밝은 한지 카드 */
+      --card-alt: #F5E6C8;         /* 한지 베이지 카드 */
+      --text: #1A1A1A;             /* 먹색 */
+      --text-secondary: #4A3B30;   /* 먹색 부드러운 */
+      --text-light: #6B5D52;       /* 먹색 흐림 */
+      --border: #D4C4A0;           /* 한지 보더 */
+      --divider: #E8D4A0;          /* 한지 구분선 */
+      --wood: #2980B9;             /* 청 (목 木) */
+      --fire: #C0392B;             /* 적 (화 火) */
+      --earth: #F39C12;            /* 황 (토 土) */
+      --metal: #FFFFFF;            /* 백 (금 金) */
+      --water: #1A1A1A;            /* 흑 (수 水) */
+      --success: #5C7C3A;          /* 한국 전통 녹색 */
+      --warning: #D4732C;          /* 부적 주황 */
+      --error: #C0392B;            /* 부적 적색 */
     }
 
+    /* 부적 폰트 (Google Fonts CDN) */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Nanum+Brush+Script&display=swap');
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
-      background: #F0F0F0;
+      font-family: 'Noto Serif KR', -apple-system, 'Malgun Gothic', sans-serif;
+      background: #2d1810;  /* 다크 갈색 (한지 폰 mockup 강조) */
       min-height: 100vh;
+    }
+
+    /* 한지 텍스처 배경 + 부적 모서리 장식 (DESIGN.md 시안 강화) */
+    .phone-frame {
+      background-color: var(--bg) !important;
+      background-image:
+        /* 모서리 미세 그라디언트 (한지 그늘) */
+        radial-gradient(ellipse at top left, rgba(139,75,40,0.10), transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(139,75,40,0.08), transparent 50%),
+        radial-gradient(ellipse at top, rgba(139,75,40,0.04), transparent 70%),
+        /* 한지 노이즈 텍스처 */
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/><feColorMatrix values='0 0 0 0 0.55, 0 0 0 0 0.42, 0 0 0 0 0.28, 0 0 0 0.10 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: cover, cover, cover, 200px 200px;
+      position: relative;
+    }
+    /* 한문 점괘 장식 (배경 미세 워터마크 — 64괘 한자) */
+    .phone-frame::before {
+      content: '乾 兌 離 震 巽 坎 艮 坤  天 地 人 道 福 緣 時 運';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      transform: translateY(-50%);
+      font-family: 'Noto Serif KR', serif;
+      font-size: 80px;
+      font-weight: 900;
+      color: rgba(192, 57, 43, 0.04);
+      letter-spacing: 30px;
+      writing-mode: vertical-rl;
+      text-align: center;
+      pointer-events: none;
+      white-space: nowrap;
+      line-height: 1;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .phone-frame > * {
+      position: relative;
+      z-index: 1;
+    }
+    /* 본문 카드 위쪽 한자 점괘 라인 (시안의 인장 옆 보조 한자) */
+    .bujeok-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+      color: var(--primary);
+      opacity: 0.6;
+    }
+    .bujeok-divider::before,
+    .bujeok-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+    }
+    .bujeok-divider .symbol {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 4px;
     }
 
     /* ===== Mobile Container ===== */
@@ -41,7 +110,7 @@
       background: var(--bg);
       min-height: 100vh;
       position: relative;
-      padding-bottom: 64px;
+      padding-bottom: 120px;  /* 카테고리 부적 + 탭바 공간 */
     }
 
     /* ===== Bottom Tab Bar ===== */
@@ -122,11 +191,12 @@
     .date-selector .value { font-size: 14px; font-weight: 600; color: var(--text); }
 
     /* ===== 운세 탭 네비게이션 ===== */
+    /* BUJEOK 탭바 한지 통일 (Designer P0 권고) */
     .fortune-tabs {
       display: flex;
-      background: var(--card);
-      padding: 8px;
-      border-bottom: 2px solid var(--border);
+      background: transparent;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
       gap: 8px;
     }
     .fortune-tab {
@@ -134,24 +204,27 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px;
-      border-radius: 12px;
-      background: #F3F4F6;
-      border: 1px solid #E5E7EB;
+      padding: 10px 8px;
+      border-radius: 0;  /* 인장 느낌 (사각) */
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
       cursor: pointer;
+      font-family: 'Noto Serif KR', serif;
       font-size: 14px;
       font-weight: 600;
-      color: #6B7280;
+      color: var(--text-secondary);
       gap: 6px;
       transition: all 0.2s;
     }
     .fortune-tab.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-      box-shadow: 0 2px 4px rgba(139,75,139,0.3);
+      background: transparent;
+      border-bottom: 2px solid var(--primary);
+      color: var(--primary);
+      box-shadow: none;
+      font-weight: 800;
     }
-    .fortune-tab .tab-emoji { font-size: 18px; }
+    .fortune-tab .tab-emoji { font-size: 16px; opacity: 0.7; }
 
     /* ===== 운세 탭 콘텐츠 ===== */
     .fortune-content { padding: 16px; }
@@ -180,39 +253,146 @@
       font-weight: 600;
     }
 
-    /* 운세 점수 카드 */
+    /* BUJEOK 점수 카드 = 인장 영역만 (DESIGN.md 시안 일치) */
     .score-card {
-      border-radius: 20px;
-      padding: 24px;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 16px 8px 24px;
       text-align: center;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      color: white;
-    }
-    .score-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; font-weight: 500; }
-    .score-value { font-size: 56px; font-weight: 800; margin-bottom: 4px; }
-    .score-grade { font-size: 18px; font-weight: 700; margin-bottom: 12px; opacity: 0.95; }
-    .score-desc { font-size: 12px; opacity: 0.9; line-height: 1.5; }
-
-    /* 상세 카드 */
-    .detail-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
       margin-bottom: 16px;
-    }
-    .detail-card .title {
-      font-size: 16px;
-      font-weight: 700;
       color: var(--text);
-      margin-bottom: 12px;
+      position: relative;
     }
-    .detail-card .text {
+    /* 큰 한자 부적 인장 (大吉/吉/平/凶) */
+    .score-card .bujeok-main-seal {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      border: 5px solid var(--primary);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(192,57,43,0.15);
+      position: relative;
+    }
+    .score-card .bujeok-main-seal::before {
+      content: '';
+      position: absolute;
+      top: 4px; left: 4px; right: 4px; bottom: 4px;
+      border: 1px solid var(--primary);
+    }
+    .score-card .bujeok-main-seal .hanja {
+      font-family: 'Nanum Brush Script', cursive;
+      font-size: 86px;
+      color: var(--text);
+      line-height: 1;
+      font-weight: 900;
+      z-index: 1;
+      margin-top: -8px;
+      /* P1-3: 손글씨 stroke 강화 (Designer 권고) */
+      text-shadow:
+        1px 0 0 var(--text),
+        -1px 0 0 var(--text),
+        0 1px 0 var(--text),
+        0 -1px 0 var(--text);
+      -webkit-text-stroke: 0.5px var(--text);
+    }
+    .score-card .bujeok-main-seal .hangul {
+      font-family: 'Noto Serif KR', serif;
       font-size: 14px;
       color: var(--text-secondary);
-      line-height: 1.6;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 4px;
+      z-index: 1;
+    }
+    .score-card .bujeok-main-seal {
+      flex-direction: column;
+    }
+    /* 우측 상단 작은 인장 (運勢) */
+    .score-card .bujeok-sub-seal {
+      position: absolute;
+      top: 28px;
+      right: 16px;
+      width: 60px;
+      height: 60px;
+      border: 3px solid var(--primary);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(3deg);
+    }
+    .score-card .bujeok-sub-seal .hanja {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 18px;
+      color: var(--primary);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -2px;
+    }
+    /* 점수 카드 내부 라벨/값 숨김 (본문 카드 안으로 이동) */
+    .score-card .score-label,
+    .score-card .score-value,
+    .score-card .score-grade,
+    .score-card .score-desc {
+      display: none;
+    }
+
+    /* BUJEOK 상세 카드 — 한지 종이 + 가운데 점수 원형 (DESIGN.md 시안) */
+    .detail-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 2px 8px rgba(139,75,40,0.08);
       margin-bottom: 16px;
+      text-align: center;
+    }
+    .detail-card .title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .detail-card .text {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    /* 본문 안 작은 점수 원형 (시안 패턴) */
+    .detail-card .score-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--text);
+      background: var(--card);
+      margin: 16px auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif KR', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .detail-card .meta-line {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 12px;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .detail-card .ai-disclosure {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 11px;
+      color: var(--text-light);
+      line-height: 1.5;
+      margin-top: 8px;
     }
     .advice-box {
       background: #E8F5E9;
@@ -279,28 +459,83 @@
     .mini-lucky-item .label { font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
     .mini-lucky-item .value { font-size: 14px; font-weight: 700; color: var(--primary); }
 
-    /* 카테고리 그리드 */
+    /* BUJEOK 카테고리 부적 도장 그리드 (시안 일치 - 4열 가로) */
     .category-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 0 4px;
     }
     .category-card {
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 8px;  /* P1-2: 여백 8px+ 추가 */
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(139,75,40,0.08);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
-    .category-card .icon { font-size: 28px; margin-bottom: 10px; }
-    .category-card .title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .category-card .score-box {
-      background: rgba(0,0,0,0.05);
-      border-radius: 8px;
-      padding: 4px 8px;
-      display: inline-block;
-      margin-bottom: 8px;
+    .category-card .label {
+      /* 인장 안에 한글 있어서 중복 — 숨김 */
+      display: none;
     }
-    .category-card .score { font-size: 12px; font-weight: 700; color: var(--text); }
-    .category-card .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .category-card .bujeok-mini-seal {
+      width: 64px;
+      height: 64px;
+      margin: 4px auto;
+      border: 3px solid var(--primary);
+      background: var(--card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 4px 0;
+    }
+    .category-card .bujeok-mini-seal {
+      flex-direction: column;
+    }
+    /* P1-1: 한글 메인 (16pt 굵게), 한자 보조 (24pt 옅게) — User 권고 역전 */
+    .category-card .bujeok-mini-seal .hanja {
+      font-family: 'Nanum Brush Script', cursive;
+      font-size: 24px;
+      color: var(--text-secondary);  /* 옅게 (장식) */
+      line-height: 1;
+      font-weight: 900;
+      opacity: 0.7;
+    }
+    .category-card .bujeok-mini-seal .hangul {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 14px;  /* 메인 정보 (한자보다 작지만 굵게) */
+      color: var(--text);
+      font-weight: 800;
+      letter-spacing: 0;
+      margin-top: 2px;
+    }
+    .category-card .score-stamp {
+      width: 44px;
+      height: 22px;
+      margin: 0 auto;
+      background: var(--primary);
+      color: white;
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: -0.5px;
+      border-radius: 2px;
+    }
+    /* 구버전 호환 (.icon, .title, .score-box, .score, .desc 일부 페이지에서 사용) */
+    .category-card .icon { display: none; }
+    .category-card .title { display: none; }
+    .category-card .score-box { display: none; }
+    .category-card .desc { display: none; }
 
     /* 활동/주의사항 카드 */
     .activity-card {
@@ -857,67 +1092,63 @@
             <div class="fortune-tengod-text">오늘의 십신: 편재</div>
           </div>
 
-          <!-- 종합 운세 점수 -->
-          <div class="score-card" style="background: #4CAF50;">
-            <div class="score-label">오늘의 운세</div>
+          <!-- BUJEOK 부적 점수 인장 (DESIGN.md) -->
+          <div class="score-card">
+            <div class="bujeok-sub-seal"><span class="hanja">運勢</span></div>
+            <div class="bujeok-main-seal">
+              <span class="hanja">吉</span>
+              <span class="hangul">길</span>
+            </div>
+            <div class="bujeok-divider"><span class="symbol">天 ◆ 地</span></div>
+            <div class="score-label">김민수님의 오늘 운세</div>
             <div class="score-value">82점</div>
-            <div class="score-grade">길</div>
             <div class="score-desc">오늘은 새로운 기회가 찾아오는 날이에요. 적극적으로 움직여보세요.</div>
           </div>
 
-          <!-- 종합 운세 요약 -->
-          <div class="section">
-            <div class="section-title">📋 오늘의 운세 요약</div>
-            <div class="detail-card">
-              <div class="title">오늘은 새로운 기회가 찾아오는 날이에요</div>
-              <div class="text">주변 사람들과의 소통이 좋은 결과를 가져올 수 있어요. 평소 미루던 일을 시작하기에도 좋은 타이밍이에요. 다만 너무 급하게 결정하기보다는 한 번 더 생각해보는 여유가 필요해요.</div>
-              <div class="advice-box">
-                <span class="icon">💡</span>
-                <span class="text">차분하게 계획을 세우고 한 걸음씩 나아가면 좋은 결과가 있을 거예요.</span>
-              </div>
-            </div>
+          <!-- BUJEOK 본문 카드 (시안 일치): 제목 + 본문 + 작은 78원 + 메타 -->
+          <div class="detail-card">
+            <div class="title">오늘은 새로운 기회가 찾아오는 날</div>
+            <div class="text">주변 사람들과의 소통이 좋은 결과를 가져와요. 평소 미루던 일을 시작하기에도 좋은 타이밍이에요. 다만 급하게 결정하기보다 한 번 더 생각해보는 여유가 필요해요.</div>
+            <div class="score-circle">82</div>
+            <div class="meta-line">갑자 일주 · 정관 · 14점</div>
+            <div class="ai-disclosure">※ 사주 계산은 명리학에 따르며, 풀이 본문은 AI가 작성합니다.</div>
           </div>
 
-          <!-- 실천 조언 -->
-          <div class="section">
-            <div class="section-title">✨ 오늘 이렇게 하세요</div>
+          <div class="bujeok-divider"><span class="symbol">人 ◆ 道</span></div>
 
-            <div class="action-card good">
-              <div class="action-header">
-                <span class="emoji">✅</span>
-                <span class="title">이렇게 하세요</span>
+          <!-- BUJEOK 카테고리 부적 도장 4개 (한자 + 한글) -->
+          <div class="category-grid">
+            <div class="category-card">
+              <div class="label">재물운</div>
+              <div class="bujeok-mini-seal">
+                <span class="hanja">財</span>
+                <span class="hangul">재물</span>
               </div>
-              <div class="action-item good"><span class="bullet">•</span><span class="text">새로운 사람과의 만남에 적극적으로 임해보세요</span></div>
-              <div class="action-item good"><span class="bullet">•</span><span class="text">미뤄둔 업무나 과제를 정리해보세요</span></div>
-              <div class="action-item good"><span class="bullet">•</span><span class="text">가벼운 운동으로 에너지를 충전하세요</span></div>
+              <div class="score-stamp">75</div>
             </div>
-
-            <div class="action-card caution">
-              <div class="action-header">
-                <span class="emoji">⚠️</span>
-                <span class="title">피하세요</span>
+            <div class="category-card">
+              <div class="label">연애운</div>
+              <div class="bujeok-mini-seal">
+                <span class="hanja">愛</span>
+                <span class="hangul">애정</span>
               </div>
-              <div class="action-item caution"><span class="bullet">•</span><span class="text">큰 금액의 투자나 계약은 신중하게 판단하세요</span></div>
-              <div class="action-item caution"><span class="bullet">•</span><span class="text">감정적인 대화는 피하고 이성적으로 접근하세요</span></div>
+              <div class="score-stamp">80</div>
             </div>
-
-            <!-- 미니 행운 포인트 -->
-            <div class="mini-lucky-box">
-              <div class="mini-lucky-title">🍀 오늘의 행운 포인트</div>
-              <div class="mini-lucky-row">
-                <div class="mini-lucky-item">
-                  <div class="label">색</div>
-                  <div class="value">남색</div>
-                </div>
-                <div class="mini-lucky-item">
-                  <div class="label">숫자</div>
-                  <div class="value">3, 7</div>
-                </div>
-                <div class="mini-lucky-item">
-                  <div class="label">방향</div>
-                  <div class="value">동쪽</div>
-                </div>
+            <div class="category-card">
+              <div class="label">직장운</div>
+              <div class="bujeok-mini-seal">
+                <span class="hanja">職</span>
+                <span class="hangul">직업</span>
               </div>
+              <div class="score-stamp">85</div>
+            </div>
+            <div class="category-card">
+              <div class="label">건강운</div>
+              <div class="bujeok-mini-seal">
+                <span class="hanja">健</span>
+                <span class="hangul">건강</span>
+              </div>
+              <div class="score-stamp">70</div>
             </div>
           </div>
         </div>
@@ -926,30 +1157,27 @@
         <div class="fortune-panel" id="panel-detail">
           <div class="section">
             <div class="section-title">📊 카테고리별 운세</div>
+            <!-- BUJEOK 부적 도장 4개 (DESIGN.md 시안) -->
             <div class="category-grid">
-              <div class="category-card" style="background: #FFF3E0;">
-                <div class="icon">💰</div>
-                <div class="title">재물운</div>
-                <div class="score-box"><span class="score">75점</span></div>
-                <div class="desc">안정적인 재물 흐름이에요. 작은 수입이 기분 좋게 찾아올 수 있어요.</div>
+              <div class="category-card">
+                <div class="label">재물운</div>
+                <div class="bujeok-mini-seal"><span class="hanja">財</span></div>
+                <div class="score-stamp">75</div>
               </div>
-              <div class="category-card" style="background: #FCE4EC;">
-                <div class="icon">💕</div>
-                <div class="title">연애운</div>
-                <div class="score-box"><span class="score">80점</span></div>
-                <div class="desc">진심 어린 대화가 관계를 깊게 해줘요. 상대방의 말에 귀 기울여 보세요.</div>
+              <div class="category-card">
+                <div class="label">연애운</div>
+                <div class="bujeok-mini-seal"><span class="hanja">愛</span></div>
+                <div class="score-stamp">80</div>
               </div>
-              <div class="category-card" style="background: #E3F2FD;">
-                <div class="icon">💼</div>
-                <div class="title">직장운</div>
-                <div class="score-box"><span class="score">85점</span></div>
-                <div class="desc">동료와의 협업이 빛을 발하는 날이에요. 새로운 프로젝트에 도전해보세요.</div>
+              <div class="category-card">
+                <div class="label">직장운</div>
+                <div class="bujeok-mini-seal"><span class="hanja">職</span></div>
+                <div class="score-stamp">85</div>
               </div>
-              <div class="category-card" style="background: #E8F5E9;">
-                <div class="icon">🏃</div>
-                <div class="title">건강운</div>
-                <div class="score-box"><span class="score">70점</span></div>
-                <div class="desc">가벼운 산책이 기분 전환에 도움이 돼요. 충분한 수면을 취해보세요.</div>
+              <div class="category-card">
+                <div class="label">건강운</div>
+                <div class="bujeok-mini-seal"><span class="hanja">健</span></div>
+                <div class="score-stamp">70</div>
               </div>
             </div>
           </div>

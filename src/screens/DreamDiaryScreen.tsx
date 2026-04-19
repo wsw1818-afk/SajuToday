@@ -51,9 +51,9 @@ const MOOD_OPTIONS: { value: MoodType; label: string; emoji: string }[] = [
 ];
 
 const FORTUNE_BADGE = {
-  good: { label: '길몽', color: '#10B981', bg: '#D1FAE5' },
-  bad: { label: '흉몽', color: '#EF4444', bg: '#FEE2E2' },
-  neutral: { label: '평몽', color: '#6B7280', bg: '#F3F4F6' },
+  good: { label: '길몽', color: COLORS.success, bg: '#D1FAE5' },
+  bad: { label: '흉몽', color: COLORS.error, bg: '#FEE2E2' },
+  neutral: { label: '평몽', color: '#6B7280', bg: COLORS.divider },
 };
 
 export default function DreamDiaryScreen() {
@@ -352,11 +352,11 @@ export default function DreamDiaryScreen() {
                   <Text style={styles.statLabel}>총 기록</Text>
                 </View>
                 <View style={[styles.statBox, { borderColor: '#D1FAE5' }]}>
-                  <Text style={[styles.statNumber, { color: '#10B981' }]}>{stats.goodDreams}</Text>
+                  <Text style={[styles.statNumber, { color: COLORS.success }]}>{stats.goodDreams}</Text>
                   <Text style={styles.statLabel}>길몽</Text>
                 </View>
                 <View style={[styles.statBox, { borderColor: '#FEE2E2' }]}>
-                  <Text style={[styles.statNumber, { color: '#EF4444' }]}>{stats.badDreams}</Text>
+                  <Text style={[styles.statNumber, { color: COLORS.error }]}>{stats.badDreams}</Text>
                   <Text style={styles.statLabel}>흉몽</Text>
                 </View>
                 <View style={styles.statBox}>

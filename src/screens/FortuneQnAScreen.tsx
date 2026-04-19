@@ -70,8 +70,8 @@ export default function FortuneQnAScreen() {
   if (answer) {
     const ResultIcon = answer.result === 'positive' ? CheckCircle :
                       answer.result === 'negative' ? XCircle : MinusCircle;
-    const resultColor = answer.result === 'positive' ? '#10B981' :
-                       answer.result === 'negative' ? '#EF4444' : '#F59E0B';
+    const resultColor = answer.result === 'positive' ? COLORS.success :
+                       answer.result === 'negative' ? COLORS.error : COLORS.warning;
 
     return (
       <SafeAreaView style={styles.container}>

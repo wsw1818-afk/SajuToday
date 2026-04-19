@@ -31,7 +31,7 @@ export function FortuneCard({ fortune }: FortuneCardProps) {
     { key: 'overall' as keyof FortuneScores, label: '전체운', color: COLORS.primary },
     { key: 'money' as keyof FortuneScores, label: '재물운', color: COLORS.secondary },
     { key: 'work' as keyof FortuneScores, label: '일/학업', color: COLORS.info },
-    { key: 'love' as keyof FortuneScores, label: '연애/대인', color: '#E91E63' },
+    { key: 'love' as keyof FortuneScores, label: '연애/대인', color: COLORS.fire },  // 적 火 (음양오행)
     { key: 'health' as keyof FortuneScores, label: '건강운', color: COLORS.success },
   ];
 

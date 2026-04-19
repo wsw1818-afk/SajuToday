@@ -27,7 +27,7 @@ const FORTUNE_CATEGORIES = [
     id: 'recommend',
     title: '🌟 처음이라면 이것부터!',
     description: '가장 인기 있는 운세예요',
-    color: '#F59E0B',
+    color: COLORS.warning,
     items: [
       {
         id: 'yearly',
@@ -35,7 +35,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: `${currentYear}년 나의 한 해 운세`,
         description: '올해 전체 운의 흐름을 알려드려요',
         emoji: '✨',
-        color: '#8B5CF6',
+        color: COLORS.primary,
         help: '1년 동안의 전반적인 운세를 미리 알 수 있어요',
       },
       {
@@ -44,7 +44,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '나와 상대방의 궁합은?',
         description: '두 사람이 얼마나 잘 맞는지 확인해요',
         emoji: '💕',
-        color: '#EC4899',
+        color: COLORS.fire,
         route: 'CompatibilityInput',
         help: '연인, 친구, 가족과의 궁합 점수를 알 수 있어요',
       },
@@ -54,7 +54,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '행운을 부르는 색상, 숫자, 방향',
         description: '오늘 나에게 행운을 가져다 줄 정보',
         emoji: '🍀',
-        color: '#10B981',
+        color: COLORS.success,
         route: 'LuckyItems',
         help: '오늘 입을 옷 색깔, 가면 좋은 방향 등을 알려줘요',
       },
@@ -64,7 +64,7 @@ const FORTUNE_CATEGORIES = [
     id: 'basic',
     title: '📅 기본 운세',
     description: '매일매일 확인하는 운세',
-    color: '#3B82F6',
+    color: COLORS.info,
     items: [
       {
         id: 'fortuneCalendar',
@@ -82,7 +82,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '나의 띠로 보는 운세',
         description: '쥐띠, 소띠 등 12가지 띠별 운세',
         emoji: '🐰',
-        color: '#10B981',
+        color: COLORS.success,
         help: '태어난 해의 동물로 보는 친근한 운세예요',
       },
       {
@@ -91,7 +91,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '내 별자리로 보는 운세',
         description: '물병자리, 양자리 등 12별자리 운세',
         emoji: '⭐',
-        color: '#3B82F6',
+        color: COLORS.info,
         help: '서양 점성술 기반의 별자리 운세예요',
       },
       {
@@ -109,7 +109,7 @@ const FORTUNE_CATEGORIES = [
     id: 'life',
     title: '🔮 인생 분석',
     description: '나의 타고난 운명을 알아봐요',
-    color: '#8B5CF6',
+    color: COLORS.primary,
     items: [
       {
         id: 'daeun',
@@ -146,7 +146,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '내 이름의 의미와 운',
         description: '이름에 담긴 오행과 운명을 분석해요',
         emoji: '✍️',
-        color: '#8B5CF6',
+        color: COLORS.primary,
         route: 'NameAnalysis',
         help: '이름이 나의 운명에 어떤 영향을 주는지 알아봐요',
       },
@@ -156,7 +156,7 @@ const FORTUNE_CATEGORIES = [
     id: 'manage',
     title: '👥 관리 기능',
     description: '운세 기록과 가족 관리',
-    color: '#EF4444',
+    color: COLORS.error,
     items: [
       {
         id: 'familyGroup',
@@ -164,7 +164,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '소중한 사람들의 사주 저장',
         description: '가족, 친구의 사주를 저장하고 궁합도 확인',
         emoji: '👨‍👩‍👧‍👦',
-        color: '#EF4444',
+        color: COLORS.error,
         route: 'FamilyGroup',
         help: '한 번 등록하면 언제든 운세와 궁합을 볼 수 있어요',
       },
@@ -174,7 +174,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '북마크한 운세 모아보기',
         description: '좋았던 운세, 중요한 운세를 다시 확인',
         emoji: '⭐',
-        color: '#F59E0B',
+        color: COLORS.warning,
         route: 'Bookmark',
         help: '마음에 드는 운세는 저장해두세요',
       },
@@ -184,7 +184,7 @@ const FORTUNE_CATEGORIES = [
         subtitle: '지금까지의 운세 분석',
         description: '내 사주 종합 분석과 사용 통계',
         emoji: '📈',
-        color: '#22C55E',
+        color: COLORS.success,
         route: 'FortuneReport',
         help: '오행 분포, 길몽 횟수 등 통계를 볼 수 있어요',
       },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     fontSize: FONT_SIZES.md,  // 더 큰 글자
-    color: '#57534E',  // 더 진한 색상
+    color: COLORS.textSecondary,  // 더 진한 색상
     marginTop: 6,
     lineHeight: 21,  // 더 넓은 줄간격
   },
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     top: '100%',
     left: SPACING.md,
     right: SPACING.md,
-    backgroundColor: '#1E293B',
+    backgroundColor: COLORS.text,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.sm,
     marginTop: 4,

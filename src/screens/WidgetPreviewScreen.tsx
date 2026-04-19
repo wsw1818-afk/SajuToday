@@ -6,6 +6,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -152,14 +153,14 @@ export default function WidgetPreviewScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : '#FDFBF7' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? colors.background : COLORS.card }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 헤더 */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={[styles.backText, { color: isDark ? colors.text : '#1C1917' }]}>←</Text>
+            <Text style={[styles.backText, { color: isDark ? colors.text : COLORS.text }]}>←</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+          <Text style={[styles.headerTitle, { color: isDark ? colors.text : COLORS.text }]}>
             운세 위젯
           </Text>
           <TouchableOpacity onPress={handleShareAll} style={styles.shareHeaderButton}>
@@ -183,8 +184,8 @@ export default function WidgetPreviewScreen() {
                 styles.sizeButton,
                 {
                   backgroundColor: selectedSize === size
-                    ? (isDark ? colors.primary : '#8B5CF6')
-                    : (isDark ? colors.card : '#F3F4F6'),
+                    ? (isDark ? colors.primary : COLORS.primary)
+                    : (isDark ? colors.card : COLORS.divider),
                 }
               ]}
               onPress={() => setSelectedSize(size)}
@@ -194,7 +195,7 @@ export default function WidgetPreviewScreen() {
                   styles.sizeButtonText,
                   {
                     color: selectedSize === size
-                      ? '#FFFFFF'
+                      ? COLORS.card
                       : (isDark ? colors.textSecondary : '#6B7280'),
                   }
                 ]}
@@ -220,8 +221,8 @@ export default function WidgetPreviewScreen() {
         </View>
 
         {/* 모든 크기 보기 */}
-        <View style={[styles.section, { backgroundColor: isDark ? colors.card : '#FFFFFF' }]}>
-          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : '#1C1917' }]}>
+        <View style={[styles.section, { backgroundColor: isDark ? colors.card : COLORS.card }]}>
+          <Text style={[styles.sectionTitle, { color: isDark ? colors.text : COLORS.text }]}>
             📐 모든 크기 보기
           </Text>
 

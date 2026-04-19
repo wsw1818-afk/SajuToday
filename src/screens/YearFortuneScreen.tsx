@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -38,9 +39,9 @@ const YearFortuneScreen: React.FC = () => {
   }, []);
 
   const getScoreColor = (score: number): string => {
-    if (score >= 80) return '#4CAF50';
-    if (score >= 60) return '#FFC107';
-    return '#F44336';
+    if (score >= 80) return COLORS.scoreExcellent;
+    if (score >= 60) return COLORS.scoreGood;
+    return COLORS.scoreBad;
   };
 
   const renderBarChart = () => {
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
   },
   statLabel: {
     fontSize: 12,
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   currentLabel: {
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
   },
   barBackground: {
     width: BAR_WIDTH,
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   },
   currentBar: {
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.scoreExcellent,
   },
   selectedBar: {
     borderWidth: 2,
@@ -304,7 +305,7 @@ const styles = StyleSheet.create({
   detailGanji: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
     marginBottom: 12,
   },
   scoreBadge: {
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
   scoreText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
   },
   detailDescription: {
     fontSize: 14,
@@ -326,7 +327,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   currentBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.scoreExcellent,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -344,12 +345,12 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: COLORS.scoreExcellent,
   },
   summaryTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: COLORS.scoreExcellent,
     marginBottom: 8,
   },
   summaryGanji: {

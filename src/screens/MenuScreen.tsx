@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -56,7 +57,7 @@ export default function MenuScreen() {
           onPress={() => handleNavigate('Compatibility')}
         >
           <View style={[styles.menuItemIcon, { backgroundColor: '#EC489915' }]}>
-            <Text style={[styles.menuIconText, { color: '#EC4899' }]}>💕</Text>
+            <Text style={[styles.menuIconText, { color: COLORS.fire }]}>💕</Text>
           </View>
           <View style={styles.menuItemContent}>
             <Text style={styles.menuItemLabel}>사주 궁합</Text>
@@ -70,7 +71,7 @@ export default function MenuScreen() {
           onPress={() => handleNavigate('Calendar')}
         >
           <View style={[styles.menuItemIcon, { backgroundColor: '#6366F115' }]}>
-            <Text style={[styles.menuIconText, { color: '#6366F1' }]}>📅</Text>
+            <Text style={[styles.menuIconText, { color: COLORS.primary }]}>📅</Text>
           </View>
           <View style={styles.menuItemContent}>
             <Text style={styles.menuItemLabel}>월간 운세</Text>
@@ -84,7 +85,7 @@ export default function MenuScreen() {
           onPress={() => handleNavigate('SavedPeople')}
         >
           <View style={[styles.menuItemIcon, { backgroundColor: '#10B98115' }]}>
-            <Text style={[styles.menuIconText, { color: '#10B981' }]}>👤</Text>
+            <Text style={[styles.menuIconText, { color: COLORS.success }]}>👤</Text>
           </View>
           <View style={styles.menuItemContent}>
             <Text style={styles.menuItemLabel}>저장된 사람</Text>
@@ -99,7 +100,7 @@ export default function MenuScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
   },
   header: {
     flexDirection: 'row',
@@ -108,12 +109,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: COLORS.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   closeButton: {
     padding: 4,
@@ -141,12 +142,12 @@ const styles = StyleSheet.create({
   userAvatarText: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   userDesc: {
     fontSize: 13,
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
   menuItemLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   menuItemDesc: {
     fontSize: 13,

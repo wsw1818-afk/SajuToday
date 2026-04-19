@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import {
   View,
   Text,
@@ -172,8 +173,8 @@ export default function DatePickerScreen() {
               key={d}
               style={[
                 styles.weekDay,
-                i === 0 && { color: '#EF4444' },
-                i === 6 && { color: '#3B82F6' },
+                i === 0 && { color: COLORS.error },
+                i === 6 && { color: COLORS.info },
               ]}
             >
               {d}
@@ -200,8 +201,8 @@ export default function DatePickerScreen() {
                 style={[
                   styles.dayText,
                   item.isSelected && styles.dayTextSelected,
-                  item.dayOfWeek === 0 && !item.isSelected && { color: '#EF4444' },
-                  item.dayOfWeek === 6 && !item.isSelected && { color: '#3B82F6' },
+                  item.dayOfWeek === 0 && !item.isSelected && { color: COLORS.error },
+                  item.dayOfWeek === 6 && !item.isSelected && { color: COLORS.info },
                 ]}
               >
                 {item.day}
@@ -229,7 +230,7 @@ export default function DatePickerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.card,
   },
   content: {
     flex: 1,
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   closeButton: {
     padding: 4,
@@ -259,18 +260,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
   },
   quickButtonActive: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
   },
   quickButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#57534E',
+    color: COLORS.textSecondary,
   },
   quickButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   yearMonth: {
     flexDirection: 'row',
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
   yearMonthText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   weekHeader: {
     flexDirection: 'row',
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: COLORS.border,
   },
   weekDay: {
     width: (width - 40) / 7,
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   daySelected: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
   },
   dayToday: {
     backgroundColor: 'rgba(139, 92, 246, 0.15)',
@@ -326,10 +327,10 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   dayTextSelected: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontWeight: '700',
   },
   selectedInfo: {
@@ -339,17 +340,17 @@ const styles = StyleSheet.create({
   selectedInfoText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#8B5CF6',
+    color: COLORS.primary,
   },
   confirmButton: {
     marginTop: 24,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: '700',
   },

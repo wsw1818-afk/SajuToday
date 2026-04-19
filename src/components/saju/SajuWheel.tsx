@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { COLORS } from '../../utils/theme';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Pillar } from '../../types';
 
@@ -86,7 +87,7 @@ const ZodiacLabel: React.FC<ZodiacLabelProps> = ({ char, angle, scale = 1, isDar
           {
             transform: [{ rotate: `-${angle}deg` }],
             fontSize: 12 * scale,
-            color: isDark ? '#A1A1AA' : '#57534E',
+            color: isDark ? '#A1A1AA' : COLORS.textSecondary,
           },
         ]}
       >
@@ -142,10 +143,10 @@ const SajuWheel: React.FC<SajuWheelProps> = ({
   };
 
   // 다크 모드 색상
-  const ringColor = isDark ? '#3F3F46' : '#E7E5E4';
+  const ringColor = isDark ? '#3F3F46' : COLORS.border;
   const textColor = isDark ? '#E4E4E7' : '#292524';
   const crossColor = isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.6)';
-  const centerBorderColor = isDark ? '#27272A' : '#FFFFFF';
+  const centerBorderColor = isDark ? '#27272A' : COLORS.card;
 
   // 다크 모드 쿼드런트 색상
   const quadrantColors = isDark ? {
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   },
   zodiacText: {
     fontSize: 12,
-    color: '#57534E',
+    color: COLORS.textSecondary,
     fontWeight: '500',
   },
   centerCore: {

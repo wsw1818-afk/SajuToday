@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { COLORS } from '../../utils/theme';
 import {
   View,
   Text,
@@ -43,10 +44,10 @@ export default function DailyFortuneWidget({
 
   // 점수에 따른 색상
   const getScoreColor = (score: number): [string, string] => {
-    if (score >= 80) return ['#22C55E', '#16A34A'];
-    if (score >= 60) return ['#3B82F6', '#2563EB'];
-    if (score >= 40) return ['#F59E0B', '#D97706'];
-    return ['#EF4444', '#DC2626'];
+    if (score >= 80) return [COLORS.success, '#16A34A'];
+    if (score >= 60) return [COLORS.info, '#2563EB'];
+    if (score >= 40) return [COLORS.warning, '#D97706'];
+    return [COLORS.error, '#DC2626'];
   };
 
   const scoreColors: [string, string] = getScoreColor(data.luckyScore);
@@ -82,7 +83,7 @@ export default function DailyFortuneWidget({
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <LinearGradient
-          colors={isDark ? ['#374151', '#1F2937'] : ['#FFFFFF', '#F9FAFB']}
+          colors={isDark ? ['#374151', '#1F2937'] : [COLORS.card, '#F9FAFB']}
           style={styles.smallWidget}
         >
           <Text style={[styles.smallDate, { color: isDark ? colors.textSecondary : '#6B7280' }]}>
@@ -109,7 +110,7 @@ export default function DailyFortuneWidget({
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <LinearGradient
-          colors={isDark ? ['#374151', '#1F2937'] : ['#FFFFFF', '#F9FAFB']}
+          colors={isDark ? ['#374151', '#1F2937'] : [COLORS.card, '#F9FAFB']}
           style={styles.mediumWidget}
         >
           <View style={styles.mediumHeader}>
@@ -160,7 +161,7 @@ export default function DailyFortuneWidget({
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
       <LinearGradient
-        colors={isDark ? ['#374151', '#1F2937'] : ['#FFFFFF', '#F9FAFB']}
+        colors={isDark ? ['#374151', '#1F2937'] : [COLORS.card, '#F9FAFB']}
         style={styles.largeWidget}
       >
         <View style={styles.largeHeader}>
@@ -199,7 +200,7 @@ export default function DailyFortuneWidget({
           </View>
         </View>
 
-        <View style={[styles.messageBox, { backgroundColor: isDark ? '#1F293720' : '#F3F4F6' }]}>
+        <View style={[styles.messageBox, { backgroundColor: isDark ? '#1F293720' : COLORS.divider }]}>
           <Text style={styles.messageIcon}>💬</Text>
           <Text style={[styles.largeMessage, { color: isDark ? colors.text : '#374151' }]}>
             {data.mainMessage}
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
   smallScore: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   smallGanji: {
     fontSize: 14,
@@ -324,7 +325,7 @@ const styles = StyleSheet.create({
   mediumScore: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   mediumMessage: {
     fontSize: 14,
@@ -403,7 +404,7 @@ const styles = StyleSheet.create({
   largeScore: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   largeScoreUnit: {
     fontSize: 14,

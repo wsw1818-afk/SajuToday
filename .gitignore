@@ -41,3 +41,10 @@ yarn-error.*
 /ios
 /android
 .gstack/
+
+# Local Claude Code state
+.claude/scheduled_tasks.lock
+.claude/settings.json
+
+# Python script cache
+scripts/__pycache__/

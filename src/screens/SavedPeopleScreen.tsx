@@ -146,7 +146,14 @@ export default function SavedPeopleScreen() {
       if (solarDate) {
         birthDateStr = solarDate;
       } else {
-        Alert.alert('변환 실패', '음력→양력 변환에 실패했습니다. 네트워크 연결을 확인해주세요.');
+        Alert.alert(
+          '음력→양력 변환 실패',
+          '인터넷 연결을 확인해주세요. 양력 생일을 아신다면 양력으로 입력하실 수 있어요.',
+          [
+            { text: '양력으로 입력하기', onPress: () => setFormCalendar('solar') },
+            { text: '확인' },
+          ]
+        );
         return;
       }
     }
@@ -538,7 +545,7 @@ export default function SavedPeopleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.card,
   },
   header: {
     paddingBottom: 16,
@@ -556,7 +563,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   addButton: {
     padding: 8,
@@ -564,7 +571,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     marginHorizontal: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -574,7 +581,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#1C1917',
+    color: COLORS.text,
   },
   content: {
     flex: 1,
@@ -600,7 +607,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   personCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -622,7 +629,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   personDetails: {
     flex: 1,
@@ -636,10 +643,10 @@ const styles = StyleSheet.create({
   personName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   relationBadge: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -663,7 +670,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: COLORS.divider,
     paddingTop: 12,
   },
   actionButton: {
@@ -689,7 +696,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -701,12 +708,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: COLORS.border,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   modalBody: {
     paddingHorizontal: 20,
@@ -725,12 +732,12 @@ const styles = StyleSheet.create({
   formInput: {
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 15,
-    color: '#1C1917',
+    color: COLORS.text,
   },
   memoInput: {
     height: 80,
@@ -741,7 +748,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -750,7 +757,7 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 15,
-    color: '#1C1917',
+    color: COLORS.text,
   },
   timeRow: {
     flexDirection: 'row',
@@ -770,7 +777,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
     alignItems: 'center',
   },
   genderButtonActive: {
@@ -783,7 +790,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   genderButtonTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   relationRow: {
     flexDirection: 'row',
@@ -796,7 +803,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   relationChipActive: {
     backgroundColor: '#6B5B45',
@@ -807,7 +814,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   relationChipTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
   saveButton: {
     backgroundColor: '#6B5B45',
@@ -820,6 +827,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
 });

@@ -76,11 +76,11 @@ function DaeunCard({ daeun, isSelected, isCurrent, onPress, cardWidth }: DaeunCa
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return '#4CAF50';
+  if (score >= 80) return COLORS.scoreExcellent;
   if (score >= 65) return '#8BC34A';
-  if (score >= 50) return '#FFC107';
-  if (score >= 35) return '#FF9800';
-  return '#F44336';
+  if (score >= 50) return COLORS.scoreGood;
+  if (score >= 35) return COLORS.scoreNeutral;
+  return COLORS.scoreBad;
 }
 
 function calculateDday(targetAge: number, currentAge: number, currentDate: Date = new Date()): number {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: FONT_SIZES.xs,
-    color: '#FF9800',
+    color: COLORS.scoreNeutral,
     marginBottom: 8,
   },
   timelineScroll: {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8F0',
   },
   daeunCardSelected: {
-    borderColor: '#3B82F6',
+    borderColor: COLORS.info,
     borderWidth: 2,
   },
   currentBadge: {

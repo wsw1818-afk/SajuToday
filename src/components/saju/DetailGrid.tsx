@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLORS } from '../../utils/theme';
 import { View, Text, StyleSheet } from 'react-native';
 import { Compass, Clock, LucideIcon } from 'lucide-react-native';
 
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1C1917',
+    color: COLORS.text,
     lineHeight: 22,
   },
   colorDot: {

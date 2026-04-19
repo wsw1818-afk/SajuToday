@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { COLORS } from '../../utils/theme';
 import {
   View,
   Text,
@@ -273,7 +274,7 @@ export function TermGlossary({ visible, onClose }: TermGlossaryProps) {
 
 const styles = StyleSheet.create({
   termText: {
-    color: '#8B5CF6',
+    color: COLORS.primary,
     fontWeight: '600',
   },
   helpIcon: {
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   tooltipContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 20,
     padding: 20,
     maxWidth: 340,
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
   // 용어 사전 모달
   glossaryContainer: {
     flex: 1,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.card,
   },
   glossaryHeader: {
     flexDirection: 'row',
@@ -343,24 +344,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E7E5E4',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.card,
   },
   glossaryTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
   },
   glossaryCloseBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     borderRadius: 20,
   },
   glossaryCloseText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#57534E',
+    color: COLORS.textSecondary,
   },
   glossaryScroll: {
     flex: 1,
@@ -372,29 +373,29 @@ const styles = StyleSheet.create({
   glossaryCategoryTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#8B5CF6',
+    color: COLORS.primary,
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 2,
     borderBottomColor: '#E9D5FF',
   },
   glossaryItem: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: COLORS.divider,
   },
   glossaryItemTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
     marginBottom: 6,
   },
   glossaryItemDesc: {
     fontSize: 14,
-    color: '#57534E',
+    color: COLORS.textSecondary,
     lineHeight: 22,
   },
   glossaryItemExample: {

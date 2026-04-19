@@ -63,7 +63,7 @@ export default function FamilyGroupScreen() {
   // New group form
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupIcon, setNewGroupIcon] = useState('👨‍👩‍👧‍👦');
-  const [newGroupColor, setNewGroupColor] = useState('#EF4444');
+  const [newGroupColor, setNewGroupColor] = useState(COLORS.error);
 
   // New member form
   const [newMemberName, setNewMemberName] = useState('');
@@ -198,7 +198,7 @@ export default function FamilyGroupScreen() {
   const resetGroupForm = () => {
     setNewGroupName('');
     setNewGroupIcon('👨‍👩‍👧‍👦');
-    setNewGroupColor('#EF4444');
+    setNewGroupColor(COLORS.error);
   };
 
   const resetMemberForm = () => {

@@ -34,9 +34,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // 오행별 색상
 const ELEMENT_COLORS: Record<Element, string> = {
-  wood: '#4CAF50',
-  fire: '#F44336',
-  earth: '#FFC107',
+  wood: COLORS.scoreExcellent,
+  fire: COLORS.scoreBad,
+  earth: COLORS.scoreGood,
   metal: '#9E9E9E',
   water: '#2196F3',
 };
@@ -77,11 +77,11 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultExpande
 // 강약 게이지 컴포넌트
 const StrengthGauge: React.FC<{ score: number; strength: string }> = ({ score, strength }) => {
   const getGaugeColor = () => {
-    if (score >= 70) return '#4CAF50';
+    if (score >= 70) return COLORS.scoreExcellent;
     if (score >= 55) return '#8BC34A';
-    if (score >= 45) return '#FFC107';
-    if (score >= 30) return '#FF9800';
-    return '#F44336';
+    if (score >= 45) return COLORS.scoreGood;
+    if (score >= 30) return COLORS.scoreNeutral;
+    return COLORS.scoreBad;
   };
 
   const strengthLabels: Record<string, string> = {
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
   harmTitle: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '700',
-    color: '#FF9800',
+    color: COLORS.scoreNeutral,
     marginBottom: SPACING.sm,
   },
   harmCard: {

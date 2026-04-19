@@ -4,6 +4,7 @@
  */
 
 import { useMemo } from 'react';
+import { COLORS } from '../utils/theme';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -14,28 +15,28 @@ export function useHomeStyles() {
 
   const dynamicStyles = useMemo(() => ({
     container: {
-      backgroundColor: isDark ? colors.background : '#FDFBF7',
+      backgroundColor: isDark ? colors.background : COLORS.card,
     },
     mainTitle: {
       fontSize: scaledFontSize(26),
-      color: isDark ? colors.text : '#1C1917',
+      color: isDark ? colors.text : COLORS.text,
     },
     subTitle: {
       fontSize: scaledFontSize(15),
-      color: isDark ? colors.textSecondary : '#57534E',
+      color: isDark ? colors.textSecondary : COLORS.textSecondary,
     },
     menuIcon: {
-      color: isDark ? colors.text : '#1C1917',
+      color: isDark ? colors.text : COLORS.text,
     },
     card: {
-      backgroundColor: isDark ? colors.surface : '#FFFFFF',
+      backgroundColor: isDark ? colors.surface : COLORS.card,
       borderColor: isDark ? colors.border : 'rgba(0, 0, 0, 0.05)',
     },
     cardText: {
-      color: isDark ? colors.text : '#1C1917',
+      color: isDark ? colors.text : COLORS.text,
     },
     secondaryText: {
-      color: isDark ? colors.textSecondary : '#57534E',
+      color: isDark ? colors.textSecondary : COLORS.textSecondary,
     },
     horoscopeSheet: {
       backgroundColor: isDark ? colors.surface : 'rgba(255, 255, 255, 1)',
@@ -70,15 +71,15 @@ export function useHomeStyles() {
       backgroundColor: isDark ? 'rgba(63, 63, 70, 0.5)' : 'rgba(231, 229, 228, 0.5)',
     },
     lunarText: {
-      color: isDark ? '#A1A1AA' : '#57534E',
+      color: isDark ? '#A1A1AA' : COLORS.textSecondary,
       fontSize: scaledFontSize(12),
     },
     dateTitle: {
-      color: isDark ? '#FAFAFA' : '#1C1917',
+      color: isDark ? '#FAFAFA' : COLORS.text,
       fontSize: scaledFontSize(22),
     },
     todayLabel: {
-      color: isDark ? '#A1A1AA' : '#57534E',
+      color: isDark ? '#A1A1AA' : COLORS.textSecondary,
       fontSize: scaledFontSize(12),
     },
     arrowButton: {
@@ -112,14 +113,14 @@ export function useHomeStyles() {
       backgroundColor: isDark ? 'rgba(39, 39, 42, 0.5)' : 'rgba(231, 229, 228, 0.5)',
     },
     fortuneTabActive: {
-      backgroundColor: isDark ? '#4F46E5' : '#FFFFFF',
+      backgroundColor: isDark ? '#4F46E5' : COLORS.card,
     },
     fortuneTabText: {
-      color: isDark ? '#A1A1AA' : '#57534E',
+      color: isDark ? '#A1A1AA' : COLORS.textSecondary,
       fontSize: scaledFontSize(14),
     },
     fortuneTabTextActive: {
-      color: isDark ? '#FFFFFF' : '#1C1917',
+      color: isDark ? COLORS.card : COLORS.text,
     },
     // 행운 정보
     luckyInfoSummary: {
@@ -131,19 +132,19 @@ export function useHomeStyles() {
       fontSize: scaledFontSize(12),
     },
     luckyInfoValue: {
-      color: isDark ? '#E4E4E7' : '#1C1917',
+      color: isDark ? '#E4E4E7' : COLORS.text,
       fontSize: scaledFontSize(14),
     },
     // 카테고리 카드
     categoryCard: {
-      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : '#FFFFFF',
+      backgroundColor: isDark ? 'rgba(39, 39, 42, 0.9)' : COLORS.card,
     },
     categoryName: {
-      color: isDark ? '#E4E4E7' : '#1C1917',
+      color: isDark ? '#E4E4E7' : COLORS.text,
       fontSize: scaledFontSize(15),
     },
     categoryMessage: {
-      color: isDark ? '#A1A1AA' : '#57534E',
+      color: isDark ? '#A1A1AA' : COLORS.textSecondary,
       fontSize: scaledFontSize(13),
     },
   }), [isDark, colors, scaledFontSize]);

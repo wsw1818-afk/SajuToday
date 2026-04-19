@@ -229,25 +229,25 @@ export default function FortuneReportScreen() {
               <Star size={20} color="#F59E0B" />,
               '저장된 북마크',
               bookmarkStats?.total || 0,
-              '#F59E0B'
+              COLORS.warning
             )}
             {renderStatCard(
               <Calendar size={20} color="#3B82F6" />,
               '꿈 기록',
               dreamStats?.totalDreams || 0,
-              '#3B82F6'
+              COLORS.info
             )}
             {renderStatCard(
               <Award size={20} color="#10B981" />,
               '길몽 수',
               dreamStats?.goodDreams || 0,
-              '#10B981'
+              COLORS.success
             )}
             {renderStatCard(
               <TrendingUp size={20} color="#8B5CF6" />,
               '관리 멤버',
               groupStats?.totalMembers || 0,
-              '#8B5CF6'
+              COLORS.primary
             )}
           </View>
         </View>
@@ -262,18 +262,18 @@ export default function FortuneReportScreen() {
             <View style={styles.dreamAnalysisCard}>
               <View style={styles.dreamTypeRow}>
                 <View style={[styles.dreamTypeBox, { backgroundColor: '#D1FAE5' }]}>
-                  <Text style={[styles.dreamTypeNumber, { color: '#10B981' }]}>
+                  <Text style={[styles.dreamTypeNumber, { color: COLORS.success }]}>
                     {dreamStats.goodDreams}
                   </Text>
                   <Text style={styles.dreamTypeLabel}>길몽</Text>
                 </View>
                 <View style={[styles.dreamTypeBox, { backgroundColor: '#FEE2E2' }]}>
-                  <Text style={[styles.dreamTypeNumber, { color: '#EF4444' }]}>
+                  <Text style={[styles.dreamTypeNumber, { color: COLORS.error }]}>
                     {dreamStats.badDreams}
                   </Text>
                   <Text style={styles.dreamTypeLabel}>흉몽</Text>
                 </View>
-                <View style={[styles.dreamTypeBox, { backgroundColor: '#F3F4F6' }]}>
+                <View style={[styles.dreamTypeBox, { backgroundColor: COLORS.divider }]}>
                   <Text style={[styles.dreamTypeNumber, { color: '#6B7280' }]}>
                     {dreamStats.neutralDreams}
                   </Text>

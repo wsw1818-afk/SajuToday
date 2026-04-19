@@ -434,9 +434,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: COLORS.divider,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: COLORS.border,
   },
   activeTab: {
     backgroundColor: COLORS.primary,

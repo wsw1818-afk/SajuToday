@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.success,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.md,
@@ -412,17 +412,17 @@ const styles = StyleSheet.create({
   successToast: {
     backgroundColor: '#D1FAE5',
     borderWidth: 1,
-    borderColor: '#10B981',
+    borderColor: COLORS.success,
   },
 
   // 에러 토스트
   errorToast: {
     backgroundColor: '#FEE2E2',
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: COLORS.error,
   },
   errorIconBox: {
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.error,
   },
   errorTitle: {
     color: '#991B1B',
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   retryButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: COLORS.error,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
@@ -506,11 +506,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.xl,
-    backgroundColor: '#FDFBF7',
+    backgroundColor: COLORS.background,
   },
   fullScreenErrorContent: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.card,
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.xl,
     paddingVertical: 40,
@@ -529,13 +529,13 @@ const styles = StyleSheet.create({
   fullScreenErrorTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1C1917',
+    color: COLORS.text,
     textAlign: 'center',
     marginBottom: SPACING.sm,
   },
   fullScreenErrorMessage: {
     fontSize: 15,
-    color: '#57534E',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: SPACING.xl,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   fullScreenRetryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#8B5CF6',
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: BORDER_RADIUS.lg,
@@ -555,6 +555,6 @@ const styles = StyleSheet.create({
   fullScreenRetryText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: COLORS.card,
   },
 });
